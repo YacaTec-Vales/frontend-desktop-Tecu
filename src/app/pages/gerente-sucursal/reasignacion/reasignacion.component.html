@@ -1,0 +1,60 @@
+<div class="max-w-6xl mx-auto space-y-6 pb-12">
+  <div class="mb-8">
+    <h1 class="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight">Reasignación de Cartera</h1>
+    <p class="text-gray-500 dark:text-gray-400 mt-2 text-lg">Transfiera distribuidoras entre coordinadores fácilmente.</p>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+    
+    <!-- Origen -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 dark:bg-gray-800 dark:border-gray-700 flex flex-col h-[500px]">
+      <h2 class="text-xl font-bold mb-4">Coordinador Origen</h2>
+      <select class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand focus:border-brand block w-full p-2.5 mb-4">
+        <option>Seleccione un Coordinador</option>
+        <option selected>Juan Pérez (Zona Centro)</option>
+        <option>María Gómez (Zona Norte)</option>
+      </select>
+      
+      <div class="flex-1 overflow-y-auto border border-gray-200 rounded-lg bg-gray-50 p-2 space-y-2">
+        <div class="bg-white p-3 rounded shadow-sm border border-brand cursor-move flex items-center justify-between">
+          <div>
+            <p class="font-bold">Distribuidora Ana García</p>
+            <p class="text-xs text-gray-500">Cartera: $15,000</p>
+          </div>
+          <input checked id="checkbox-1" type="checkbox" value="" class="w-4 h-4 text-brand bg-gray-100 border-gray-300 rounded focus:ring-brand focus:ring-2">
+        </div>
+        <div class="bg-white p-3 rounded shadow-sm border border-gray-200 cursor-move flex items-center justify-between opacity-60">
+          <div>
+            <p class="font-bold">Distribuidora Pedro López</p>
+            <p class="text-xs text-gray-500">Cartera: $5,000</p>
+          </div>
+          <input id="checkbox-2" type="checkbox" value="" class="w-4 h-4 text-brand bg-gray-100 border-gray-300 rounded focus:ring-brand focus:ring-2">
+        </div>
+      </div>
+    </div>
+
+    <!-- Destino -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 dark:bg-gray-800 dark:border-gray-700 flex flex-col h-[500px]">
+      <h2 class="text-xl font-bold mb-4">Coordinador Destino</h2>
+      <select class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand focus:border-brand block w-full p-2.5 mb-4">
+        <option>Seleccione un Coordinador</option>
+        <option>Juan Pérez (Zona Centro)</option>
+        <option selected>María Gómez (Zona Norte)</option>
+      </select>
+      
+      <div class="flex-1 overflow-y-auto border border-dashed border-gray-300 rounded-lg bg-gray-50 flex items-center justify-center relative">
+        <!-- Transfer Action (Simulated floating button between columns ideally, but we place it here for simplicity) -->
+        <div class="absolute inset-0 flex items-center justify-center p-4">
+            <div class="text-center">
+                <svg class="mx-auto w-10 h-10 text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg>
+                <p class="text-gray-500 mb-4">Seleccione distribuidoras del origen y transfiera al destino.</p>
+                <button type="button" class="px-5 py-2.5 text-sm font-bold text-white rounded-lg shadow-sm hover:opacity-90 transition-colors" style="background-color: var(--color-brand);">
+                  Transferir 1 Selección
+                </button>
+            </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>

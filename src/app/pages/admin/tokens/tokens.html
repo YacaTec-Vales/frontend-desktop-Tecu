@@ -1,0 +1,35 @@
+<div class="max-w-xl mx-auto mt-20 pb-24">
+  
+  <div class="bg-white rounded-2xl shadow-xl border border-gray-200 dark:bg-gray-800 dark:border-gray-700 p-8 text-center">
+    
+    <div class="w-16 h-16 bg-brand text-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-md">
+      <svg class="w-8 h-8" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+      </svg>
+    </div>
+
+    <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">Acción Restringida</h2>
+    <p class="text-gray-500 dark:text-gray-400 mb-8">Usted está intentando modificar el nombre de un cliente que ya tiene un vale activo. Solicite autorización de gerencia.</p>
+
+    <form class="space-y-6">
+      <div>
+        <label class="block mb-4 text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider">Ingrese Token de Autorización</label>
+        
+        <div class="flex gap-2 justify-center" dir="ltr">
+            <!-- Simulated OTP input using 6 boxes -->
+            <input type="text" maxlength="1" (keyup)="onKeyUp($event, 0)" id="otp-0" class="w-12 h-14 text-center text-2xl font-extrabold bg-white border-2 rounded-lg focus:outline-none shadow-sm" style="border-color: var(--color-brand); color: var(--color-brand);" required>
+            <input type="text" maxlength="1" (keyup)="onKeyUp($event, 1)" id="otp-1" class="w-12 h-14 text-center text-2xl font-extrabold bg-white border-2 rounded-lg focus:outline-none shadow-sm" style="border-color: var(--color-brand); color: var(--color-brand);" required>
+            <input type="text" maxlength="1" (keyup)="onKeyUp($event, 2)" id="otp-2" class="w-12 h-14 text-center text-2xl font-extrabold bg-white border-2 rounded-lg focus:outline-none shadow-sm" style="border-color: var(--color-brand); color: var(--color-brand);" required>
+            <span class="flex items-center text-gray-400 font-bold mx-1">-</span>
+            <input type="text" maxlength="1" (keyup)="onKeyUp($event, 3)" id="otp-3" class="w-12 h-14 text-center text-2xl font-extrabold bg-white border-2 rounded-lg focus:outline-none shadow-sm" style="border-color: var(--color-brand); color: var(--color-brand);" required>
+            <input type="text" maxlength="1" (keyup)="onKeyUp($event, 4)" id="otp-4" class="w-12 h-14 text-center text-2xl font-extrabold bg-white border-2 rounded-lg focus:outline-none shadow-sm" style="border-color: var(--color-brand); color: var(--color-brand);" required>
+            <input type="text" maxlength="1" (keyup)="onKeyUp($event, 5)" id="otp-5" class="w-12 h-14 text-center text-2xl font-extrabold bg-white border-2 rounded-lg focus:outline-none shadow-sm" style="border-color: var(--color-brand); color: var(--color-brand);" required>
+        </div>
+      </div>
+
+      <button type="button" class="w-full hover:opacity-90 focus:ring-4 font-bold rounded-lg text-lg px-5 py-4 text-center shadow-md mt-4 transition-transform active:scale-[0.98]" style="background-color: var(--color-brand); color: white; border: 1px solid var(--color-brand);">
+        Validar y Desbloquear
+      </button>
+    </form>
+  </div>
+</div>

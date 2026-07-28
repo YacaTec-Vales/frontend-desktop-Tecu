@@ -1,0 +1,48 @@
+<section class="relative min-h-screen flex font-sans bg-gray-100 overflow-hidden">
+  <!-- Background Image (Visible full on mobile, left half on desktop) -->
+  <div class="absolute inset-0 z-0 md:relative md:w-1/2 md:flex-shrink-0 lg:w-[55%]">
+    <img src="/Gemini_Generated_Image_91y1x91y1x91y1x9.png" alt="Fondo" class="absolute inset-0 w-full h-full object-cover grayscale opacity-70" />
+    <div class="absolute inset-0 bg-gray-900/50 mix-blend-multiply"></div>
+  </div>
+
+  <!-- Login Panel -->
+  <div class="relative z-10 w-full flex flex-col justify-center items-center p-6 sm:p-12 md:w-1/2 lg:w-[45%] bg-transparent md:bg-white md:rounded-l-[3rem] shadow-2xl min-h-screen">
+      <div class="w-full max-w-md space-y-8 my-auto bg-white/95 md:bg-transparent p-10 md:p-0 rounded-3xl md:rounded-none shadow-2xl md:shadow-none backdrop-blur-sm md:backdrop-blur-none">
+          
+          <!-- Logo & Title -->
+          <div class="flex flex-col items-center text-center">
+              <img src="/logo-yt.svg" class="w-56 mb-4 drop-shadow-sm" alt="YacaTec Logo">
+              <h2 class="text-xl font-bold mt-2 text-gray-900">Panel de control</h2>
+          </div>
+          
+          <div *ngIf="error" class="p-3 text-sm text-red-800 bg-red-50 rounded-lg font-bold" role="alert">
+            {{ error }}
+          </div>
+
+          <!-- Form -->
+          <form class="space-y-6" (submit)="onSubmit($event)">
+              <div>
+                  <label for="email" class="block mb-2 text-sm font-extrabold text-gray-900">Email</label>
+                  <input type="email" name="email" id="email" [(ngModel)]="email" class="bg-gray-200 border-0 text-gray-900 text-lg rounded-xl focus:ring-4 focus:ring-brand-300 block w-full p-4 font-semibold transition-all" placeholder="admin@empresa.com" required>
+              </div>
+              <div>
+                  <label for="password" class="block mb-2 text-sm font-extrabold text-gray-900">Contraseña</label>
+                  <input type="password" name="password" id="password" class="bg-gray-200 border-0 text-gray-900 text-lg rounded-xl focus:ring-4 focus:ring-brand-300 block w-full p-4 font-semibold transition-all" placeholder="••••••••" required>
+              </div>
+              
+              <button type="submit" class="w-full text-white font-bold rounded-xl text-xl px-5 py-4 mt-4 text-center shadow-lg hover:opacity-90 hover:-translate-y-0.5 transition-all duration-200" style="background-color: var(--color-brand);">
+                  Panel de control
+              </button>
+          </form>
+
+          <div class="mt-8 pt-6 border-t border-gray-200">
+              <h4 class="text-sm font-bold text-gray-500 mb-3 uppercase tracking-wider text-center">Accesos de prueba</h4>
+              <div class="flex flex-wrap justify-center gap-2">
+                  <span class="bg-gray-100 text-gray-800 text-xs font-bold px-3 py-1 rounded-full cursor-pointer hover:bg-gray-200" (click)="email = 'admin@empresa.com'">Admin</span>
+                  <span class="bg-gray-100 text-gray-800 text-xs font-bold px-3 py-1 rounded-full cursor-pointer hover:bg-gray-200" (click)="email = 'gerente_sucursal@empresa.com'">Sucursal</span>
+                  <span class="bg-gray-100 text-gray-800 text-xs font-bold px-3 py-1 rounded-full cursor-pointer hover:bg-gray-200" (click)="email = 'gerente_general@empresa.com'">Corporativo</span>
+              </div>
+          </div>
+      </div>
+  </div>
+</section>

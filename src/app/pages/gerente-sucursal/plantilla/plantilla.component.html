@@ -1,0 +1,81 @@
+<div class="max-w-7xl mx-auto space-y-6 pb-12">
+  <div class="flex justify-between items-end mb-8">
+    <div>
+      <h1 class="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight">Gestor de Plantilla</h1>
+      <p class="text-gray-500 dark:text-gray-400 mt-2 text-lg">Administre los accesos y roles del equipo operativo de la sucursal.</p>
+    </div>
+    <button type="button" class="px-5 py-3 text-sm font-bold text-white rounded-lg shadow-sm hover:opacity-90 flex items-center gap-2" style="background-color: var(--color-brand);">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+      Nuevo Empleado
+    </button>
+  </div>
+
+  <div class="bg-white rounded-xl shadow-sm border border-gray-200 dark:bg-gray-800 dark:border-gray-700 overflow-hidden">
+    <div class="p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 flex justify-between items-center">
+      <div class="relative w-72">
+        <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+          <svg class="w-5 h-5 text-gray-500 dark:text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"></path></svg>
+        </div>
+        <input type="text" class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand focus:border-brand block w-full pl-10 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="Buscar empleado...">
+      </div>
+    </div>
+    
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+            <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                <tr>
+                    <th scope="col" class="px-6 py-3">Nombre</th>
+                    <th scope="col" class="px-6 py-3">Rol</th>
+                    <th scope="col" class="px-6 py-3">Correo</th>
+                    <th scope="col" class="px-6 py-3">Estado</th>
+                    <th scope="col" class="px-6 py-3">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                    <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                        Juan Pérez
+                    </th>
+                    <td class="px-6 py-4">Coordinador</td>
+                    <td class="px-6 py-4">jperez@empresa.com</td>
+                    <td class="px-6 py-4">
+                        <span class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded dark:bg-green-900 dark:text-green-300">Activo</span>
+                    </td>
+                    <td class="px-6 py-4 flex gap-3">
+                        <a href="#" class="font-medium text-blue-600 dark:text-blue-500 hover:underline">Editar</a>
+                        <a href="#" class="font-medium text-red-600 dark:text-red-500 hover:underline">Baja</a>
+                    </td>
+                </tr>
+                <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                    <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                        Luis Hernández
+                    </th>
+                    <td class="px-6 py-4">Cajero</td>
+                    <td class="px-6 py-4">lhernandez@empresa.com</td>
+                    <td class="px-6 py-4">
+                        <span class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded dark:bg-green-900 dark:text-green-300">Activo</span>
+                    </td>
+                    <td class="px-6 py-4 flex gap-3">
+                        <a href="#" class="font-medium text-blue-600 dark:text-blue-500 hover:underline">Editar</a>
+                        <a href="#" class="font-medium text-red-600 dark:text-red-500 hover:underline">Baja</a>
+                    </td>
+                </tr>
+                <tr class="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-600">
+                    <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                        Ana Martínez
+                    </th>
+                    <td class="px-6 py-4">Verificador</td>
+                    <td class="px-6 py-4">amartinez@empresa.com</td>
+                    <td class="px-6 py-4">
+                        <span class="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded dark:bg-red-900 dark:text-red-300">Suspendido</span>
+                    </td>
+                    <td class="px-6 py-4 flex gap-3">
+                        <a href="#" class="font-medium text-blue-600 dark:text-blue-500 hover:underline">Editar</a>
+                        <a href="#" class="font-medium text-green-600 dark:text-green-500 hover:underline">Reactivar</a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+  </div>
+</div>

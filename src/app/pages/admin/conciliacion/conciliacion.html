@@ -1,0 +1,82 @@
+<div class="h-[calc(100vh-8rem)] flex flex-col pb-6">
+  <div class="mb-6 shrink-0">
+    <h1 class="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight">Conciliación Manual</h1>
+    <p class="text-gray-500 dark:text-gray-400 mt-2 text-base">Empate los pagos huérfanos del banco con los tickets subidos por las distribuidoras.</p>
+  </div>
+
+  <div class="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-6 min-h-0">
+    
+    <!-- Lado Izquierdo: Pagos Huérfanos -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-200 dark:bg-gray-800 dark:border-gray-700 flex flex-col overflow-hidden">
+      <div class="p-4 border-b border-brand bg-brand flex justify-between items-center shrink-0">
+        <h3 class="text-lg font-bold text-white">1. Pagos sin identificar (Banco)</h3>
+        <span class="bg-white text-brand text-xs font-bold px-2.5 py-0.5 rounded-full shadow-sm">2 Pendientes</span>
+      </div>
+      <div class="p-4 flex-1 overflow-y-auto space-y-4 bg-gray-50 dark:bg-gray-900/50">
+        
+        <!-- Huerfano 1 (Selected state) -->
+        <div class="bg-white border-2 dark:bg-gray-800 rounded-xl p-4 shadow-md cursor-pointer relative overflow-hidden" style="border-color: var(--color-brand);">
+            <div class="absolute top-0 right-0 text-white text-xs px-2 py-1 rounded-bl-lg font-bold" style="background-color: var(--color-brand);">Seleccionado</div>
+            <div class="flex flex-col mb-2 mt-1 pr-20">
+                <span class="text-xl font-bold text-gray-900 dark:text-white">$2,100.00</span>
+                <span class="text-sm text-gray-500 font-mono mt-1">REF: 00000</span>
+            </div>
+            <p class="text-sm text-gray-600 dark:text-gray-400">Concepto: DEPOSITO EFECTIVO CAJERO</p>
+            <p class="text-xs text-gray-400 mt-2">12 Nov 2023 - 14:32 hrs</p>
+        </div>
+
+        <!-- Huerfano 2 -->
+        <div class="bg-white border border-gray-200 hover:border-gray-300 dark:bg-gray-800 dark:border-gray-700 rounded-xl p-4 shadow-sm cursor-pointer transition-colors">
+            <div class="flex flex-col mb-2 mt-1">
+                <span class="text-xl font-bold text-gray-900 dark:text-white">$5,000.00</span>
+                <span class="text-sm text-gray-500 font-mono mt-1">REF: SPEI392</span>
+            </div>
+            <p class="text-sm text-gray-600 dark:text-gray-400">Concepto: SPEI RECIBIDO BANAMEX</p>
+            <p class="text-xs text-gray-400 mt-2">11 Nov 2023 - 09:15 hrs</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lado Derecho: Tickets de Distribuidoras -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-200 dark:bg-gray-800 dark:border-gray-700 flex flex-col overflow-hidden">
+      <div class="p-4 border-b border-brand bg-brand flex justify-between items-center shrink-0">
+        <h3 class="text-lg font-bold text-white">2. Tickets reportados</h3>
+        <span class="bg-white text-brand text-xs font-bold px-2.5 py-0.5 rounded-full shadow-sm">1 Por conciliar</span>
+      </div>
+      <div class="p-4 flex-1 overflow-y-auto space-y-4 bg-gray-50 dark:bg-gray-900/50">
+        
+        <!-- Ticket 1 -->
+        <div class="bg-white border border-gray-200 dark:bg-gray-800 dark:border-gray-700 rounded-xl overflow-hidden shadow-sm">
+            <div class="p-4 flex justify-between items-start">
+                <div>
+                    <span class="bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded dark:bg-gray-700 dark:text-gray-300">Dist: Ana García</span>
+                    <h4 class="text-lg font-bold text-gray-900 dark:text-white mt-2">Reporta pago de $2,100.00</h4>
+                    <p class="text-xs text-gray-500 mt-1">Sube ticket por falta de referencia en practicaja.</p>
+                </div>
+            </div>
+            
+            <!-- Imagen del ticket -->
+            <div class="bg-gray-200 dark:bg-gray-700 aspect-[3/1] relative flex items-center justify-center border-y border-gray-200 dark:border-gray-600">
+                <span class="text-gray-500 dark:text-gray-400 text-sm font-bold flex items-center gap-2">
+                  <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607zM10.5 7.5v6m3-3h-6" />
+                  </svg>
+                  [Imagen de Ticket OXXO / Practicaja]
+                </span>
+            </div>
+
+            <div class="p-4 bg-gray-50 dark:bg-gray-800/80">
+                <button type="button" class="w-full hover:opacity-90 focus:ring-4 focus:ring-brand-300 font-bold rounded-lg text-sm px-5 py-3 text-center transition-transform active:scale-[0.98] shadow-sm flex items-center justify-center gap-2" style="background-color: var(--color-brand); color: white; border: 1px solid var(--color-brand);">
+                    <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
+                    </svg>
+                    Vincular y Conciliar ($2,100)
+                </button>
+            </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
