@@ -1,3 +1,4 @@
 /* You can add global styles to this file, and also import other style files */
+@import "../../frontend-global-styles/global-theme.css";
 
-@import 'tailwindcss';
+@source "./app";

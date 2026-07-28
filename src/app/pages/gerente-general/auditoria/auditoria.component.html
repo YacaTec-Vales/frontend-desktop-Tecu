@@ -1,0 +1,76 @@
+<div class="max-w-7xl mx-auto space-y-6 pb-12">
+  <div class="flex justify-between items-end mb-8">
+    <div>
+      <h1 class="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight">Visor de Auditoría</h1>
+      <p class="text-gray-500 dark:text-gray-400 mt-2 text-lg">Registro inmutable de todas las acciones críticas realizadas en el sistema.</p>
+    </div>
+    <div class="flex gap-3">
+      <input type="date" class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand focus:border-brand p-2.5">
+      <button type="button" class="px-5 py-2.5 text-sm font-medium text-gray-900 bg-white rounded-lg border border-gray-200 hover:bg-gray-100">
+        Exportar Log
+      </button>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-xl shadow-sm border border-gray-200 dark:bg-gray-800 dark:border-gray-700 overflow-hidden">
+    <div class="p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 flex justify-between items-center gap-4">
+      <div class="relative flex-1 max-w-md">
+        <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+          <svg class="w-5 h-5 text-gray-500 dark:text-gray-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"></path></svg>
+        </div>
+        <input type="text" class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand focus:border-brand block w-full pl-10 p-2" placeholder="Buscar por usuario, IP, o evento...">
+      </div>
+      <select class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand focus:border-brand p-2">
+        <option>Todos los Eventos</option>
+        <option>Login / Logout</option>
+        <option>Aprobaciones</option>
+        <option>Configuraciones</option>
+        <option>Tokens</option>
+      </select>
+    </div>
+    
+    <div class="overflow-x-auto font-mono text-sm">
+        <table class="w-full text-left text-gray-500 dark:text-gray-400">
+            <thead class="text-xs text-gray-700 uppercase bg-gray-100 dark:bg-gray-700 dark:text-gray-400">
+                <tr>
+                    <th scope="col" class="px-6 py-3">Timestamp</th>
+                    <th scope="col" class="px-6 py-3">Usuario (Email)</th>
+                    <th scope="col" class="px-6 py-3">IP Origen</th>
+                    <th scope="col" class="px-6 py-3">Tipo Evento</th>
+                    <th scope="col" class="px-6 py-3">Detalle</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50">
+                    <td class="px-6 py-3 whitespace-nowrap">2026-07-28 10:15:32</td>
+                    <td class="px-6 py-3 text-blue-600">gerente_general@empresa.com</td>
+                    <td class="px-6 py-3 text-gray-400">192.168.1.45</td>
+                    <td class="px-6 py-3"><span class="bg-purple-100 text-purple-800 px-2 py-0.5 rounded text-xs">CONFIG_UPDATE</span></td>
+                    <td class="px-6 py-3">Modificó tasa de interés base a 12%</td>
+                </tr>
+                <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50">
+                    <td class="px-6 py-3 whitespace-nowrap">2026-07-28 09:42:11</td>
+                    <td class="px-6 py-3 text-blue-600">gerente_sucursal@empresa.com</td>
+                    <td class="px-6 py-3 text-gray-400">10.0.4.12</td>
+                    <td class="px-6 py-3"><span class="bg-green-100 text-green-800 px-2 py-0.5 rounded text-xs">APPROVAL</span></td>
+                    <td class="px-6 py-3">Aprobó alta distribuidora: SAMG850123HNLXYZ09</td>
+                </tr>
+                <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50">
+                    <td class="px-6 py-3 whitespace-nowrap">2026-07-28 08:30:05</td>
+                    <td class="px-6 py-3 text-blue-600">admin@empresa.com</td>
+                    <td class="px-6 py-3 text-gray-400">10.0.5.99</td>
+                    <td class="px-6 py-3"><span class="bg-red-100 text-red-800 px-2 py-0.5 rounded text-xs">TOKEN_USED</span></td>
+                    <td class="px-6 py-3">Desbloqueo de cajero con token 842910</td>
+                </tr>
+                <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50">
+                    <td class="px-6 py-3 whitespace-nowrap">2026-07-28 08:00:00</td>
+                    <td class="px-6 py-3 text-blue-600">admin@empresa.com</td>
+                    <td class="px-6 py-3 text-gray-400">10.0.5.99</td>
+                    <td class="px-6 py-3"><span class="bg-gray-200 text-gray-800 px-2 py-0.5 rounded text-xs">LOGIN</span></td>
+                    <td class="px-6 py-3">Inicio de sesión exitoso</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,64 @@
+<div class="antialiased bg-gray-50 dark:bg-gray-900 h-screen font-sans flex overflow-hidden">
+  
+  <!-- Sidebar -->
+  <aside [class.w-64]="isSidebarOpen" [class.w-24]="!isSidebarOpen" class="flex-shrink-0 h-screen bg-white border-r border-gray-200 dark:bg-gray-800 dark:border-gray-700 flex flex-col z-40 transition-all duration-300 ease-in-out" aria-label="Sidenav">
+    <div class="overflow-y-auto py-5 h-full flex flex-col">
+      <div class="mb-10 flex items-center justify-between cursor-pointer px-3 group" (click)="toggleSidebar()" title="Desplegar/Ocultar Menú">
+          <div class="flex items-center">
+            <img src="Group 9.svg" class="w-10 h-10 object-contain flex-shrink-0" alt="Logo" />
+            <span *ngIf="isSidebarOpen" class="ml-3 text-xl font-bold whitespace-nowrap text-brand dark:text-brand-light transition-opacity duration-300">Sucursal</span>
+          </div>
+          <div class="p-1 rounded-md bg-gray-100 hover:bg-gray-200 text-gray-500 transition-colors">
+            <svg *ngIf="isSidebarOpen" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+            <svg *ngIf="!isSidebarOpen" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+          </div>
+      </div>
+      
+      <ul class="space-y-2 flex-1 px-3">
+        <li>
+          <a routerLink="/gerente-sucursal/dashboard" routerLinkActive="bg-gray-100 dark:bg-gray-700" [title]="!isSidebarOpen ? 'Dashboard' : ''" class="flex items-center p-2 text-base font-medium text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group transition-colors overflow-hidden">
+            <svg class="w-6 h-6 flex-shrink-0 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-brand dark:group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"></path></svg>
+            <span *ngIf="isSidebarOpen" class="ml-3 whitespace-nowrap">Dashboard</span>
+          </a>
+        </li>
+        <li>
+          <a routerLink="/gerente-sucursal/aprobaciones" routerLinkActive="bg-gray-100 dark:bg-gray-700" [title]="!isSidebarOpen ? 'Aprobaciones' : ''" class="flex items-center p-2 text-base font-medium text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group transition-colors overflow-hidden">
+            <svg class="w-6 h-6 flex-shrink-0 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-brand dark:group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            <span *ngIf="isSidebarOpen" class="ml-3 whitespace-nowrap">Aprobaciones</span>
+          </a>
+        </li>
+        <li>
+          <a routerLink="/gerente-sucursal/plantilla" routerLinkActive="bg-gray-100 dark:bg-gray-700" [title]="!isSidebarOpen ? 'Gestor de Plantilla' : ''" class="flex items-center p-2 text-base font-medium text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group transition-colors overflow-hidden">
+            <svg class="w-6 h-6 flex-shrink-0 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-brand dark:group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+            <span *ngIf="isSidebarOpen" class="ml-3 whitespace-nowrap">Gestor de Plantilla</span>
+          </a>
+        </li>
+        <li>
+          <a routerLink="/gerente-sucursal/reasignacion" routerLinkActive="bg-gray-100 dark:bg-gray-700" [title]="!isSidebarOpen ? 'Reasignación' : ''" class="flex items-center p-2 text-base font-medium text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group transition-colors overflow-hidden">
+            <svg class="w-6 h-6 flex-shrink-0 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-brand dark:group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
+            <span *ngIf="isSidebarOpen" class="ml-3 whitespace-nowrap">Reasignación</span>
+          </a>
+        </li>
+      </ul>
+      
+      <!-- Logout -->
+      <ul class="space-y-2 mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 px-3">
+        <li>
+          <a routerLink="/login" [title]="!isSidebarOpen ? 'Cerrar Sesión' : ''" class="flex items-center p-2 text-base font-medium text-gray-900 rounded-lg dark:text-white hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900 dark:hover:text-red-400 group transition-colors overflow-hidden">
+            <svg aria-hidden="true" class="flex-shrink-0 w-6 h-6 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-red-600 dark:group-hover:text-red-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+              <path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd"></path>
+            </svg>
+            <span *ngIf="isSidebarOpen" class="ml-3 whitespace-nowrap">Cerrar Sesión</span>
+          </a>
+        </li>
+      </ul>
+    </div>
+  </aside>
+
+  <!-- Main Content Wrapper -->
+  <main class="flex-1 w-full h-full flex flex-col bg-gray-50 dark:bg-gray-900 overflow-y-auto min-w-0 transition-all">
+    <div class="p-4 md:p-8">
+      <router-outlet></router-outlet>
+    </div>
+  </main>
+</div>

@@ -1,0 +1,70 @@
+<div class="max-w-7xl mx-auto space-y-6 pb-12">
+  <div class="flex justify-between items-end mb-8">
+    <div>
+      <h1 class="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight">Dashboard de Sucursal</h1>
+      <p class="text-gray-500 dark:text-gray-400 mt-2 text-lg">Visión general del estado de salud financiera de su sucursal.</p>
+    </div>
+    <div class="bg-brand text-white px-4 py-2 rounded-lg font-bold shadow-sm">
+      Sucursal: Monterrey Centro
+    </div>
+  </div>
+
+  <!-- Alertas Urgentes -->
+  <div class="flex items-start p-4 mb-4 text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400 border border-red-200" role="alert">
+    <svg class="flex-shrink-0 inline w-5 h-5 me-3 mt-[2px]" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
+      <path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5ZM9.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM12 15H8a1 1 0 0 1 0-2h1v-3H8a1 1 0 0 1 0-2h2a1 1 0 0 1 1 1v4h1a1 1 0 0 1 0 2Z"/>
+    </svg>
+    <div>
+      <span class="font-bold text-base">Alertas Urgentes (2)</span>
+      <ul class="mt-1.5 list-disc list-inside text-sm">
+        <li>La morosidad de la cartera norte ha subido un 1.2% esta semana.</li>
+        <li>Falta aprobar 3 aumentos de crédito antes del cierre del día.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- KPIs -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 dark:bg-gray-800 dark:border-gray-700">
+      <h3 class="text-gray-500 text-sm font-medium">Colocación Total (Mes)</h3>
+      <p class="text-3xl font-bold text-gray-900 mt-2">$210,000.00</p>
+      <span class="text-green-600 text-xs font-bold bg-green-100 px-2 py-1 rounded mt-3 inline-block">+5.4% vs mes anterior</span>
+    </div>
+    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 dark:bg-gray-800 dark:border-gray-700">
+      <h3 class="text-gray-500 text-sm font-medium">Clientes Activos</h3>
+      <p class="text-3xl font-bold text-gray-900 mt-2">1,245</p>
+      <span class="text-green-600 text-xs font-bold bg-green-100 px-2 py-1 rounded mt-3 inline-block">+12 nuevos esta semana</span>
+    </div>
+    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 dark:bg-gray-800 dark:border-gray-700">
+      <h3 class="text-gray-500 text-sm font-medium">Índice de Morosidad</h3>
+      <p class="text-3xl font-bold text-red-600 mt-2">4.9%</p>
+      <span class="text-red-600 text-xs font-bold bg-red-100 px-2 py-1 rounded mt-3 inline-block">Requiere atención</span>
+    </div>
+  </div>
+
+  <!-- Gráficas -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
+    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 dark:bg-gray-800 dark:border-gray-700">
+      <apx-chart
+        [series]="colocacionOptions.series!"
+        [chart]="colocacionOptions.chart!"
+        [xaxis]="colocacionOptions.xaxis!"
+        [dataLabels]="colocacionOptions.dataLabels!"
+        [colors]="colocacionOptions.colors!"
+        [title]="colocacionOptions.title!"
+      ></apx-chart>
+    </div>
+    
+    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 dark:bg-gray-800 dark:border-gray-700">
+      <apx-chart
+        [series]="morosidadOptions.series!"
+        [chart]="morosidadOptions.chart!"
+        [xaxis]="morosidadOptions.xaxis!"
+        [dataLabels]="morosidadOptions.dataLabels!"
+        [colors]="morosidadOptions.colors!"
+        [stroke]="morosidadOptions.stroke!"
+        [title]="morosidadOptions.title!"
+      ></apx-chart>
+    </div>
+  </div>
+</div>
