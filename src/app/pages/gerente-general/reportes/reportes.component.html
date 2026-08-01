@@ -1,0 +1,102 @@
+<div class="max-w-7xl mx-auto space-y-6">
+  
+  <div class="flex justify-between items-end">
+    <div>
+      <h2 class="text-3xl font-bold text-gray-900 dark:text-white">Reportes Globales</h2>
+      <p class="text-gray-500 dark:text-gray-400 mt-1 text-lg">Historial de cartera, morosidad y consulta de expedientes.</p>
+    </div>
+    <div>
+      <app-button variant="outline" (onClick)="exportarExcel()">
+        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+        Exportar CSV
+      </app-button>
+    </div>
+  </div>
+
+  <!-- Zona de Filtros -->
+  <app-card title="Filtros de Búsqueda">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+      <app-input label="Fecha Inicio" type="date" [(ngModel)]="filtroFechaInicio"></app-input>
+      <app-input label="Fecha Fin" type="date" [(ngModel)]="filtroFechaFin"></app-input>
+      <app-input label="Sucursal" type="text" placeholder="Ej: Matriz" [(ngModel)]="filtroSucursal"></app-input>
+      <div class="flex gap-2">
+        <app-button variant="text" (onClick)="limpiarFiltros()" [fullWidth]="true">Limpiar</app-button>
+        <app-button variant="primary" (onClick)="aplicarFiltros()" [fullWidth]="true">Buscar</app-button>
+      </div>
+    </div>
+  </app-card>
+
+  <!-- Tabla de Resultados -->
+  <app-card [noPadding]="true">
+    <app-table [columns]="['ID Dist', 'Nombre Completo', 'Sucursal', 'Calificación', 'Deuda Total', 'Expediente', 'Acciones']">
+      <tr *ngFor="let row of datosFiltrados" class="bg-white border-b hover:bg-gray-50 transition-colors">
+        <td class="px-6 py-4 font-bold text-gray-900">{{ row.id }}</td>
+        <td class="px-6 py-4">{{ row.nombre }}</td>
+        <td class="px-6 py-4 text-gray-500">{{ row.sucursal }}</td>
+        
+        <td class="px-6 py-4">
+          <app-badge *ngIf="row.calificacion === 'Excelente'" [text]="row.calificacion" variant="success"></app-badge>
+          <app-badge *ngIf="row.calificacion === 'Regular'" [text]="row.calificacion" variant="info"></app-badge>
+          <app-badge *ngIf="row.calificacion.includes('Moroso')" [text]="row.calificacion" variant="error"></app-badge>
+        </td>
+        
+        <td class="px-6 py-4 font-bold" [ngClass]="row.morosidad === '$0.00' ? 'text-gray-500' : 'text-red-600'">
+          {{ row.morosidad }}
+        </td>
+        
+        <td class="px-6 py-4">
+          <span class="text-xs font-semibold" [ngClass]="row.expediente === 'Completo' ? 'text-green-600' : 'text-yellow-600'">
+            {{ row.expediente }}
+          </span>
+        </td>
+        
+        <td class="px-6 py-4">
+          <app-button variant="text" size="sm" (onClick)="verExpediente(row)">Ver Detalle</app-button>
+        </td>
+      </tr>
+    </app-table>
+  </app-card>
+
+</div>
+
+<!-- Modal: Visor de Expediente -->
+<app-modal [isOpen]="isModalExpedienteOpen" [title]="'Expediente: ' + (distribuidoraSeleccionada?.nombre || '')" maxWidth="2xl" (onClose)="cerrarExpediente()">
+  <div class="space-y-6" *ngIf="distribuidoraSeleccionada">
+    
+    <div class="flex gap-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
+      <div class="w-16 h-16 bg-brand text-white rounded-full flex items-center justify-center text-xl font-bold">
+        {{ distribuidoraSeleccionada.nombre.charAt(0) }}
+      </div>
+      <div>
+        <h4 class="text-lg font-bold text-gray-900">{{ distribuidoraSeleccionada.id }} - {{ distribuidoraSeleccionada.nombre }}</h4>
+        <p class="text-sm text-gray-500">Adscrita a: {{ distribuidoraSeleccionada.sucursal }}</p>
+        <div class="mt-2">
+           <app-badge [text]="'Score: ' + distribuidoraSeleccionada.calificacion" [variant]="distribuidoraSeleccionada.calificacion.includes('Moroso') ? 'error' : 'success'"></app-badge>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <h5 class="font-bold text-gray-900 border-b border-gray-200 pb-2 mb-3">Documentación Cargada</h5>
+      <ul class="space-y-2">
+        <li class="flex items-center text-sm text-gray-700">
+          <svg class="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+          Identificación Oficial (INE)
+        </li>
+        <li class="flex items-center text-sm text-gray-700">
+          <svg class="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+          Comprobante de Domicilio
+        </li>
+        <li class="flex items-center text-sm text-gray-700" *ngIf="distribuidoraSeleccionada.expediente !== 'Completo'">
+          <svg class="w-5 h-5 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+          Contrato Firmado Original (Pendiente)
+        </li>
+      </ul>
+    </div>
+
+    <div class="mt-6 flex justify-end">
+      <app-button variant="text" (onClick)="cerrarExpediente()">Cerrar</app-button>
+    </div>
+
+  </div>
+</app-modal>

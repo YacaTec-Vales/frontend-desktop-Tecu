@@ -17,12 +17,12 @@ export class Login {
 
   onSubmit(event: Event) {
     event.preventDefault();
-    if (this.email === 'admin@empresa.com') {
-      this.router.navigate(['/admin/punto-atencion']);
+    if (this.email === 'cajera@empresa.com') {
+      this.router.navigate(['/cajera/liberacion']);
     } else if (this.email === 'gerente_sucursal@empresa.com') {
-      this.router.navigate(['/gerente-sucursal/dashboard']);
+      this.router.navigate(['/gerente-sucursal/plantilla']);
     } else if (this.email === 'gerente_general@empresa.com') {
-      this.router.navigate(['/gerente-general/panel-corporativo']);
+      this.router.navigate(['/gerente-general/catalogos']);
     } else {
       this.error = 'Usuario no reconocido. Utilice las credenciales de prueba mostradas abajo.';
     }

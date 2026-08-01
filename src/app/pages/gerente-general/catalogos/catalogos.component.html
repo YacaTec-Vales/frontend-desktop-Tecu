@@ -1,0 +1,154 @@
+<div class="max-w-7xl mx-auto space-y-6">
+  
+  <div>
+    <h2 class="text-3xl font-bold text-gray-900 dark:text-white">Catálogos Maestros</h2>
+    <p class="text-gray-500 dark:text-gray-400 mt-1 text-lg">Administración global del sistema. Crea, edita y desactiva parámetros core.</p>
+  </div>
+
+  <!-- Tabs Navigation -->
+  <div class="border-b border-gray-200 dark:border-gray-700">
+    <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+      <a (click)="setTab('productos')" [class]="activeTab === 'productos' ? 'border-brand text-brand' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm cursor-pointer transition-colors">
+        Productos (Vales)
+      </a>
+      <a (click)="setTab('categorias')" [class]="activeTab === 'categorias' ? 'border-brand text-brand' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm cursor-pointer transition-colors">
+        Categorías de Crédito
+      </a>
+      <a (click)="setTab('sucursales')" [class]="activeTab === 'sucursales' ? 'border-brand text-brand' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm cursor-pointer transition-colors">
+        Sucursales
+      </a>
+      <a (click)="setTab('personal')" [class]="activeTab === 'personal' ? 'border-brand text-brand' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm cursor-pointer transition-colors">
+        Gestión de Personal
+      </a>
+    </nav>
+  </div>
+
+  <!-- Tab Content: PRODUCTOS -->
+  <div *ngIf="activeTab === 'productos'" class="animate-fade-in">
+    <app-card title="Catálogo de Vales Permitidos" subtitle="Define montos cerrados estrictos. Sin múltiplos fraccionados." [noPadding]="true">
+      <div class="p-4 flex justify-end border-b border-gray-100">
+        <app-button variant="primary" (onClick)="abrirModalProducto()">+ Nuevo Vale</app-button>
+      </div>
+      <app-table [columns]="['Código', 'Monto del Vale', 'Estado', 'Acciones']">
+        <tr *ngFor="let p of productos" class="bg-white border-b hover:bg-gray-50">
+          <td class="px-6 py-4 font-bold">{{ p.id }}</td>
+          <td class="px-6 py-4 font-bold text-brand">${{ p.monto | number }}</td>
+          <td class="px-6 py-4"><app-badge [text]="p.estado" variant="success"></app-badge></td>
+          <td class="px-6 py-4">
+            <app-button variant="text" size="sm">Baja</app-button>
+          </td>
+        </tr>
+      </app-table>
+    </app-card>
+  </div>
+
+  <!-- Tab Content: CATEGORÍAS -->
+  <div *ngIf="activeTab === 'categorias'" class="animate-fade-in">
+    <app-card title="Categorías de Crédito" subtitle="Define niveles y porcentajes de ganancia para distribuidoras." [noPadding]="true">
+      <div class="p-4 flex justify-end border-b border-gray-100">
+        <app-button variant="primary" (onClick)="abrirModalCategoria()">+ Nueva Categoría</app-button>
+      </div>
+      <app-table [columns]="['Categoría', 'Porcentaje de Ganancia', 'Acciones']">
+        <tr *ngFor="let c of categorias" class="bg-white border-b hover:bg-gray-50">
+          <td class="px-6 py-4 font-bold uppercase">{{ c.nombre }}</td>
+          <td class="px-6 py-4 text-green-600 font-bold">{{ c.ganancia }}%</td>
+          <td class="px-6 py-4">
+            <app-button variant="text" size="sm">Editar %</app-button>
+          </td>
+        </tr>
+      </app-table>
+    </app-card>
+  </div>
+
+  <!-- Tab Content: SUCURSALES -->
+  <div *ngIf="activeTab === 'sucursales'" class="animate-fade-in">
+    <app-card title="Red de Sucursales" subtitle="Alta y baja de ubicaciones físicas." [noPadding]="true">
+      <div class="p-4 flex justify-end border-b border-gray-100">
+        <app-button variant="primary" (onClick)="abrirModalSucursal()">+ Nueva Sucursal</app-button>
+      </div>
+      <app-table [columns]="['ID', 'Nombre', 'Estado', 'Acciones']">
+        <tr *ngFor="let s of sucursales" class="bg-white border-b hover:bg-gray-50">
+          <td class="px-6 py-4 font-bold">{{ s.id }}</td>
+          <td class="px-6 py-4">{{ s.nombre }}</td>
+          <td class="px-6 py-4"><app-badge [text]="s.estado" variant="success"></app-badge></td>
+          <td class="px-6 py-4">
+            <app-button variant="text" size="sm">Baja</app-button>
+          </td>
+        </tr>
+      </app-table>
+    </app-card>
+  </div>
+
+  <!-- Tab Content: PERSONAL -->
+  <div *ngIf="activeTab === 'personal'" class="animate-fade-in">
+    <app-card title="Gestión de Empleados" subtitle="Directorio y roles del sistema." [noPadding]="true">
+      <div class="p-4 flex justify-end border-b border-gray-100">
+        <app-button variant="primary" (onClick)="abrirModalPersonal()">+ Nuevo Empleado</app-button>
+      </div>
+      <app-table [columns]="['ID', 'Nombre', 'Rol', 'Sucursal', 'Acciones']">
+        <tr *ngFor="let emp of personal" class="bg-white border-b hover:bg-gray-50">
+          <td class="px-6 py-4 font-bold">{{ emp.id }}</td>
+          <td class="px-6 py-4">{{ emp.nombre }}</td>
+          <td class="px-6 py-4"><app-badge [text]="emp.rol" variant="info"></app-badge></td>
+          <td class="px-6 py-4 text-gray-500">{{ emp.sucursal }}</td>
+          <td class="px-6 py-4 flex gap-2">
+            <app-button variant="text" size="sm">Editar</app-button>
+          </td>
+        </tr>
+      </app-table>
+    </app-card>
+  </div>
+
+</div>
+
+
+<!-- ==============================
+     MODALES (CRUD)
+=============================== -->
+
+<!-- Modal Nuevo Producto -->
+<app-modal [isOpen]="isProductoModalOpen" title="Crear Nuevo Vale" (onClose)="cerrarModalProducto()">
+  <div class="space-y-4">
+    <p class="text-sm text-gray-500">Recuerda que solo se permiten montos cerrados (ej. $500, $1000). No fracciones.</p>
+    <app-input label="Monto del Vale ($)" type="number" placeholder="Ej: 5000" [(ngModel)]="nuevoProducto.monto"></app-input>
+    <div class="mt-6 flex justify-end gap-2">
+      <app-button variant="text" (onClick)="cerrarModalProducto()">Cancelar</app-button>
+      <app-button variant="primary" (onClick)="guardarProducto()" [disabled]="!nuevoProducto.monto">Guardar Vale</app-button>
+    </div>
+  </div>
+</app-modal>
+
+<!-- Modal Nueva Categoría -->
+<app-modal [isOpen]="isCategoriaModalOpen" title="Crear Categoría de Crédito" (onClose)="cerrarModalCategoria()">
+  <div class="space-y-4">
+    <app-input label="Nombre de Categoría" type="text" placeholder="Ej: Diamante" [(ngModel)]="nuevaCategoria.nombre"></app-input>
+    <app-input label="Porcentaje de Ganancia (%)" type="number" placeholder="Ej: 12" [(ngModel)]="nuevaCategoria.ganancia"></app-input>
+    <div class="mt-6 flex justify-end gap-2">
+      <app-button variant="text" (onClick)="cerrarModalCategoria()">Cancelar</app-button>
+      <app-button variant="primary" (onClick)="guardarCategoria()" [disabled]="!nuevaCategoria.nombre || !nuevaCategoria.ganancia">Guardar Categoría</app-button>
+    </div>
+  </div>
+</app-modal>
+
+<!-- Modal Nueva Sucursal -->
+<app-modal [isOpen]="isSucursalModalOpen" title="Alta de Sucursal" (onClose)="cerrarModalSucursal()">
+  <div class="space-y-4">
+    <app-input label="Nombre de la Sucursal" type="text" placeholder="Ej: Sucursal Centro" [(ngModel)]="nuevaSucursal.nombre"></app-input>
+    <div class="mt-6 flex justify-end gap-2">
+      <app-button variant="text" (onClick)="cerrarModalSucursal()">Cancelar</app-button>
+      <app-button variant="primary" (onClick)="guardarSucursal()" [disabled]="!nuevaSucursal.nombre">Crear Sucursal</app-button>
+    </div>
+  </div>
+</app-modal>
+
+<!-- Modal Nuevo Personal -->
+<app-modal [isOpen]="isPersonalModalOpen" title="Registrar Empleado" maxWidth="lg" (onClose)="cerrarModalPersonal()">
+  <div class="space-y-4">
+    <app-input label="Nombre Completo" type="text" placeholder="Juan Pérez" [(ngModel)]="nuevoPersonal.nombre"></app-input>
+    <app-input label="Rol en Sistema" type="text" placeholder="Ej: Cajera, Coordinador, Verificador" [(ngModel)]="nuevoPersonal.rol"></app-input>
+    <div class="mt-6 flex justify-end gap-2">
+      <app-button variant="text" (onClick)="cerrarModalPersonal()">Cancelar</app-button>
+      <app-button variant="primary" (onClick)="guardarPersonal()" [disabled]="!nuevoPersonal.nombre || !nuevoPersonal.rol">Registrar</app-button>
+    </div>
+  </div>
+</app-modal>
