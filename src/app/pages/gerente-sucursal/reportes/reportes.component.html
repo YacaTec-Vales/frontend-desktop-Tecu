@@ -1,0 +1,35 @@
+<div class="max-w-7xl mx-auto space-y-6">
+  
+  <div>
+    <h2 class="text-3xl font-bold text-gray-900 dark:text-white">Estado de Cuenta (Local)</h2>
+    <p class="text-gray-500 dark:text-gray-400 mt-1 text-lg">Consulta las Relaciones y deudas de las distribuidoras asignadas a tu sucursal.</p>
+  </div>
+
+  <!-- Zona de Filtros -->
+  <app-card title="Filtros de Relación">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+      <app-input label="Fecha de Relación" type="date" [(ngModel)]="filtroFecha"></app-input>
+      <app-input label="Nombre Distribuidora" type="text" placeholder="Ej: María López" [(ngModel)]="filtroDistribuidora"></app-input>
+      <div class="flex gap-2">
+        <app-button variant="text" (onClick)="limpiarFiltros()" [fullWidth]="true">Limpiar</app-button>
+        <app-button variant="primary" (onClick)="aplicarFiltros()" [fullWidth]="true">Filtrar</app-button>
+      </div>
+    </div>
+  </app-card>
+
+  <!-- Tabla de Relaciones -->
+  <app-card [noPadding]="true">
+    <app-table [columns]="['Folio de Relación', 'Distribuidora', 'Total en Vales Otorgados', 'Pago Quincenal Estimado', 'Estado de Cuenta']">
+      <tr *ngFor="let rel of datosFiltrados" class="bg-white border-b hover:bg-gray-50 transition-colors">
+        <td class="px-6 py-4 font-bold text-gray-900">{{ rel.folio }}</td>
+        <td class="px-6 py-4 font-medium">{{ rel.distribuidora }}</td>
+        <td class="px-6 py-4 text-gray-700">{{ rel.totalOtorgado }}</td>
+        <td class="px-6 py-4 font-bold text-indigo-600">{{ rel.pagoQuincenal }}</td>
+        <td class="px-6 py-4">
+          <app-badge [text]="rel.estado" [variant]="rel.estado === 'Al Corriente' ? 'success' : 'error'"></app-badge>
+        </td>
+      </tr>
+    </app-table>
+  </app-card>
+
+</div>

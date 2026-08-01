@@ -1,0 +1,103 @@
+<div class="max-w-4xl mx-auto space-y-6">
+  
+  <div>
+    <h2 class="text-3xl font-bold text-gray-900 dark:text-white">Liberación de Pago</h2>
+    <p class="text-gray-500 dark:text-gray-400 mt-1 text-lg">Busca el folio del cliente, coteja documentos y registra la transferencia.</p>
+  </div>
+
+  <!-- Buscador -->
+  <app-card>
+    <div class="flex gap-4 items-end">
+      <div class="flex-1">
+        <app-input label="Folio de Vale" placeholder="Ej: PRE-123 o DIG-456" [(ngModel)]="folioBuscado"></app-input>
+      </div>
+      <app-button variant="primary" (onClick)="buscarFolio()" [disabled]="!folioBuscado">Consultar Sistema</app-button>
+    </div>
+    <p *ngIf="errorBusqueda" class="text-red-500 text-sm mt-2 font-medium">{{ errorBusqueda }}</p>
+  </app-card>
+
+  <!-- Flujo Dinámico (Si se encuentra un vale y NO se ha liberado aún) -->
+  <div *ngIf="valeEncontrado && !liberacionExitosa" class="space-y-6 animate-fade-in">
+    
+    <app-card [title]="'Procesando ' + valeEncontrado.tipo" [subtitle]="'Monto a entregar: ' + valeEncontrado.monto">
+      
+      <!-- Datos del Cliente -->
+      <div class="p-4 bg-gray-50 border border-gray-200 rounded-lg mb-6">
+        <div class="flex justify-between items-start">
+          <div>
+            <p class="text-xs text-gray-500 uppercase tracking-wider font-bold mb-1">Beneficiario Final</p>
+            
+            <div *ngIf="!modoEdicionActivo">
+              <p class="text-xl font-black text-gray-900">{{ valeEncontrado.cliente }}</p>
+            </div>
+            
+            <div *ngIf="modoEdicionActivo" class="mt-2 flex gap-2">
+              <app-input [(ngModel)]="valeEncontrado.cliente" placeholder="Corregir nombre"></app-input>
+              <app-button variant="primary" size="sm" (onClick)="guardarEdicion()">Guardar</app-button>
+            </div>
+            
+          </div>
+          <app-button variant="text" size="sm" (onClick)="abrirDisputa()" *ngIf="!modoEdicionActivo">
+            <span class="text-orange-600 font-bold">¿Error en los datos?</span>
+          </app-button>
+        </div>
+      </div>
+
+      <!-- Cotejo Físico (Checkboxes nativos) -->
+      <div class="space-y-4 mb-8">
+        <p class="font-bold text-gray-900">Validación Física en Ventanilla</p>
+        
+        <label class="flex items-center space-x-3 cursor-pointer">
+          <input type="checkbox" [(ngModel)]="ineValidado" class="w-6 h-6 rounded border-gray-300 text-emerald-600 focus:ring-emerald-600">
+          <span class="text-gray-700 font-medium">He tenido a la vista la <strong>Identificación Oficial (INE)</strong> y coincide.</span>
+        </label>
+        
+        <label *ngIf="valeEncontrado.tipo === 'Pre-Vale'" class="flex items-center space-x-3 cursor-pointer">
+          <input type="checkbox" [(ngModel)]="comprobanteValidado" class="w-6 h-6 rounded border-gray-300 text-emerald-600 focus:ring-emerald-600">
+          <span class="text-gray-700 font-medium">He tenido a la vista el <strong>Comprobante de Domicilio</strong> vigente.</span>
+        </label>
+      </div>
+
+      <!-- Registro de Transferencia -->
+      <div class="border-t border-gray-200 pt-6">
+        <h4 class="font-bold text-gray-900 mb-4">Registro Bancario</h4>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
+          <app-input label="Núm. de Autorización (Transferencia)" placeholder="Ej: 9028301" [(ngModel)]="autorizacionBancaria"></app-input>
+          <app-button variant="primary" [fullWidth]="true" (onClick)="liberarPago()" [disabled]="!puedeLiberar()">
+            Confirmar Liberación
+          </app-button>
+        </div>
+      </div>
+
+    </app-card>
+  </div>
+
+  <!-- Pantalla de Éxito -->
+  <div *ngIf="liberacionExitosa" class="p-8 bg-emerald-50 border border-emerald-200 rounded-xl text-center">
+    <div class="w-16 h-16 bg-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4">
+      <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+    </div>
+    <h3 class="text-2xl font-black text-emerald-900 mb-2">Pago Liberado Exitosamente</h3>
+    <p class="text-emerald-700">El monto de {{ valeEncontrado.monto }} fue registrado bajo la autorización {{ autorizacionBancaria }}.</p>
+    <div class="mt-6">
+      <app-button variant="outline" (onClick)="buscarFolio()">Liberar Nuevo Folio</app-button>
+    </div>
+  </div>
+
+</div>
+
+<!-- Modal Token de Disputa -->
+<app-modal [isOpen]="isModalTokenOpen" title="Autorización Requerida" maxWidth="sm" (onClose)="cerrarDisputa()">
+  <div class="space-y-4">
+    <p class="text-sm text-gray-600">
+      Para editar los datos sensibles del cliente, necesitas ingresar el <strong>Token de 6 dígitos</strong> generado por el Gerente o Coordinador desde su bandeja de aprobaciones.
+    </p>
+    
+    <app-input label="Token de Seguridad" placeholder="------" [(ngModel)]="tokenInput" type="text" class="text-center text-2xl tracking-widest uppercase"></app-input>
+    
+    <div class="pt-4 flex justify-end gap-2">
+      <app-button variant="text" (onClick)="cerrarDisputa()">Cancelar</app-button>
+      <app-button variant="primary" (onClick)="validarToken()">Validar y Habilitar Edición</app-button>
+    </div>
+  </div>
+</app-modal>

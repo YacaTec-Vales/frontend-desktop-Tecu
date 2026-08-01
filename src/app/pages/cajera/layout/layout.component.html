@@ -1,0 +1,53 @@
+<div class="antialiased bg-gray-50 dark:bg-gray-900 h-screen font-sans flex overflow-hidden">
+  
+  <!-- Sidebar -->
+  <aside [class.w-64]="isSidebarOpen" [class.w-20]="!isSidebarOpen" class="flex-shrink-0 h-screen bg-white border-r border-gray-200 dark:bg-gray-800 dark:border-gray-700 flex flex-col z-40 transition-all duration-300 ease-in-out shadow-sm">
+    <div class="flex flex-col h-full py-5 px-3">
+      
+      <!-- Brand -->
+      <div class="mb-8 flex items-center justify-between cursor-pointer px-2" (click)="toggleSidebar()">
+        <div class="flex items-center gap-3 overflow-hidden">
+          <div class="w-10 h-10 bg-emerald-600 rounded-lg flex items-center justify-center text-white shrink-0 font-bold text-xl">
+            $
+          </div>
+          <span *ngIf="isSidebarOpen" class="text-xl font-black text-emerald-600 tracking-tight whitespace-nowrap">Ventanilla</span>
+        </div>
+      </div>
+
+      <!-- Navigation -->
+      <ul class="space-y-2 flex-1">
+        <li>
+          <a routerLink="/cajera/liberacion" routerLinkActive="bg-emerald-50 text-emerald-600 font-bold dark:bg-gray-700 dark:text-white" class="flex items-center p-3 text-base font-medium text-gray-700 rounded-lg hover:bg-gray-100 transition-colors group overflow-hidden">
+            <svg class="w-6 h-6 shrink-0 transition-colors group-hover:text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            <span *ngIf="isSidebarOpen" class="ml-4 whitespace-nowrap">Liberar Pago</span>
+          </a>
+        </li>
+        <li class="pt-4 mt-4 border-t border-gray-200">
+           <span *ngIf="isSidebarOpen" class="px-3 text-xs font-bold text-gray-400 uppercase tracking-wider">Próximas Fases</span>
+        </li>
+        <li>
+          <a routerLink="/cajera/conciliacion" routerLinkActive="bg-emerald-50 text-emerald-600 font-bold dark:bg-gray-700 dark:text-white" class="flex items-center p-3 text-base font-medium text-gray-700 rounded-lg hover:bg-gray-100 transition-colors group overflow-hidden">
+            <svg class="w-6 h-6 shrink-0 transition-colors group-hover:text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
+            <span *ngIf="isSidebarOpen" class="ml-4 whitespace-nowrap">Conciliación</span>
+          </a>
+        </li>
+      </ul>
+
+      <!-- Footer / Profile -->
+      <div class="mt-auto border-t border-gray-200 pt-4">
+        <a (click)="logout()" class="cursor-pointer flex items-center p-3 text-base font-medium text-red-600 rounded-lg hover:bg-red-50 transition-colors overflow-hidden">
+          <svg class="w-6 h-6 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+          <span *ngIf="isSidebarOpen" class="ml-4 font-bold">Cerrar Sesión</span>
+        </a>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-900 w-full relative h-screen">
+    <div class="p-8">
+      <router-outlet></router-outlet>
+    </div>
+  </main>
+
+</div>
