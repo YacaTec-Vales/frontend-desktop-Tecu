@@ -15,8 +15,8 @@ export class ModalComponent {
   @Output() onClose = new EventEmitter<void>();
 
   // Cerrar con la tecla ESC
-  @HostListener('document:keydown.escape', ['$event'])
-  onKeydownHandler(event: KeyboardEvent) {
+  @HostListener('document:keydown.escape')
+  onKeydownHandler() {
     if (this.isOpen) {
       this.close();
     }

@@ -28,7 +28,7 @@ export class ButtonComponent {
     let variantClass = '';
     switch (this.variant) {
       case 'primary':
-        variantClass = 'text-white bg-brand hover:bg-brand-strong focus-visible:ring-brand-300';
+        variantClass = 'text-white bg-brand hover:bg-brand-strong focus-visible:ring-brand';
         break;
       case 'secondary':
         variantClass = 'text-gray-900 bg-gray-100 hover:bg-gray-200 focus-visible:ring-gray-300 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600';

@@ -1,88 +1,89 @@
-<div class="max-w-6xl mx-auto space-y-6 pb-12">
-  <div class="mb-8">
-    <h1 class="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight">Bandeja de Aprobaciones</h1>
-    <p class="text-gray-500 dark:text-gray-400 mt-2 text-lg">Revise y autorice los movimientos solicitados por el equipo operativo.</p>
+<div class="max-w-7xl mx-auto space-y-6">
+  
+  <div>
+    <h2 class="text-3xl font-bold text-gray-900 dark:text-white">Aprobaciones Locales</h2>
+    <p class="text-gray-500 dark:text-gray-400 mt-1 text-lg">Bandeja de decisiones exclusivas para la sucursal actual.</p>
   </div>
 
-  <!-- Tabs -->
-  <div class="border-b border-gray-200 dark:border-gray-700 mb-6">
-    <ul class="flex flex-wrap -mb-px text-sm font-medium text-center text-gray-500 dark:text-gray-400">
-        <li class="me-2">
-            <button (click)="setTab('distribuidoras')" [class.text-brand]="activeTab === 'distribuidoras'" [class.border-brand]="activeTab === 'distribuidoras'" [class.border-transparent]="activeTab !== 'distribuidoras'" class="inline-flex items-center justify-center p-4 border-b-2 rounded-t-lg hover:text-brand hover:border-gray-300 group">
-                Altas Distribuidoras <span class="bg-brand text-white ml-2 px-2 py-0.5 rounded-full text-xs">2</span>
-            </button>
-        </li>
-        <li class="me-2">
-            <button (click)="setTab('aumentos')" [class.text-brand]="activeTab === 'aumentos'" [class.border-brand]="activeTab === 'aumentos'" [class.border-transparent]="activeTab !== 'aumentos'" class="inline-flex items-center justify-center p-4 border-b-2 rounded-t-lg hover:text-brand hover:border-gray-300 group">
-                Aumentos de Crédito <span class="bg-gray-200 text-gray-800 ml-2 px-2 py-0.5 rounded-full text-xs">1</span>
-            </button>
-        </li>
-        <li class="me-2">
-            <button (click)="setTab('caja')" [class.text-brand]="activeTab === 'caja'" [class.border-brand]="activeTab === 'caja'" [class.border-transparent]="activeTab !== 'caja'" class="inline-flex items-center justify-center p-4 border-b-2 rounded-t-lg hover:text-brand hover:border-gray-300 group">
-                Modificaciones Caja
-            </button>
-        </li>
-        <li class="me-2">
-            <button (click)="setTab('conciliaciones')" [class.text-brand]="activeTab === 'conciliaciones'" [class.border-brand]="activeTab === 'conciliaciones'" [class.border-transparent]="activeTab !== 'conciliaciones'" class="inline-flex items-center justify-center p-4 border-b-2 rounded-t-lg hover:text-brand hover:border-gray-300 group">
-                Conciliaciones
-            </button>
-        </li>
-    </ul>
-  </div>
-
-  <!-- Tab Content: Distribuidoras -->
-  <div *ngIf="activeTab === 'distribuidoras'" class="space-y-4">
-    <!-- Item 1 -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-200 dark:bg-gray-800 dark:border-gray-700 p-6 flex flex-col md:flex-row gap-6 justify-between items-center">
-      <div class="flex-1">
-        <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">María Guadalupe Sánchez</h3>
-        <p class="text-sm text-gray-500 mb-1"><strong>Curp:</strong> SAMG850123HNLXYZ09</p>
-        <p class="text-sm text-gray-500 mb-1"><strong>Coordinador:</strong> Juan Pérez (Zona Centro)</p>
-        <p class="text-sm text-gray-500"><strong>Crédito Solicitado:</strong> $10,000.00 MXN</p>
-      </div>
-      <div class="flex gap-3">
-        <button type="button" class="px-5 py-2.5 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-brand focus:z-10 focus:ring-4 focus:ring-gray-100">
-          Rechazar
-        </button>
-        <button type="button" class="px-5 py-2.5 text-sm font-bold text-white rounded-lg hover:opacity-90 shadow-sm" style="background-color: var(--color-brand); border: 1px solid var(--color-brand);">
-          Aprobar Alta
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Tab Content: Aumentos -->
-  <div *ngIf="activeTab === 'aumentos'" class="space-y-4">
-    <!-- Item 1 -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-200 dark:bg-gray-800 dark:border-gray-700 p-6 flex flex-col md:flex-row gap-6 justify-between items-center">
-      <div class="flex-1">
-        <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">Distribuidora: Ana García</h3>
-        <p class="text-sm text-gray-500 mb-1"><strong>Historial:</strong> 2 años, sin atrasos.</p>
-        <p class="text-sm text-gray-500 mb-4"><strong>Crédito Actual:</strong> $15,000.00 MXN</p>
-        
-        <div>
-          <label class="block mb-2 text-sm font-bold text-gray-900 dark:text-white">Monto Aprobado Sugerido</label>
-          <div class="flex relative">
-            <span class="inline-flex items-center px-3 text-sm text-gray-900 bg-gray-200 border border-e-0 border-gray-300 rounded-s-md dark:bg-gray-600 dark:text-gray-400 dark:border-gray-600">
-              $
-            </span>
-            <input type="number" class="rounded-none rounded-e-lg bg-gray-50 border border-gray-300 text-gray-900 focus:ring-brand focus:border-brand block flex-1 min-w-0 w-full text-sm p-2.5" value="20000">
-          </div>
-        </div>
-      </div>
-      <div class="flex gap-3">
-        <button type="button" class="px-5 py-2.5 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-brand focus:z-10 focus:ring-4 focus:ring-gray-100">
-          Rechazar Aumento
-        </button>
-        <button type="button" class="px-5 py-2.5 text-sm font-bold text-white rounded-lg hover:opacity-90 shadow-sm" style="background-color: var(--color-brand); border: 1px solid var(--color-brand);">
-          Autorizar
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <div *ngIf="activeTab === 'caja' || activeTab === 'conciliaciones'" class="text-center py-12 text-gray-500">
-    No hay solicitudes pendientes en esta categoría.
-  </div>
+  <app-card [noPadding]="true">
+    <app-table [columns]="['Folio', 'Tipo de Trámite', 'Solicitante', 'Descripción', 'Estado', 'Acción']" [isEmpty]="peticiones.length === 0" emptyMessage="No hay peticiones locales pendientes.">
+      <tr *ngFor="let peticion of peticiones" class="bg-white border-b hover:bg-gray-50">
+        <td class="px-6 py-4 font-bold">{{ peticion.id }}</td>
+        <td class="px-6 py-4"><span class="font-semibold text-indigo-600">{{ peticion.tipo }}</span></td>
+        <td class="px-6 py-4 text-gray-500">{{ peticion.solicitante }}</td>
+        <td class="px-6 py-4">{{ peticion.descripcion }}</td>
+        <td class="px-6 py-4"><app-badge [text]="peticion.estado" variant="warning"></app-badge></td>
+        <td class="px-6 py-4">
+          <app-button variant="primary" size="sm" (onClick)="abrirModal(peticion)">Revisar</app-button>
+        </td>
+      </tr>
+    </app-table>
+  </app-card>
 
 </div>
+
+<!-- Modal Unificado de Revisión -->
+<app-modal [isOpen]="isModalOpen" title="Revisión de Trámite Local" maxWidth="lg" (onClose)="cerrarModal()">
+  <div class="space-y-4" *ngIf="peticionSeleccionada">
+    
+    <div class="p-4 rounded-lg bg-gray-50 border border-gray-200 dark:bg-gray-700 dark:border-gray-600">
+      <div class="grid grid-cols-2 gap-4 text-sm">
+        <div>
+          <p class="text-gray-500 dark:text-gray-400">Folio</p>
+          <p class="font-bold text-gray-900 dark:text-white">{{ peticionSeleccionada.id }}</p>
+        </div>
+        <div>
+          <p class="text-gray-500 dark:text-gray-400">Tipo</p>
+          <p class="font-bold text-indigo-600">{{ peticionSeleccionada.tipo }}</p>
+        </div>
+        <div>
+          <p class="text-gray-500 dark:text-gray-400">Solicitante</p>
+          <p class="font-bold text-gray-900 dark:text-white">{{ peticionSeleccionada.solicitante }}</p>
+        </div>
+        <div class="col-span-2">
+          <p class="text-gray-500 dark:text-gray-400">Descripción / Motivo</p>
+          <p class="font-medium text-gray-900 dark:text-white">{{ peticionSeleccionada.descripcion }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dictamen Local -->
+    <div *ngIf="peticionSeleccionada.tipo === 'Dictamen Local'" class="mt-4 p-4 border-l-4 border-indigo-500 bg-indigo-50">
+      <p class="text-sm font-semibold text-indigo-800 mb-2">Validación de Campo</p>
+      <ul class="text-sm list-disc pl-5 space-y-1 text-gray-700">
+        <li>Domicilio verificado físicamente.</li>
+        <li>Fotografías coinciden con la ubicación reportada.</li>
+      </ul>
+      <p class="text-xs text-gray-500 mt-2">Al aprobar, la distribuidora quedará activa en esta sucursal.</p>
+    </div>
+
+    <!-- Aumento de Crédito -->
+    <div *ngIf="peticionSeleccionada.tipo === 'Aumento de Crédito'" class="mt-4 p-4 border-l-4 border-green-500 bg-green-50">
+      <p class="text-sm font-semibold text-green-800 mb-2">Incentivo Pre-autorizado</p>
+      <p class="text-sm text-gray-700">Crédito Actual: <strong>$5,000</strong></p>
+      <p class="text-sm text-gray-700">Aumento Solicitado por Coordinador: <strong>$2,000</strong></p>
+      <p class="text-xs text-gray-500 mt-2">Al aprobar, el límite se actualizará a $7,000.</p>
+    </div>
+
+    <!-- Edición en Caja (Generación de Token) -->
+    <div *ngIf="peticionSeleccionada.tipo === 'Edición en Caja'" class="mt-4 p-4 border-l-4 border-orange-500 bg-orange-50">
+      <p class="text-sm font-semibold text-orange-800 mb-2">Autorización Restringida</p>
+      <p class="text-sm text-gray-700">La cajera solicita editar datos sensibles de un cliente final. Requiere tu autorización mediante un **Token de Seguridad**.</p>
+      
+      <div *ngIf="tokenGenerado" class="mt-4 p-6 bg-white border border-orange-200 rounded-lg text-center shadow-inner">
+        <p class="text-xs text-gray-500 uppercase tracking-widest font-bold mb-2">Dicta este Token a la Cajera</p>
+        <p class="text-5xl font-black text-orange-600 tracking-[0.2em]">{{ tokenGenerado }}</p>
+      </div>
+    </div>
+
+    <div class="mt-8 flex justify-end gap-3 pt-4 border-t border-gray-100 dark:border-gray-700" *ngIf="!tokenGenerado">
+      <app-button variant="error" (onClick)="rechazar()">Rechazar</app-button>
+      <app-button variant="primary" (onClick)="aprobar()">{{ peticionSeleccionada.tipo === 'Edición en Caja' ? 'Generar Token' : 'Aprobar' }}</app-button>
+    </div>
+    
+    <div class="mt-8 flex justify-end gap-3 pt-4 border-t border-gray-100 dark:border-gray-700" *ngIf="tokenGenerado">
+      <app-button variant="primary" (onClick)="cerrarModal()">Cerrar y Finalizar</app-button>
+    </div>
+
+  </div>
+</app-modal>

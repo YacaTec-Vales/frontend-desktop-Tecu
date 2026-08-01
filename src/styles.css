@@ -2,3 +2,24 @@
 @import "../../frontend-global-styles/global-theme.css";
 
 @source "./app";
+
+:root {
+  --color-brand: #600C0C;
+  --color-brand-strong: #400808;
+}
+
+.bg-brand {
+  background-color: var(--color-brand) !important;
+}
+.hover\:bg-brand-strong:hover {
+  background-color: var(--color-brand-strong) !important;
+}
+.text-brand {
+  color: var(--color-brand) !important;
+}
+.border-brand {
+  border-color: var(--color-brand) !important;
+}
+.ring-brand {
+  --tw-ring-color: var(--color-brand) !important;
+}
