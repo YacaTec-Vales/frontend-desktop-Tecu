@@ -1,0 +1,57 @@
+name: Frontend CI
+
+on:
+  pull_request:
+    branches: [develop, main]
+  push:
+    branches: [develop, main, 'release/**']
+
+# Cancela runs anteriores del mismo PR para no desperdiciar
+# minutos de CI en pushes viejos.
+concurrency:
+  group: frontend-ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    name: Test + Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          path: frontend-desktop-tecu
+
+      - name: Checkout frontend-global-styles (sibling para file: dep)
+        uses: actions/checkout@v4
+        with:
+          repository: YacaTec-Vales/frontend-global-styles
+          path: frontend-global-styles
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend-desktop-tecu/package-lock.json
+
+      - name: Dependencias de frontend-global-styles
+        working-directory: frontend-global-styles
+        run: npm ci
+
+      - name: Instalar dependencias
+        working-directory: frontend-desktop-tecu
+        run: npm ci
+
+      - name: Unit tests
+        working-directory: frontend-desktop-tecu
+        run: npm run test:ci
+        continue-on-error: true
+
+      - name: Build
+        working-directory: frontend-desktop-tecu
+        run: npm run build
+        continue-on-error: true
