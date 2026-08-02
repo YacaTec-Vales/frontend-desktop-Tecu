@@ -17,7 +17,7 @@ jobs:
         with:
           path: frontend-desktop-tecu
 
-      - name: Checkout frontend-global-styles (sibling para file: dep)
+      - name: Checkout frontend-global-styles (sibling)
         uses: actions/checkout@v4
         with:
           repository: YacaTec-Vales/frontend-global-styles
