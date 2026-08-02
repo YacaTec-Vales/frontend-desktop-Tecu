@@ -1,0 +1,60 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - 'release/**'
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          path: frontend-desktop-tecu
+
+      - name: Checkout frontend-global-styles (sibling para file: dep)
+        uses: actions/checkout@v4
+        with:
+          repository: YacaTec-Vales/frontend-global-styles
+          path: frontend-global-styles
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend-desktop-tecu/package-lock.json
+
+      - name: Instalar dependencias
+        working-directory: frontend-desktop-tecu
+        run: npm ci
+
+      - name: Build
+        working-directory: frontend-desktop-tecu
+        run: npm run build
+
+      - name: Empaquetar artefacto (dist/browser)
+        run: |
+          TAG="${GITHUB_REF_NAME#release/}"
+          mkdir -p /tmp/release
+          tar -czf "/tmp/release/frontend-desktop-tecu-${TAG}.tar.gz" \
+            -C frontend-desktop-tecu/dist/frontend-desktop-tecu/browser .
+          echo "asset=frontend-desktop-tecu-${TAG}.tar.gz" >> "$GITHUB_ENV"
+
+      - name: Crear GitHub Release v0.0.1 (o actualizar)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="${GITHUB_REF_NAME#release/}"
+          if gh release view "${TAG}" >/dev/null 2>&1; then
+            gh release upload "${TAG}" "/tmp/release/${asset}" --clobber
+          else
+            gh release create "${TAG}" "/tmp/release/${asset}" \
+              --title "frontend-desktop-tecu ${TAG}" \
+              --notes "Artifact de prueba para el flujo de versionado (build automatico)."
+          fi
