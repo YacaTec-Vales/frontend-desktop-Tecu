@@ -1,3 +1,9 @@
+## [0.1.0-rc.2](https://github.com/YacaTec-Vales/frontend-desktop-Tecu/compare/v0.1.0-rc.1...v0.1.0-rc.2) (2026-08-03)
+
+### Bug Fixes
+
+* **ci:** quitar skip ci de los commits de release ([582e8e1](https://github.com/YacaTec-Vales/frontend-desktop-Tecu/commit/582e8e1d8f1a1d5798de543eb9e0c676b9e8fb96))
+
 ## [0.1.0-rc.1](https://github.com/YacaTec-Vales/frontend-desktop-Tecu/compare/v0.0.0...v0.1.0-rc.1) (2026-08-03)
 
 ### Features
