@@ -1,6 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
+import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
   selector: 'app-gerente-sucursal-layout',
@@ -10,6 +11,7 @@ import { RouterModule, Router } from '@angular/router';
 })
 export class LayoutComponent {
   isSidebarOpen = true;
+  private authService = inject(AuthService);
 
   constructor(private router: Router) {}
 
@@ -18,6 +20,6 @@ export class LayoutComponent {
   }
 
   logout() {
-    this.router.navigate(['/login']);
+    this.authService.logout();
   }
 }

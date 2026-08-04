@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CardComponent } from '../../../components/ui/card/card';
@@ -6,42 +6,74 @@ import { TableComponent } from '../../../components/ui/table/table';
 import { ButtonComponent } from '../../../components/ui/button/button';
 import { ModalComponent } from '../../../components/ui/modal/modal';
 import { InputComponent } from '../../../components/ui/input/input';
-import { BadgeComponent } from '../../../components/ui/badge/badge';
+
+import { StaffService } from '../../../core/services/staff.service';
+import { Coordinador, Verificador, Cajero, CreateStaffDto } from '../../../core/models/staff.model';
+
+type PersonalTab = 'coordinadores' | 'verificadores' | 'cajeros';
 
 @Component({
   selector: 'app-plantilla',
   standalone: true,
-  imports: [CommonModule, FormsModule, CardComponent, TableComponent, ButtonComponent, ModalComponent, InputComponent, BadgeComponent],
+  imports: [CommonModule, FormsModule, CardComponent, TableComponent, ButtonComponent, ModalComponent, InputComponent],
   templateUrl: './plantilla.component.html'
 })
-export class PlantillaComponent {
-  personal = [
-    { id: 'EMP-201', nombre: 'Laura Martínez', rol: 'Coordinador', estado: 'Activo' },
-    { id: 'EMP-202', nombre: 'Pedro Gómez', rol: 'Verificador', estado: 'Activo' },
-    { id: 'EMP-203', nombre: 'Sofía Castro', rol: 'Cajera', estado: 'Inactivo' }
-  ];
+export class PlantillaComponent implements OnInit {
+  activePersonalTab: PersonalTab = 'coordinadores';
 
-  isModalOpen = false;
-  nuevoEmpleado = { nombre: '', rol: '' };
+  // State Modales
+  isPersonalModalOpen = false;
 
-  abrirModal() {
-    this.isModalOpen = true;
+  // API Data
+  coordinadores: Coordinador[] = [];
+  verificadores: Verificador[] = [];
+  cajeros: Cajero[] = [];
+
+  // Forms Models
+  nuevoPersonal: CreateStaffDto = {
+    firstName: '',
+    lastNamePaternal: '',
+    lastNameMaternal: '',
+    email: '',
+    phone: '',
+    branchId: '' // En el backend el GS auto-asigna a su sucursal o se asume el token
+  };
+
+  constructor(private staffService: StaffService) {}
+
+  ngOnInit() {
+    this.loadStaff();
   }
 
-  cerrarModal() {
-    this.isModalOpen = false;
-    this.nuevoEmpleado = { nombre: '', rol: '' };
+  loadStaff() {
+    this.staffService.getCoordinadores().subscribe(data => this.coordinadores = data);
+    this.staffService.getVerificadores().subscribe(data => this.verificadores = data);
+    this.staffService.getCajeros().subscribe(data => this.cajeros = data);
   }
 
-  guardarEmpleado() {
-    if (this.nuevoEmpleado.nombre && this.nuevoEmpleado.rol) {
-      this.personal.push({
-        id: `EMP-20${this.personal.length + 1}`,
-        nombre: this.nuevoEmpleado.nombre,
-        rol: this.nuevoEmpleado.rol,
-        estado: 'Activo'
+  setPersonalTab(tab: PersonalTab) {
+    this.activePersonalTab = tab;
+  }
+
+  abrirModalPersonal() { this.isPersonalModalOpen = true; }
+  cerrarModalPersonal() { 
+    this.isPersonalModalOpen = false; 
+    this.nuevoPersonal = { firstName: '', lastNamePaternal: '', lastNameMaternal: '', email: '', phone: '', branchId: '' }; 
+  }
+
+  guardarPersonal() {
+    if (this.nuevoPersonal.firstName && this.nuevoPersonal.email) {
+      const saveAction = this.activePersonalTab === 'coordinadores' 
+        ? this.staffService.createCoordinador(this.nuevoPersonal)
+        : this.activePersonalTab === 'verificadores' 
+        ? this.staffService.createVerificador(this.nuevoPersonal)
+        : this.staffService.createCajero(this.nuevoPersonal);
+
+      saveAction.subscribe(() => {
+        this.loadStaff();
+        this.cerrarModalPersonal();
       });
-      this.cerrarModal();
     }
   }
 }
+
