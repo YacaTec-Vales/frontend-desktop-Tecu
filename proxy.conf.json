@@ -1,0 +1,8 @@
+{
+    "/api": {
+        "target": "https://yacatec.devas-projects.sbs",
+        "secure": true,
+        "changeOrigin": true,
+        "logLevel": "debug"
+    }
+}
