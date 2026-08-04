@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CardComponent } from '../../../components/ui/card/card';
@@ -8,7 +8,13 @@ import { ModalComponent } from '../../../components/ui/modal/modal';
 import { InputComponent } from '../../../components/ui/input/input';
 import { BadgeComponent } from '../../../components/ui/badge/badge';
 
+import { BranchService } from '../../../core/services/branch.service';
+import { StaffService } from '../../../core/services/staff.service';
+import { Branch } from '../../../core/models/branch.model';
+import { Coordinador, Verificador, Cajero, CreateStaffDto } from '../../../core/models/staff.model';
+
 type Tab = 'productos' | 'categorias' | 'sucursales' | 'personal';
+type PersonalTab = 'coordinadores' | 'verificadores' | 'cajeros';
 
 @Component({
   selector: 'app-catalogos',
@@ -16,8 +22,9 @@ type Tab = 'productos' | 'categorias' | 'sucursales' | 'personal';
   imports: [CommonModule, FormsModule, CardComponent, TableComponent, ButtonComponent, ModalComponent, InputComponent, BadgeComponent],
   templateUrl: './catalogos.component.html'
 })
-export class CatalogosComponent {
+export class CatalogosComponent implements OnInit {
   activeTab: Tab = 'productos';
+  activePersonalTab: PersonalTab = 'coordinadores';
 
   // State Modales
   isProductoModalOpen = false;
@@ -25,7 +32,7 @@ export class CatalogosComponent {
   isSucursalModalOpen = false;
   isPersonalModalOpen = false;
 
-  // -- Datos Dummy --
+  // -- Datos Dummy (Productos/Categorías) --
   productos = [
     { id: 'VAL-1', monto: 5000, estado: 'Activo' },
     { id: 'VAL-2', monto: 10000, estado: 'Activo' },
@@ -36,24 +43,53 @@ export class CatalogosComponent {
     { nombre: 'Oro', ganancia: 10 },
   ];
 
-  sucursales = [
-    { id: 'SUC-01', nombre: 'Matriz Principal', estado: 'Activo' },
-    { id: 'SUC-02', nombre: 'Sucursal Norte', estado: 'Activo' },
-  ];
-
-  personal = [
-    { id: 'EMP-120', nombre: 'Juan Pérez', rol: 'Coordinador', sucursal: 'Matriz Principal' },
-    { id: 'EMP-121', nombre: 'Ana Gómez', rol: 'Verificadora', sucursal: 'Matriz Principal' },
-  ];
+  // API Data
+  sucursales: Branch[] = [];
+  coordinadores: Coordinador[] = [];
+  verificadores: Verificador[] = [];
+  cajeros: Cajero[] = [];
 
   // Forms Models
   nuevoProducto = { monto: null };
   nuevaCategoria = { nombre: '', ganancia: null };
-  nuevaSucursal = { nombre: '' };
-  nuevoPersonal = { nombre: '', rol: '' };
+  
+  nuevaSucursal = { name: '', address: '', phone: '' };
+  
+  nuevoPersonal: CreateStaffDto = {
+    firstName: '',
+    lastNamePaternal: '',
+    lastNameMaternal: '',
+    email: '',
+    phone: '',
+    branchId: ''
+  };
+
+  constructor(
+    private branchService: BranchService,
+    private staffService: StaffService
+  ) {}
+
+  ngOnInit() {
+    this.loadBranches();
+    this.loadStaff();
+  }
+
+  loadBranches() {
+    this.branchService.getBranches().subscribe(data => this.sucursales = data);
+  }
+
+  loadStaff() {
+    this.staffService.getCoordinadores().subscribe(data => this.coordinadores = data);
+    this.staffService.getVerificadores().subscribe(data => this.verificadores = data);
+    this.staffService.getCajeros().subscribe(data => this.cajeros = data);
+  }
 
   setTab(tab: Tab) {
     this.activeTab = tab;
+  }
+
+  setPersonalTab(tab: PersonalTab) {
+    this.activePersonalTab = tab;
   }
 
   // Productos
@@ -78,21 +114,34 @@ export class CatalogosComponent {
 
   // Sucursales
   abrirModalSucursal() { this.isSucursalModalOpen = true; }
-  cerrarModalSucursal() { this.isSucursalModalOpen = false; this.nuevaSucursal = { nombre: '' }; }
+  cerrarModalSucursal() { this.isSucursalModalOpen = false; this.nuevaSucursal = { name: '', address: '', phone: '' }; }
   guardarSucursal() {
-    if (this.nuevaSucursal.nombre) {
-      this.sucursales.push({ id: `SUC-0${this.sucursales.length + 1}`, nombre: this.nuevaSucursal.nombre, estado: 'Activo' });
-      this.cerrarModalSucursal();
+    if (this.nuevaSucursal.name) {
+      this.branchService.createBranch(this.nuevaSucursal).subscribe(() => {
+        this.loadBranches();
+        this.cerrarModalSucursal();
+      });
     }
   }
 
   // Personal
   abrirModalPersonal() { this.isPersonalModalOpen = true; }
-  cerrarModalPersonal() { this.isPersonalModalOpen = false; this.nuevoPersonal = { nombre: '', rol: '' }; }
+  cerrarModalPersonal() { 
+    this.isPersonalModalOpen = false; 
+    this.nuevoPersonal = { firstName: '', lastNamePaternal: '', lastNameMaternal: '', email: '', phone: '', branchId: '' }; 
+  }
   guardarPersonal() {
-    if (this.nuevoPersonal.nombre && this.nuevoPersonal.rol) {
-      this.personal.push({ id: `EMP-1${this.personal.length + 1}`, nombre: this.nuevoPersonal.nombre, rol: this.nuevoPersonal.rol, sucursal: 'Matriz Principal' });
-      this.cerrarModalPersonal();
+    if (this.nuevoPersonal.firstName && this.nuevoPersonal.email) {
+      const saveAction = this.activePersonalTab === 'coordinadores' 
+        ? this.staffService.createCoordinador(this.nuevoPersonal)
+        : this.activePersonalTab === 'verificadores' 
+        ? this.staffService.createVerificador(this.nuevoPersonal)
+        : this.staffService.createCajero(this.nuevoPersonal);
+
+      saveAction.subscribe(() => {
+        this.loadStaff();
+        this.cerrarModalPersonal();
+      });
     }
   }
 }

@@ -66,12 +66,13 @@
       <div class="p-4 flex justify-end border-b border-gray-100">
         <app-button variant="primary" (onClick)="abrirModalSucursal()">+ Nueva Sucursal</app-button>
       </div>
-      <app-table [columns]="['ID', 'Nombre', 'Estado', 'Acciones']">
+      <app-table [columns]="['ID', 'Nombre', 'Dirección', 'Teléfono', 'Acciones']">
         <tr *ngFor="let s of sucursales" class="bg-white border-b hover:bg-gray-50">
-          <td class="px-6 py-4 font-bold">{{ s.id }}</td>
-          <td class="px-6 py-4">{{ s.nombre }}</td>
-          <td class="px-6 py-4"><app-badge [text]="s.estado" variant="success"></app-badge></td>
-          <td class="px-6 py-4">
+          <td class="px-6 py-4 font-bold text-xs truncate max-w-[100px]" [title]="s.id">{{ s.id }}</td>
+          <td class="px-6 py-4">{{ s.name }}</td>
+          <td class="px-6 py-4">{{ s.address }}</td>
+          <td class="px-6 py-4">{{ s.phone }}</td>
+          <td class="px-6 py-4 flex gap-2">
             <app-button variant="text" size="sm">Baja</app-button>
           </td>
         </tr>
@@ -80,21 +81,55 @@
   </div>
 
   <!-- Tab Content: PERSONAL -->
-  <div *ngIf="activeTab === 'personal'" class="animate-fade-in">
-    <app-card title="Gestión de Empleados" subtitle="Directorio y roles del sistema." [noPadding]="true">
+  <div *ngIf="activeTab === 'personal'" class="animate-fade-in space-y-4">
+    <!-- Pestañas Internas -->
+    <div class="flex space-x-2 bg-gray-100 p-1 rounded-lg w-fit">
+      <button (click)="setPersonalTab('coordinadores')" [class]="activePersonalTab === 'coordinadores' ? 'bg-white shadow text-gray-900' : 'text-gray-500 hover:text-gray-700'" class="px-4 py-2 text-sm font-medium rounded-md transition-all">Coordinadores</button>
+      <button (click)="setPersonalTab('verificadores')" [class]="activePersonalTab === 'verificadores' ? 'bg-white shadow text-gray-900' : 'text-gray-500 hover:text-gray-700'" class="px-4 py-2 text-sm font-medium rounded-md transition-all">Verificadores</button>
+      <button (click)="setPersonalTab('cajeros')" [class]="activePersonalTab === 'cajeros' ? 'bg-white shadow text-gray-900' : 'text-gray-500 hover:text-gray-700'" class="px-4 py-2 text-sm font-medium rounded-md transition-all">Cajeros</button>
+    </div>
+
+    <app-card title="Gestión de Empleados" [subtitle]="'Directorio de ' + activePersonalTab" [noPadding]="true">
       <div class="p-4 flex justify-end border-b border-gray-100">
         <app-button variant="primary" (onClick)="abrirModalPersonal()">+ Nuevo Empleado</app-button>
       </div>
-      <app-table [columns]="['ID', 'Nombre', 'Rol', 'Sucursal', 'Acciones']">
-        <tr *ngFor="let emp of personal" class="bg-white border-b hover:bg-gray-50">
-          <td class="px-6 py-4 font-bold">{{ emp.id }}</td>
-          <td class="px-6 py-4">{{ emp.nombre }}</td>
-          <td class="px-6 py-4"><app-badge [text]="emp.rol" variant="info"></app-badge></td>
-          <td class="px-6 py-4 text-gray-500">{{ emp.sucursal }}</td>
-          <td class="px-6 py-4 flex gap-2">
-            <app-button variant="text" size="sm">Editar</app-button>
-          </td>
-        </tr>
+
+      <app-table [columns]="['ID', 'Nombre', 'Email', 'Teléfono', 'Sucursal', 'Acciones']">
+        <!-- Coordinadores -->
+        <ng-container *ngIf="activePersonalTab === 'coordinadores'">
+          <tr *ngFor="let emp of coordinadores" class="bg-white border-b hover:bg-gray-50">
+            <td class="px-6 py-4 font-bold text-xs truncate max-w-[80px]" [title]="emp.id">{{ emp.id }}</td>
+            <td class="px-6 py-4">{{ emp.firstName }} {{ emp.lastNamePaternal }}</td>
+            <td class="px-6 py-4 text-gray-500">{{ emp.email }}</td>
+            <td class="px-6 py-4">{{ emp.phone }}</td>
+            <td class="px-6 py-4 text-gray-500 truncate max-w-[100px]" [title]="emp.branchId">{{ emp.branchId || 'N/A' }}</td>
+            <td class="px-6 py-4"><app-button variant="text" size="sm">Editar</app-button></td>
+          </tr>
+        </ng-container>
+
+        <!-- Verificadores -->
+        <ng-container *ngIf="activePersonalTab === 'verificadores'">
+          <tr *ngFor="let emp of verificadores" class="bg-white border-b hover:bg-gray-50">
+            <td class="px-6 py-4 font-bold text-xs truncate max-w-[80px]" [title]="emp.id">{{ emp.id }}</td>
+            <td class="px-6 py-4">{{ emp.firstName }} {{ emp.lastNamePaternal }}</td>
+            <td class="px-6 py-4 text-gray-500">{{ emp.email }}</td>
+            <td class="px-6 py-4">{{ emp.phone }}</td>
+            <td class="px-6 py-4 text-gray-500 truncate max-w-[100px]" [title]="emp.branchId">{{ emp.branchId || 'N/A' }}</td>
+            <td class="px-6 py-4"><app-button variant="text" size="sm">Editar</app-button></td>
+          </tr>
+        </ng-container>
+
+        <!-- Cajeros -->
+        <ng-container *ngIf="activePersonalTab === 'cajeros'">
+          <tr *ngFor="let emp of cajeros" class="bg-white border-b hover:bg-gray-50">
+            <td class="px-6 py-4 font-bold text-xs truncate max-w-[80px]" [title]="emp.id">{{ emp.id }}</td>
+            <td class="px-6 py-4">{{ emp.firstName }} {{ emp.lastNamePaternal }}</td>
+            <td class="px-6 py-4 text-gray-500">{{ emp.email }}</td>
+            <td class="px-6 py-4">{{ emp.phone }}</td>
+            <td class="px-6 py-4 text-gray-500 truncate max-w-[100px]" [title]="emp.branchId">{{ emp.branchId || 'N/A' }}</td>
+            <td class="px-6 py-4"><app-button variant="text" size="sm">Editar</app-button></td>
+          </tr>
+        </ng-container>
       </app-table>
     </app-card>
   </div>
@@ -133,22 +168,43 @@
 <!-- Modal Nueva Sucursal -->
 <app-modal [isOpen]="isSucursalModalOpen" title="Alta de Sucursal" (onClose)="cerrarModalSucursal()">
   <div class="space-y-4">
-    <app-input label="Nombre de la Sucursal" type="text" placeholder="Ej: Sucursal Centro" [(ngModel)]="nuevaSucursal.nombre"></app-input>
+    <app-input label="Nombre de la Sucursal" type="text" placeholder="Ej: Sucursal Centro" [(ngModel)]="nuevaSucursal.name"></app-input>
+    <app-input label="Dirección" type="text" placeholder="Ej: Av. Principal 123" [(ngModel)]="nuevaSucursal.address"></app-input>
+    <app-input label="Teléfono" type="text" placeholder="Ej: 8711234567" [(ngModel)]="nuevaSucursal.phone"></app-input>
     <div class="mt-6 flex justify-end gap-2">
       <app-button variant="text" (onClick)="cerrarModalSucursal()">Cancelar</app-button>
-      <app-button variant="primary" (onClick)="guardarSucursal()" [disabled]="!nuevaSucursal.nombre">Crear Sucursal</app-button>
+      <app-button variant="primary" (onClick)="guardarSucursal()" [disabled]="!nuevaSucursal.name">Crear Sucursal</app-button>
     </div>
   </div>
 </app-modal>
 
 <!-- Modal Nuevo Personal -->
-<app-modal [isOpen]="isPersonalModalOpen" title="Registrar Empleado" maxWidth="lg" (onClose)="cerrarModalPersonal()">
+<app-modal [isOpen]="isPersonalModalOpen" [title]="'Registrar ' + activePersonalTab" maxWidth="lg" (onClose)="cerrarModalPersonal()">
   <div class="space-y-4">
-    <app-input label="Nombre Completo" type="text" placeholder="Juan Pérez" [(ngModel)]="nuevoPersonal.nombre"></app-input>
-    <app-input label="Rol en Sistema" type="text" placeholder="Ej: Cajera, Coordinador, Verificador" [(ngModel)]="nuevoPersonal.rol"></app-input>
+    <div class="grid grid-cols-2 gap-4">
+      <app-input label="Nombre(s)" type="text" placeholder="Juan" [(ngModel)]="nuevoPersonal.firstName"></app-input>
+      <app-input label="Apellido Paterno" type="text" placeholder="Pérez" [(ngModel)]="nuevoPersonal.lastNamePaternal"></app-input>
+    </div>
+    <div class="grid grid-cols-2 gap-4">
+      <app-input label="Apellido Materno" type="text" placeholder="López" [(ngModel)]="nuevoPersonal.lastNameMaternal"></app-input>
+      <app-input label="Correo Electrónico" type="email" placeholder="juan@yacatec.com" [(ngModel)]="nuevoPersonal.email"></app-input>
+    </div>
+    <div class="grid grid-cols-2 gap-4">
+      <app-input label="Teléfono" type="text" placeholder="8712345678" [(ngModel)]="nuevoPersonal.phone"></app-input>
+      
+      <!-- Select Nativo para la sucursal -->
+      <div>
+        <label class="block mb-2 text-sm font-extrabold text-gray-900 dark:text-white">Sucursal Asignada</label>
+        <select [(ngModel)]="nuevoPersonal.branchId" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand focus:border-brand block w-full p-2.5">
+          <option value="" disabled selected>Seleccione una sucursal</option>
+          <option *ngFor="let branch of sucursales" [value]="branch.id">{{ branch.name }}</option>
+        </select>
+      </div>
+    </div>
+
     <div class="mt-6 flex justify-end gap-2">
       <app-button variant="text" (onClick)="cerrarModalPersonal()">Cancelar</app-button>
-      <app-button variant="primary" (onClick)="guardarPersonal()" [disabled]="!nuevoPersonal.nombre || !nuevoPersonal.rol">Registrar</app-button>
+      <app-button variant="primary" (onClick)="guardarPersonal()" [disabled]="!nuevoPersonal.firstName || !nuevoPersonal.email">Registrar</app-button>
     </div>
   </div>
 </app-modal>
