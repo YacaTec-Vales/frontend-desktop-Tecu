@@ -1,48 +1,84 @@
-<div class="max-w-4xl mx-auto space-y-6">
-  
+<div class="space-y-6">
   <div>
-    <h2 class="text-3xl font-bold text-gray-900 dark:text-white">Configuración Operativa</h2>
-    <p class="text-gray-500 dark:text-gray-400 mt-1 text-lg">Ajustes globales del Motor de Fechas.</p>
+    <h2 class="text-2xl font-bold tracking-tight">Configuración Global de Negocio</h2>
+    <p class="text-sm text-brand-secondary mt-1">
+      Modifica los parámetros financieros maestros que rigen los cálculos en todas las sucursales.
+    </p>
   </div>
 
-  <div *ngIf="successMessage" class="p-4 mb-4 text-sm text-green-800 rounded-lg bg-green-50 dark:bg-gray-800 dark:text-green-400 font-medium animate-fade-in" role="alert">
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="flex justify-center p-12">
+    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-primary"></div>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="errorMessage" class="bg-red-50 text-red-600 p-4 rounded-md">
+    {{ errorMessage }}
+  </div>
+
+  <div *ngIf="successMessage" class="bg-green-50 text-green-600 p-4 rounded-md">
     {{ successMessage }}
   </div>
 
-  <app-card title="Motor de Fechas (Corte y Pago)" subtitle="Establece dinámicamente las fechas sin restricciones estrictas de días.">
-    <div class="space-y-6 mt-4">
-      <div class="p-4 bg-yellow-50 text-yellow-800 text-sm rounded-lg border border-yellow-200 dark:bg-gray-800 dark:text-yellow-300 dark:border-yellow-900">
-        <span class="font-bold">Advertencia:</span> Cambiar la fecha de corte o pago afectará inmediatamente los cálculos de cobranza de todas las sucursales y la generación de reportes moratorios.
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <app-input 
-          label="Fecha de Corte Global" 
-          type="date"
-          hint="Día límite para que las ventas entren en la quincena actual."
-          [(ngModel)]="fechaCorte"
-          [disabled]="isSaving">
-        </app-input>
-
-        <app-input 
-          label="Fecha Límite de Pago" 
-          type="date"
-          hint="Último día para liquidar vales sin generar penalizaciones."
-          [(ngModel)]="fechaPago"
-          [disabled]="isSaving">
-        </app-input>
-      </div>
-
-      <div class="pt-6 flex justify-end gap-4 border-t border-gray-100 dark:border-gray-700">
-        <app-button variant="text" size="lg" [disabled]="isSaving">
-          Restablecer
-        </app-button>
+  <div *ngIf="!isLoading" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    
+    <!-- Parámetros Financieros (Vales) -->
+    <app-card title="Parámetros de Vales y Cobranza" subtitle="Seguros, intereses y multas">
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium mb-1">Costo del Seguro por Vale ($ MXN)</label>
+          <app-input type="number" [(ngModel)]="insurancePesos" placeholder="Ej. 100"></app-input>
+        </div>
         
-        <app-button variant="primary" size="lg" (onClick)="guardarFechas()" [disabled]="isSaving || !fechaCorte || !fechaPago">
-          {{ isSaving ? 'Guardando en el sistema...' : 'Guardar y Aplicar Fechas' }}
-        </app-button>
-      </div>
-    </div>
-  </app-card>
+        <div>
+          <label class="block text-sm font-medium mb-1">Interés por Quincena (%)</label>
+          <app-input type="number" [(ngModel)]="interestPercent" placeholder="Ej. 5"></app-input>
+        </div>
 
+        <div>
+          <label class="block text-sm font-medium mb-1">Multa por Mora / Pago Tardío ($ MXN)</label>
+          <app-input type="number" [(ngModel)]="latePenaltyPesos" placeholder="Ej. 300"></app-input>
+        </div>
+      </div>
+    </app-card>
+
+    <!-- Parámetros de Puntos -->
+    <app-card title="Sistema de Puntos" subtitle="Cálculo de recompensas a distribuidores">
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium mb-1">Monto para obtener puntos (Divisor $ MXN)</label>
+          <p class="text-xs text-gray-500 mb-1">Se da un tramo de puntos por cada X pesos pagados.</p>
+          <app-input type="number" [(ngModel)]="pointsDivisorPesos" placeholder="Ej. 1200"></app-input>
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium mb-1">Multiplicador de Puntos (%)</label>
+          <app-input type="number" [(ngModel)]="pointsMultiplierPercent" placeholder="Ej. 3"></app-input>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium mb-1">Valor en efectivo por Punto ($ MXN)</label>
+          <app-input type="number" [(ngModel)]="pointsValuePesos" placeholder="Ej. 2"></app-input>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium mb-1">Penalización de Puntos por Mora (%)</label>
+          <app-input type="number" [(ngModel)]="pointsLatePenaltyPercent" placeholder="Ej. 20"></app-input>
+        </div>
+      </div>
+    </app-card>
+
+  </div>
+
+  <div *ngIf="!isLoading" class="flex justify-end gap-3 mt-6">
+    <app-button variant="outline" (click)="loadConfig()">
+      Descartar Cambios
+    </app-button>
+    <app-button 
+      variant="primary" 
+      (click)="guardarConfiguracion()"
+      [disabled]="isSaving">
+      {{ isSaving ? 'Guardando...' : 'Guardar Configuración' }}
+    </app-button>
+  </div>
 </div>
