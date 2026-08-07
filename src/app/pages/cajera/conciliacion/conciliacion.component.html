@@ -1,129 +1,100 @@
-<div class="max-w-7xl mx-auto space-y-6">
+<div class="max-w-4xl mx-auto space-y-6 pb-12">
   
   <div>
-    <h2 class="text-3xl font-bold text-gray-900 dark:text-white">Conciliación de Pagos</h2>
-    <p class="text-gray-500 dark:text-gray-400 mt-1 text-lg">Valida y asigna los depósitos de las distribuidoras a sus folios correspondientes.</p>
+    <h2 class="text-3xl font-bold text-gray-900 dark:text-white">Cobro de Relaciones</h2>
+    <p class="text-gray-500 dark:text-gray-400 mt-1 text-lg">Cobra los estados de cuenta de las distribuidoras en ventanilla.</p>
   </div>
 
-  <!-- Pestañas -->
-  <div class="border-b border-gray-200 dark:border-gray-700">
-    <ul class="flex flex-wrap -mb-px text-sm font-medium text-center">
-      <li class="mr-2">
-        <button class="inline-block p-4 border-b-2 rounded-t-lg transition-colors"
-                [ngClass]="tabActiva === 'automatica' ? 'border-emerald-600 text-emerald-600 font-bold' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
-                (click)="cambiarTab('automatica')">
-          Conciliación Automática (Archivo)
-        </button>
-      </li>
-      <li class="mr-2">
-        <button class="inline-block p-4 border-b-2 rounded-t-lg transition-colors"
-                [ngClass]="tabActiva === 'manual' ? 'border-emerald-600 text-emerald-600 font-bold' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
-                (click)="cambiarTab('manual')">
-          Bandeja de Descuadres Manuales
-          <span class="ml-2 bg-red-100 text-red-600 py-0.5 px-2 rounded-full text-xs" *ngIf="pagosManuales.length > 0">{{ pagosManuales.length }}</span>
-        </button>
-      </li>
-    </ul>
-  </div>
+  <!-- Buscador -->
+  <app-card>
+    <div class="flex gap-4 items-end">
+      <div class="flex-1">
+        <app-input label="Folio de Relación (UUID)" placeholder="Ej: f92d1fec-..." [(ngModel)]="relationIdBuscado"></app-input>
+      </div>
+      <app-button variant="primary" (onClick)="buscarRelacion()" [disabled]="!relationIdBuscado || isLoadingBusqueda">
+        {{ isLoadingBusqueda ? 'Buscando...' : 'Consultar Relación' }}
+      </app-button>
+    </div>
+    <p *ngIf="errorBusqueda" class="text-red-500 text-sm mt-2 font-medium">{{ errorBusqueda }}</p>
+  </app-card>
 
-  <!-- Contenido: Conciliación Automática -->
-  <div *ngIf="tabActiva === 'automatica'" class="space-y-6 animate-fade-in">
-    <app-card title="Subir Estado de Cuenta Bancario">
+  <!-- Detalle de Relación Encontrada -->
+  <div *ngIf="relationEncontrada && !pagoExitoso" class="space-y-6 animate-fade-in">
+    
+    <app-card [title]="'Detalle de la Relación'" [subtitle]="'Distribuidora ID: ' + relationEncontrada.distributorId">
       
-      <div *ngIf="!conciliacionEnProceso && !resultadoConciliacion" class="flex flex-col items-center justify-center w-full">
-        <label class="flex flex-col items-center justify-center w-full h-64 border-2 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors" [ngClass]="archivoSeleccionado ? 'border-emerald-500 bg-emerald-50' : 'border-gray-300'">
-            <div class="flex flex-col items-center justify-center pt-5 pb-6">
-                <svg class="w-12 h-12 mb-4" [ngClass]="archivoSeleccionado ? 'text-emerald-500' : 'text-gray-400'" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
-                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
-                </svg>
-                <p class="mb-2 text-sm text-gray-500" *ngIf="!archivoSeleccionado"><span class="font-semibold text-emerald-600">Haz clic para seleccionar</span> o arrastra y suelta el archivo</p>
-                <p class="mb-2 text-lg font-bold text-emerald-600" *ngIf="archivoSeleccionado">estado_cuenta_bbva_octubre.xlsx</p>
-                <p class="text-xs text-gray-500">Solo archivos Excel (.xlsx, .csv)</p>
-            </div>
-            <input type="file" class="hidden" (change)="simularSubidaArchivo()" />
-        </label>
+      <!-- Información Financiera -->
+      <div class="p-4 bg-gray-50 border border-gray-200 rounded-lg mb-6">
+        <div class="flex justify-between items-center mb-4">
+          <div>
+            <p class="text-xs text-gray-500 uppercase tracking-wider font-bold mb-1">Monto a Pagar</p>
+            <p class="text-3xl font-black text-brand">{{ relationEncontrada.totalToPayCents / 100 | currency:'MXN' }}</p>
+          </div>
+          <div class="text-right">
+            <app-badge [text]="relationEncontrada.paymentStatus" [variant]="relationEncontrada.paymentStatus === 'PAID' ? 'success' : 'warning'"></app-badge>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4 border-t border-gray-200 pt-4 mt-4">
+          <div>
+            <p class="text-xs text-gray-500 uppercase tracking-wider font-bold mb-1">Puntos a otorgar</p>
+            <p class="text-lg font-bold text-gray-900">+{{ relationEncontrada.pointsAwarded }} Pts</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ventana de Pago -->
+      <div *ngIf="paymentWindow" class="space-y-4 mb-8">
+        <h4 class="font-bold text-gray-900">Estado de la Ventana de Pago</h4>
         
-        <div class="mt-6 w-full flex justify-end">
-          <app-button variant="primary" [disabled]="!archivoSeleccionado" (onClick)="procesarConciliacion()">Procesar Match Automático</app-button>
+        <div class="p-4 rounded-lg flex flex-col gap-2"
+             [ngClass]="{
+               'bg-emerald-50 border-emerald-200': paymentWindow.status === 'EARLY' || paymentWindow.status === 'NORMAL',
+               'bg-red-50 border-red-200': paymentWindow.status === 'LATE' || paymentWindow.status === 'CLOSED'
+             }">
+          <p class="font-bold" [ngClass]="paymentWindow.status === 'LATE' || paymentWindow.status === 'CLOSED' ? 'text-red-800' : 'text-emerald-800'">
+            {{ paymentWindow.status }}
+          </p>
+          <p class="text-sm text-gray-700">Límite de pago: {{ paymentWindow.deadline | date:'medium' }}</p>
+          
+          <div *ngIf="paymentWindow.latePenaltyCents && paymentWindow.latePenaltyCents > 0" class="text-sm text-red-600 font-bold mt-2">
+            Penalización por atraso (ya incluida): {{ paymentWindow.latePenaltyCents / 100 | currency:'MXN' }}
+          </div>
         </div>
       </div>
 
-      <!-- Loading State -->
-      <div *ngIf="conciliacionEnProceso" class="flex flex-col items-center justify-center py-12">
-        <svg class="animate-spin h-10 w-10 text-emerald-600 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-        <p class="text-gray-600 font-medium">Cruzando referencias bancarias con la base de datos...</p>
+      <!-- Registro de Pago -->
+      <div class="border-t border-gray-200 pt-6" *ngIf="relationEncontrada.paymentStatus !== 'PAID' && paymentWindow?.status !== 'CLOSED'">
+        <h4 class="font-bold text-gray-900 mb-4">Registro de Pago en Efectivo</h4>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
+          <app-input label="Referencia o Recibo (Opcional)" placeholder="Ej: Ticket-8821" [(ngModel)]="referenciaPago"></app-input>
+          <app-button variant="primary" [fullWidth]="true" (onClick)="aplicarPago()" [disabled]="isPaying">
+            {{ isPaying ? 'Procesando...' : 'Cobrar e Imprimir Ticket' }}
+          </app-button>
+        </div>
       </div>
 
-      <!-- Resultados -->
-      <div *ngIf="resultadoConciliacion" class="animate-fade-in">
-        <div class="bg-emerald-50 border border-emerald-200 rounded-lg p-6 text-center">
-          <h3 class="text-2xl font-bold text-emerald-900 mb-4">Conciliación Finalizada</h3>
-          <div class="grid grid-cols-3 gap-4">
-            <div class="p-4 bg-white rounded-lg shadow-sm border border-emerald-100">
-              <p class="text-3xl font-black text-emerald-600">{{ resultadoConciliacion.exitosos }}</p>
-              <p class="text-sm text-gray-500 font-medium uppercase mt-1">Match Exitosos</p>
-            </div>
-            <div class="p-4 bg-white rounded-lg shadow-sm border border-red-100">
-              <p class="text-3xl font-black text-red-600">{{ resultadoConciliacion.fallidos }}</p>
-              <p class="text-sm text-gray-500 font-medium uppercase mt-1">No Identificados</p>
-            </div>
-            <div class="p-4 bg-white rounded-lg shadow-sm border border-emerald-100">
-              <p class="text-3xl font-black text-gray-900">{{ resultadoConciliacion.totalDinero }}</p>
-              <p class="text-sm text-gray-500 font-medium uppercase mt-1">Total Conciliado</p>
-            </div>
-          </div>
-          <div class="mt-6 flex justify-center gap-3">
-             <app-button variant="outline" (onClick)="resultadoConciliacion = null">Subir otro archivo</app-button>
-             <app-button variant="primary" (onClick)="cambiarTab('manual')" *ngIf="resultadoConciliacion.fallidos > 0">Ir a Descuadres Manuales</app-button>
-          </div>
-        </div>
+      <div *ngIf="relationEncontrada.paymentStatus === 'PAID'" class="mt-4 p-4 text-center rounded bg-gray-100 text-gray-600 font-bold">
+        Esta relación ya ha sido pagada.
+      </div>
+      
+      <div *ngIf="paymentWindow?.status === 'CLOSED' && relationEncontrada.paymentStatus !== 'PAID'" class="mt-4 p-4 text-center rounded bg-red-100 text-red-800 font-bold">
+        La ventana de pago está CERRADA. La cuenta se ha congelado o enviado a cobranza.
       </div>
 
     </app-card>
   </div>
 
-  <!-- Contenido: Conciliación Manual -->
-  <div *ngIf="tabActiva === 'manual'" class="animate-fade-in">
-    <app-card [noPadding]="true">
-      <app-table [columns]="['Ref Bancaria', 'Monto', 'Fecha de Depósito', 'Motivo del Descuadre', 'Acción']" [isEmpty]="pagosManuales.length === 0" emptyMessage="Todos los pagos han sido conciliados.">
-        <tr *ngFor="let pago of pagosManuales" class="bg-white border-b hover:bg-gray-50">
-          <td class="px-6 py-4 font-bold text-gray-900">{{ pago.id }}</td>
-          <td class="px-6 py-4 font-bold text-emerald-600">{{ pago.monto }}</td>
-          <td class="px-6 py-4 text-gray-500">{{ pago.fecha }}</td>
-          <td class="px-6 py-4 text-red-600 font-medium">{{ pago.motivo }}</td>
-          <td class="px-6 py-4">
-            <app-button variant="primary" size="sm" (onClick)="abrirModalManual(pago)">Asignar a Folio</app-button>
-          </td>
-        </tr>
-      </app-table>
-    </app-card>
+  <!-- Pantalla de Éxito -->
+  <div *ngIf="pagoExitoso" class="p-8 bg-emerald-50 border border-emerald-200 rounded-xl text-center">
+    <div class="w-16 h-16 bg-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4">
+      <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+    </div>
+    <h3 class="text-2xl font-black text-emerald-900 mb-2">Cobro Exitoso</h3>
+    <p class="text-emerald-700">Se cobró el monto de {{ relationEncontrada?.totalToPayCents / 100 | currency:'MXN' }} correctamente.</p>
+    <div class="mt-6 flex justify-center gap-4">
+      <app-button variant="outline" (onClick)="relationIdBuscado = ''; buscarRelacion()">Cobrar otra Relación</app-button>
+    </div>
   </div>
 
 </div>
-
-<!-- Modal: Asignación Manual -->
-<app-modal [isOpen]="isModalOpen" title="Asignación Manual de Pago" maxWidth="md" (onClose)="cerrarModalManual()">
-  <div class="space-y-4" *ngIf="pagoSeleccionado">
-    
-    <div class="p-4 bg-red-50 border border-red-100 rounded-lg mb-4">
-      <p class="text-sm text-red-800 font-bold mb-1">Pago no reconocido por el sistema</p>
-      <p class="text-xs text-red-600">Al forzar esta asignación manual, el folio destino será marcado como pagado. <strong>Requiere token de autorización.</strong></p>
-    </div>
-
-    <div class="flex justify-between items-center py-2 border-b border-gray-100">
-      <span class="text-gray-500 text-sm">Monto a asignar:</span>
-      <span class="text-xl font-black text-emerald-600">{{ pagoSeleccionado.monto }}</span>
-    </div>
-
-    <app-input label="Folio Destino (Relación a pagar)" placeholder="Ej: REL-402" [(ngModel)]="folioAsignado"></app-input>
-    
-    <div class="mt-4 border-t border-gray-100 pt-4">
-      <app-input label="Token de Autorización (Gerencia)" type="text" placeholder="------" [(ngModel)]="tokenAutorizacion" class="text-center text-2xl tracking-widest uppercase"></app-input>
-    </div>
-
-    <div class="pt-4 flex justify-end gap-2">
-      <app-button variant="text" (onClick)="cerrarModalManual()">Cancelar</app-button>
-      <app-button variant="primary" (onClick)="asignarPago()" [disabled]="!folioAsignado || tokenAutorizacion.length < 6">Forzar Asignación</app-button>
-    </div>
-  </div>
-</app-modal>
