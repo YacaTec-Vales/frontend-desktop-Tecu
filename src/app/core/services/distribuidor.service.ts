@@ -15,4 +15,12 @@ export class DistribuidorService {
   createDistribuidor(data: CreateDistribuidorDto): Observable<Distribuidor> {
     return this.http.post<Distribuidor>(this.apiUrl, data);
   }
+
+  changeCategory(id: string, categoryId: string): Observable<any> {
+    return this.http.put(`${this.apiUrl}/${id}/category`, { categoryId });
+  }
+
+  changeCoordinator(id: string, coordId: string): Observable<any> {
+    return this.http.put(`${this.apiUrl}/${id}/coord-change`, { coordId });
+  }
 }

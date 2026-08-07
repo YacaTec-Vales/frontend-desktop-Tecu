@@ -29,11 +29,14 @@
       <div class="p-4 flex justify-end border-b border-gray-100">
         <app-button variant="primary" (onClick)="abrirModalProducto()">+ Nuevo Vale</app-button>
       </div>
-      <app-table [columns]="['Código', 'Monto del Vale', 'Estado', 'Acciones']">
+      <app-table [columns]="['Nombre', 'Descripción', 'Monto del Vale', 'Estado', 'Acciones']">
         <tr *ngFor="let p of productos" class="bg-white border-b hover:bg-gray-50">
-          <td class="px-6 py-4 font-bold">{{ p.id }}</td>
-          <td class="px-6 py-4 font-bold text-brand">${{ p.monto | number }}</td>
-          <td class="px-6 py-4"><app-badge [text]="p.estado" variant="success"></app-badge></td>
+          <td class="px-6 py-4 font-bold">{{ p.name }}</td>
+          <td class="px-6 py-4 text-gray-500">{{ p.description }}</td>
+          <td class="px-6 py-4 font-bold text-brand">{{ p.amountCents / 100 | currency:'MXN' }}</td>
+          <td class="px-6 py-4">
+            <app-badge [text]="p.isActive ? 'Activo' : 'Inactivo'" [variant]="p.isActive ? 'success' : 'danger'"></app-badge>
+          </td>
           <td class="px-6 py-4">
             <app-button variant="text" size="sm">Baja</app-button>
           </td>
@@ -145,10 +148,14 @@
 <app-modal [isOpen]="isProductoModalOpen" title="Crear Nuevo Vale" (onClose)="cerrarModalProducto()">
   <div class="space-y-4">
     <p class="text-sm text-gray-500">Recuerda que solo se permiten montos cerrados (ej. $500, $1000). No fracciones.</p>
-    <app-input label="Monto del Vale ($)" type="number" placeholder="Ej: 5000" [(ngModel)]="nuevoProducto.monto"></app-input>
+    
+    <app-input label="Nombre del Vale" type="text" placeholder="Ej: Vale 500" [(ngModel)]="nuevoProducto.name"></app-input>
+    <app-input label="Descripción (Opcional)" type="text" placeholder="Vale básico" [(ngModel)]="nuevoProducto.description"></app-input>
+    <app-input label="Monto del Vale ($ MXN)" type="number" placeholder="Ej: 500" [(ngModel)]="nuevoProducto.montoPesos"></app-input>
+    
     <div class="mt-6 flex justify-end gap-2">
       <app-button variant="text" (onClick)="cerrarModalProducto()">Cancelar</app-button>
-      <app-button variant="primary" (onClick)="guardarProducto()" [disabled]="!nuevoProducto.monto">Guardar Vale</app-button>
+      <app-button variant="primary" (onClick)="guardarProducto()" [disabled]="!nuevoProducto.montoPesos || !nuevoProducto.name">Guardar Vale</app-button>
     </div>
   </div>
 </app-modal>

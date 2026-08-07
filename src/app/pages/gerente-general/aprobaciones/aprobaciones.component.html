@@ -2,72 +2,86 @@
   
   <div>
     <h2 class="text-3xl font-bold text-gray-900 dark:text-white">Centro de Aprobaciones</h2>
-    <p class="text-gray-500 dark:text-gray-400 mt-1 text-lg">Bandeja centralizada para dar visto bueno a dictámenes, incentivos y conciliaciones.</p>
+    <p class="text-gray-500 dark:text-gray-400 mt-1 text-lg">Bandeja centralizada para dar visto bueno a dictámenes e incrementos de crédito.</p>
   </div>
 
-  <app-card [noPadding]="true">
-    <app-table [columns]="['Folio', 'Tipo de Trámite', 'Solicitante', 'Descripción', 'Estado', 'Acción']" [isEmpty]="peticiones.length === 0" emptyMessage="No hay peticiones pendientes de revisión.">
-      <tr *ngFor="let peticion of peticiones" class="bg-white border-b hover:bg-gray-50">
-        <td class="px-6 py-4 font-bold">{{ peticion.id }}</td>
-        <td class="px-6 py-4"><span class="font-semibold text-brand">{{ peticion.tipo }}</span></td>
-        <td class="px-6 py-4 text-gray-500">{{ peticion.solicitante }}</td>
-        <td class="px-6 py-4">{{ peticion.descripcion }}</td>
-        <td class="px-6 py-4"><app-badge [text]="peticion.estado" variant="warning"></app-badge></td>
-        <td class="px-6 py-4">
-          <app-button variant="primary" size="sm" (onClick)="abrirModal(peticion)">Revisar</app-button>
-        </td>
-      </tr>
-    </app-table>
-  </app-card>
+  <!-- Tabs Navigation -->
+  <div class="border-b border-gray-200 dark:border-gray-700">
+    <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+      <a (click)="setTab('dictamenes')" [class]="activeTab === 'dictamenes' ? 'border-brand text-brand' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm cursor-pointer transition-colors">
+        Dictámenes de Alta ({{ dictamenes.length }})
+      </a>
+      <a (click)="setTab('incrementos')" [class]="activeTab === 'incrementos' ? 'border-brand text-brand' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm cursor-pointer transition-colors">
+        Aumentos de Crédito ({{ incrementos.length }})
+      </a>
+    </nav>
+  </div>
+
+  <!-- Tab Content: DICTAMENES -->
+  <div *ngIf="activeTab === 'dictamenes'" class="animate-fade-in">
+    <app-card [noPadding]="true">
+      <app-table [columns]="['Folio Solicitud', 'Distribuidor ID', 'Fecha', 'Estado', 'Acción']" [isEmpty]="dictamenes.length === 0" emptyMessage="No hay dictámenes pendientes de revisión.">
+        <tr *ngFor="let d of dictamenes" class="bg-white border-b hover:bg-gray-50">
+          <td class="px-6 py-4 font-bold">{{ d.id }}</td>
+          <td class="px-6 py-4">{{ d.distribuidorId }}</td>
+          <td class="px-6 py-4 text-gray-500">{{ d.createdAt | date }}</td>
+          <td class="px-6 py-4"><app-badge [text]="d.status" variant="warning"></app-badge></td>
+          <td class="px-6 py-4">
+            <app-button variant="primary" size="sm" (onClick)="abrirModal(d)">Revisar</app-button>
+          </td>
+        </tr>
+      </app-table>
+    </app-card>
+  </div>
+
+  <!-- Tab Content: INCREMENTOS -->
+  <div *ngIf="activeTab === 'incrementos'" class="animate-fade-in">
+    <app-card [noPadding]="true">
+      <app-table [columns]="['Folio', 'Distribuidor ID', 'Monto Solicitado', 'Fecha', 'Estado', 'Acción']" [isEmpty]="incrementos.length === 0" emptyMessage="No hay incrementos pendientes de revisión.">
+        <tr *ngFor="let i of incrementos" class="bg-white border-b hover:bg-gray-50">
+          <td class="px-6 py-4 font-bold">{{ i.id }}</td>
+          <td class="px-6 py-4">{{ i.distribuidorId }}</td>
+          <td class="px-6 py-4 font-bold text-green-600">{{ i.requestedAmountCents / 100 | currency:'MXN' }}</td>
+          <td class="px-6 py-4 text-gray-500">{{ i.createdAt | date }}</td>
+          <td class="px-6 py-4"><app-badge [text]="i.status" variant="warning"></app-badge></td>
+          <td class="px-6 py-4">
+            <app-button variant="primary" size="sm" (onClick)="abrirModal(i)">Revisar</app-button>
+          </td>
+        </tr>
+      </app-table>
+    </app-card>
+  </div>
 
 </div>
 
 <!-- Modal Unificado de Revisión -->
 <app-modal [isOpen]="isModalOpen" title="Revisión de Trámite" maxWidth="lg" (onClose)="cerrarModal()">
-  <div class="space-y-4" *ngIf="peticionSeleccionada">
+  <div class="space-y-4" *ngIf="selectedItem">
     
     <div class="p-4 rounded-lg bg-gray-50 border border-gray-200 dark:bg-gray-700 dark:border-gray-600">
       <div class="grid grid-cols-2 gap-4 text-sm">
         <div>
           <p class="text-gray-500 dark:text-gray-400">Folio</p>
-          <p class="font-bold text-gray-900 dark:text-white">{{ peticionSeleccionada.id }}</p>
+          <p class="font-bold text-gray-900 dark:text-white">{{ selectedItem.id }}</p>
         </div>
         <div>
-          <p class="text-gray-500 dark:text-gray-400">Tipo</p>
-          <p class="font-bold text-brand">{{ peticionSeleccionada.tipo }}</p>
-        </div>
-        <div>
-          <p class="text-gray-500 dark:text-gray-400">Solicitante</p>
-          <p class="font-bold text-gray-900 dark:text-white">{{ peticionSeleccionada.solicitante }}</p>
-        </div>
-        <div class="col-span-2">
-          <p class="text-gray-500 dark:text-gray-400">Descripción / Motivo</p>
-          <p class="font-medium text-gray-900 dark:text-white">{{ peticionSeleccionada.descripcion }}</p>
+          <p class="text-gray-500 dark:text-gray-400">Distribuidor ID</p>
+          <p class="font-bold text-gray-900 dark:text-white">{{ selectedItem.distribuidorId }}</p>
         </div>
       </div>
     </div>
 
     <!-- Vistas Condicionales por Tipo de Trámite -->
-    <div *ngIf="peticionSeleccionada.tipo === 'Dictamen Distribuidora'" class="mt-4 p-4 border-l-4 border-brand bg-brand-50">
-      <p class="text-sm font-semibold text-brand-strong mb-2">Expediente Adjunto</p>
-      <ul class="text-sm list-disc pl-5 space-y-1 text-gray-700">
-        <li>Fotos de domicilio: <strong>Validadas por verificador</strong></li>
-        <li>Buró de Crédito: <strong>Score 680 (Aceptable)</strong></li>
-      </ul>
-      <p class="text-xs text-gray-500 mt-2">Al aprobar, la distribuidora ingresará a la categoría Inicial.</p>
+    <div *ngIf="activeTab === 'dictamenes'" class="mt-4 p-4 border-l-4 border-brand bg-brand-50">
+      <p class="text-sm font-semibold text-brand-strong mb-2">Dictamen de Alta</p>
+      <p class="text-sm text-gray-700">La solicitud ha sido verificada en campo y está lista para su autorización final por la gerencia.</p>
+      <p class="text-xs text-gray-500 mt-2">Al aprobar, se creará el perfil oficial de Distribuidora.</p>
     </div>
 
-    <div *ngIf="peticionSeleccionada.tipo === 'Aumento de Crédito'" class="mt-4 p-4 border-l-4 border-green-500 bg-green-50">
-      <p class="text-sm font-semibold text-green-800 mb-2">Datos Financieros</p>
-      <p class="text-sm text-gray-700">Crédito Actual: <strong>$15,000</strong></p>
-      <p class="text-sm text-gray-700">Aumento Solicitado: <strong>$5,000</strong></p>
-      <p class="text-xs text-gray-500 mt-2">Al aprobar, su nuevo límite será de $20,000.</p>
-    </div>
-
-    <div *ngIf="peticionSeleccionada.tipo === 'Conciliación Manual'" class="mt-4 p-4 border-l-4 border-yellow-500 bg-yellow-50">
-      <p class="text-sm font-semibold text-yellow-800 mb-2">Detalle del Descuadre</p>
-      <p class="text-sm text-gray-700">Diferencia: <strong>-$50.00</strong> (Faltante físico)</p>
-      <p class="text-xs text-gray-500 mt-2">Al aprobar, se registrará el faltante bajo la responsabilidad de la cajera en turno.</p>
+    <div *ngIf="activeTab === 'incrementos'" class="mt-4 p-4 border-l-4 border-green-500 bg-green-50">
+      <p class="text-sm font-semibold text-green-800 mb-2">Aumento de Crédito</p>
+      <p class="text-sm text-gray-700">Aumento Solicitado: <strong class="text-lg">{{ selectedItem.requestedAmountCents / 100 | currency:'MXN' }}</strong></p>
+      <p class="text-xs text-gray-500 mt-2">Al aprobar, este monto se sumará a su límite de crédito actual.</p>
     </div>
 
     <div *ngIf="errorMessage" class="mt-4 p-4 text-sm text-red-800 rounded-lg bg-red-50" role="alert">

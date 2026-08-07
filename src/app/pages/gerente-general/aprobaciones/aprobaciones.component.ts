@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CardComponent } from '../../../components/ui/card/card';
@@ -7,7 +7,10 @@ import { ButtonComponent } from '../../../components/ui/button/button';
 import { ModalComponent } from '../../../components/ui/modal/modal';
 import { BadgeComponent } from '../../../components/ui/badge/badge';
 
-import { DistribuidorService } from '../../../core/services/distribuidor.service';
+import { SolicitudService, Solicitud } from '../../../core/services/solicitud.service';
+import { CreditRaiseService, CreditRaiseRequest } from '../../../core/services/credit-raise.service';
+
+type AprobacionTab = 'dictamenes' | 'incrementos';
 
 @Component({
   selector: 'app-aprobaciones',
@@ -15,65 +18,115 @@ import { DistribuidorService } from '../../../core/services/distribuidor.service
   imports: [CommonModule, FormsModule, CardComponent, TableComponent, ButtonComponent, ModalComponent, BadgeComponent],
   templateUrl: './aprobaciones.component.html'
 })
-export class AprobacionesComponent {
-  // Bandeja de peticiones (Mock Data temporal hasta que exista GET /api/v1/solicitudes)
-  peticiones = [
-    { id: '11111111-1111-1111-1111-111111111111', tipo: 'Dictamen Distribuidora', solicitante: 'Coord. Matriz', descripcion: 'Alta de María López', estado: 'Pendiente' },
-    { id: 'PET-102', tipo: 'Aumento de Crédito', solicitante: 'Coord. Norte', descripcion: 'Pre-autorización de Incentivo para DIST-45', estado: 'Pendiente' },
-    { id: 'PET-103', tipo: 'Conciliación Manual', solicitante: 'Cajera Matriz', descripcion: 'Descuadre de $50 en corte de caja', estado: 'Pendiente' }
-  ];
+export class AprobacionesComponent implements OnInit {
+  activeTab: AprobacionTab = 'dictamenes';
+  
+  dictamenes: Solicitud[] = [];
+  incrementos: CreditRaiseRequest[] = [];
 
   isModalOpen = false;
-  peticionSeleccionada: any = null;
+  selectedItem: any = null;
   isLoading = false;
   errorMessage = '';
 
-  constructor(private distribuidorService: DistribuidorService) {}
+  constructor(
+    private solicitudService: SolicitudService,
+    private creditRaiseService: CreditRaiseService
+  ) {}
 
-  abrirModal(peticion: any) {
-    this.peticionSeleccionada = peticion;
+  ngOnInit() {
+    this.loadDictamenes();
+    this.loadIncrementos();
+  }
+
+  setTab(tab: AprobacionTab) {
+    this.activeTab = tab;
+  }
+
+  loadDictamenes() {
+    this.solicitudService.getSolicitudes().subscribe(data => {
+      // Filtrar solo los verificados pendientes de autorización
+      this.dictamenes = data.filter(d => d.status === 'VERIFICADO');
+    });
+  }
+
+  loadIncrementos() {
+    this.creditRaiseService.getPendingRequests().subscribe(data => {
+      this.incrementos = data;
+    });
+  }
+
+  abrirModal(item: any) {
+    this.selectedItem = item;
     this.isModalOpen = true;
     this.errorMessage = '';
   }
 
   cerrarModal() {
     this.isModalOpen = false;
-    this.peticionSeleccionada = null;
+    this.selectedItem = null;
     this.errorMessage = '';
   }
 
   aprobar() {
-    if (this.peticionSeleccionada) {
-      if (this.peticionSeleccionada.tipo === 'Dictamen Distribuidora') {
-        this.isLoading = true;
-        // Simulando que el ID de la petición es el solicitudId (UUID)
-        this.distribuidorService.createDistribuidor({ solicitudId: this.peticionSeleccionada.id }).subscribe({
-          next: () => {
-            this.isLoading = false;
-            this.marcarComo('Aprobado');
-          },
-          error: (err) => {
-            this.isLoading = false;
-            this.errorMessage = 'Hubo un error al comunicarse con la API: ' + (err.message || 'Error desconocido');
-          }
-        });
-      } else {
-        // Lógica para los otros tipos de peticiones que no tienen API aún
-        this.marcarComo('Aprobado');
-      }
+    if (!this.selectedItem) return;
+    this.isLoading = true;
+
+    if (this.activeTab === 'dictamenes') {
+      this.solicitudService.autorizarSolicitud(this.selectedItem.id).subscribe({
+        next: () => {
+          this.isLoading = false;
+          this.loadDictamenes();
+          this.cerrarModal();
+        },
+        error: (err) => {
+          this.isLoading = false;
+          this.errorMessage = err.error?.message || err.message;
+        }
+      });
+    } else {
+      this.creditRaiseService.approveRequest(this.selectedItem.id).subscribe({
+        next: () => {
+          this.isLoading = false;
+          this.loadIncrementos();
+          this.cerrarModal();
+        },
+        error: (err) => {
+          this.isLoading = false;
+          this.errorMessage = err.error?.message || err.message;
+        }
+      });
     }
   }
 
   rechazar() {
-    if (this.peticionSeleccionada) {
-      // Como no hay endpoint de rechazo todavía, solo actualizamos UI local
-      this.marcarComo('Rechazado');
-    }
-  }
+    if (!this.selectedItem) return;
+    this.isLoading = true;
 
-  private marcarComo(estado: string) {
-    this.peticionSeleccionada.estado = estado;
-    this.peticiones = this.peticiones.filter(p => p.estado === 'Pendiente');
-    this.cerrarModal();
+    if (this.activeTab === 'dictamenes') {
+      this.solicitudService.rechazarSolicitud(this.selectedItem.id).subscribe({
+        next: () => {
+          this.isLoading = false;
+          this.loadDictamenes();
+          this.cerrarModal();
+        },
+        error: (err) => {
+          this.isLoading = false;
+          this.errorMessage = err.error?.message || err.message;
+        }
+      });
+    } else {
+      this.creditRaiseService.rejectRequest(this.selectedItem.id).subscribe({
+        next: () => {
+          this.isLoading = false;
+          this.loadIncrementos();
+          this.cerrarModal();
+        },
+        error: (err) => {
+          this.isLoading = false;
+          this.errorMessage = err.error?.message || err.message;
+        }
+      });
+    }
   }
 }

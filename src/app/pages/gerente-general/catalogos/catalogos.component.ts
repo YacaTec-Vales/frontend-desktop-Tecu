@@ -10,6 +10,7 @@ import { BadgeComponent } from '../../../components/ui/badge/badge';
 
 import { BranchService } from '../../../core/services/branch.service';
 import { StaffService } from '../../../core/services/staff.service';
+import { ProductService, Product, CreateProductDto } from '../../../core/services/product.service';
 import { Branch } from '../../../core/models/branch.model';
 import { Coordinador, Verificador, Cajero, CreateStaffDto } from '../../../core/models/staff.model';
 
@@ -32,25 +33,21 @@ export class CatalogosComponent implements OnInit {
   isSucursalModalOpen = false;
   isPersonalModalOpen = false;
 
-  // -- Datos Dummy (Productos/Categorías) --
-  productos = [
-    { id: 'VAL-1', monto: 5000, estado: 'Activo' },
-    { id: 'VAL-2', monto: 10000, estado: 'Activo' },
-  ];
-  
+  // -- Datos Dummy (Categorías) --
   categorias = [
     { nombre: 'Plata', ganancia: 6 },
     { nombre: 'Oro', ganancia: 10 },
   ];
 
   // API Data
+  productos: Product[] = [];
   sucursales: Branch[] = [];
   coordinadores: Coordinador[] = [];
   verificadores: Verificador[] = [];
   cajeros: Cajero[] = [];
 
   // Forms Models
-  nuevoProducto = { monto: null };
+  nuevoProducto = { name: '', description: '', montoPesos: null as number | null };
   nuevaCategoria = { nombre: '', ganancia: null };
   
   nuevaSucursal = { name: '', address: '', phone: '' };
@@ -66,12 +63,18 @@ export class CatalogosComponent implements OnInit {
 
   constructor(
     private branchService: BranchService,
-    private staffService: StaffService
+    private staffService: StaffService,
+    private productService: ProductService
   ) {}
 
   ngOnInit() {
     this.loadBranches();
     this.loadStaff();
+    this.loadProducts();
+  }
+
+  loadProducts() {
+    this.productService.getProducts().subscribe(data => this.productos = data);
   }
 
   loadBranches() {
@@ -94,11 +97,18 @@ export class CatalogosComponent implements OnInit {
 
   // Productos
   abrirModalProducto() { this.isProductoModalOpen = true; }
-  cerrarModalProducto() { this.isProductoModalOpen = false; this.nuevoProducto = { monto: null }; }
+  cerrarModalProducto() { this.isProductoModalOpen = false; this.nuevoProducto = { name: '', description: '', montoPesos: null }; }
   guardarProducto() {
-    if (this.nuevoProducto.monto) {
-      this.productos.push({ id: `VAL-${this.productos.length + 1}`, monto: this.nuevoProducto.monto, estado: 'Activo' });
-      this.cerrarModalProducto();
+    if (this.nuevoProducto.montoPesos && this.nuevoProducto.name) {
+      const dto: CreateProductDto = {
+        name: this.nuevoProducto.name,
+        description: this.nuevoProducto.description,
+        amountCents: Math.round(this.nuevoProducto.montoPesos * 100)
+      };
+      this.productService.createProduct(dto).subscribe(() => {
+        this.loadProducts();
+        this.cerrarModalProducto();
+      });
     }
   }
 
