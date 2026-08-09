@@ -1,4 +1,4 @@
-<div class="max-w-7xl mx-auto space-y-6">
+<div class="max-w-7xl mx-auto space-y-6 pb-12">
   
   <div>
     <h2 class="text-3xl font-bold text-gray-900 dark:text-white">Plantilla Local</h2>
@@ -80,18 +80,23 @@
 <!-- Modal Personal -->
 <app-modal [isOpen]="isPersonalModalOpen" title="Registrar Personal" maxWidth="md" (onClose)="cerrarModalPersonal()">
   <div class="space-y-4">
-    <app-input label="Nombre(s)" type="text" [(ngModel)]="nuevoPersonal.firstName"></app-input>
-    <div class="grid grid-cols-2 gap-4">
-      <app-input label="Apellido Paterno" type="text" [(ngModel)]="nuevoPersonal.lastNamePaternal"></app-input>
-      <app-input label="Apellido Materno" type="text" [(ngModel)]="nuevoPersonal.lastNameMaternal"></app-input>
+    
+    <div *ngIf="errorMessage" class="p-3 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400 font-medium">
+      {{ errorMessage }}
     </div>
-    <app-input label="Correo Electrónico" type="email" placeholder="usuario@yacatec.test" [(ngModel)]="nuevoPersonal.email"></app-input>
-    <app-input label="Teléfono" type="text" placeholder="10 dígitos" [(ngModel)]="nuevoPersonal.phone"></app-input>
+
+    <app-input label="Nombre(s) *" type="text" [(ngModel)]="nuevoPersonal.firstName"></app-input>
+    <div class="grid grid-cols-2 gap-4">
+      <app-input label="Apellido Paterno *" type="text" [(ngModel)]="nuevoPersonal.lastNamePaternal"></app-input>
+      <app-input label="Apellido Materno *" type="text" [(ngModel)]="nuevoPersonal.lastNameMaternal"></app-input>
+    </div>
+    <app-input label="Correo Electrónico *" type="email" placeholder="usuario@yacatec.test" [(ngModel)]="nuevoPersonal.email"></app-input>
+    <app-input label="Teléfono (10 dígitos) *" type="text" placeholder="Ej: 8712345678" [(ngModel)]="nuevoPersonal.phone"></app-input>
 
     <div class="mt-6 flex justify-end gap-2 pt-4 border-t border-gray-100">
-      <app-button variant="text" (onClick)="cerrarModalPersonal()">Cancelar</app-button>
-      <app-button variant="primary" (onClick)="guardarPersonal()" [disabled]="!nuevoPersonal.firstName || !nuevoPersonal.email">
-        Crear {{ activePersonalTab === 'coordinadores' ? 'Coordinador' : activePersonalTab === 'verificadores' ? 'Verificador' : 'Cajero' }}
+      <app-button variant="text" (onClick)="cerrarModalPersonal()" [disabled]="isSaving">Cancelar</app-button>
+      <app-button variant="primary" (onClick)="guardarPersonal()" [disabled]="!isFormValid || isSaving">
+        {{ isSaving ? 'Guardando...' : 'Crear ' + (activePersonalTab === 'coordinadores' ? 'Coordinador' : activePersonalTab === 'verificadores' ? 'Verificador' : 'Cajero') }}
       </app-button>
     </div>
   </div>

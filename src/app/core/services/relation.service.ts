@@ -14,7 +14,7 @@ export interface RelationDetails {
 }
 
 export interface PaymentWindow {
-  status: 'EARLY' | 'NORMAL' | 'CLOSED';
+  status: 'EARLY' | 'NORMAL' | 'LATE' | 'CLOSED';
   deadline: string;
   latePenaltyCents?: number;
   pointsPenaltyBps?: number;

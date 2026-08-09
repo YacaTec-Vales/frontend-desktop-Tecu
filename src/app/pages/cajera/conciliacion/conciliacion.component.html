@@ -91,7 +91,7 @@
       <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
     </div>
     <h3 class="text-2xl font-black text-emerald-900 mb-2">Cobro Exitoso</h3>
-    <p class="text-emerald-700">Se cobró el monto de {{ relationEncontrada?.totalToPayCents / 100 | currency:'MXN' }} correctamente.</p>
+    <p class="text-emerald-700">Se cobró el monto de {{ (relationEncontrada?.totalToPayCents || 0) / 100 | currency:'MXN' }} correctamente.</p>
     <div class="mt-6 flex justify-center gap-4">
       <app-button variant="outline" (onClick)="relationIdBuscado = ''; buscarRelacion()">Cobrar otra Relación</app-button>
     </div>

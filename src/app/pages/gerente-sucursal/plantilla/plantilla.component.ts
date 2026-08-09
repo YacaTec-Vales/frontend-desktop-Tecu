@@ -23,6 +23,8 @@ export class PlantillaComponent implements OnInit {
 
   // State Modales
   isPersonalModalOpen = false;
+  isSaving = false;
+  errorMessage = '';
 
   // API Data
   coordinadores: Coordinador[] = [];
@@ -36,7 +38,7 @@ export class PlantillaComponent implements OnInit {
     lastNameMaternal: '',
     email: '',
     phone: '',
-    branchId: '' // En el backend el GS auto-asigna a su sucursal o se asume el token
+    branchId: '' // GS no requiere enviarlo explícitamente, backend asume la sucursal del token
   };
 
   constructor(private staffService: StaffService) {}
@@ -55,25 +57,55 @@ export class PlantillaComponent implements OnInit {
     this.activePersonalTab = tab;
   }
 
-  abrirModalPersonal() { this.isPersonalModalOpen = true; }
+  abrirModalPersonal() { 
+    this.isPersonalModalOpen = true; 
+    this.errorMessage = '';
+  }
+
   cerrarModalPersonal() { 
+    if (this.isSaving) return;
     this.isPersonalModalOpen = false; 
+    this.errorMessage = '';
     this.nuevoPersonal = { firstName: '', lastNamePaternal: '', lastNameMaternal: '', email: '', phone: '', branchId: '' }; 
   }
 
-  guardarPersonal() {
-    if (this.nuevoPersonal.firstName && this.nuevoPersonal.email) {
-      const saveAction = this.activePersonalTab === 'coordinadores' 
-        ? this.staffService.createCoordinador(this.nuevoPersonal)
-        : this.activePersonalTab === 'verificadores' 
-        ? this.staffService.createVerificador(this.nuevoPersonal)
-        : this.staffService.createCajero(this.nuevoPersonal);
+  get isFormValid(): boolean {
+    return !!(
+      this.nuevoPersonal.firstName &&
+      this.nuevoPersonal.lastNamePaternal &&
+      this.nuevoPersonal.lastNameMaternal &&
+      this.nuevoPersonal.email &&
+      this.nuevoPersonal.email.includes('@') &&
+      this.nuevoPersonal.phone &&
+      this.nuevoPersonal.phone.length >= 10
+    );
+  }
 
-      saveAction.subscribe(() => {
+  guardarPersonal() {
+    if (!this.isFormValid) {
+      this.errorMessage = 'Por favor, complete todos los campos obligatorios correctamente.';
+      return;
+    }
+
+    this.isSaving = true;
+    this.errorMessage = '';
+
+    const saveAction = this.activePersonalTab === 'coordinadores' 
+      ? this.staffService.createCoordinador(this.nuevoPersonal)
+      : this.activePersonalTab === 'verificadores' 
+      ? this.staffService.createVerificador(this.nuevoPersonal)
+      : this.staffService.createCajero(this.nuevoPersonal);
+
+    saveAction.subscribe({
+      next: () => {
+        this.isSaving = false;
         this.loadStaff();
         this.cerrarModalPersonal();
-      });
-    }
+      },
+      error: (err) => {
+        this.isSaving = false;
+        this.errorMessage = err.error?.message || 'Ocurrió un error al registrar al personal. Verifique si el correo ya existe.';
+      }
+    });
   }
 }
-
