@@ -5,22 +5,30 @@ import { environment } from '../../../environments/environment';
 
 export interface Product {
   id: string;
-  name: string;
-  description: string;
-  amountCents: number;
+  code: string;
+  variant: string;
+  costCents: number;
+  totalPeriods: number;
+  commissionBps: number;
+  insuranceCents: number;
+  interestPerPeriodBps: number;
   isActive: boolean;
 }
 
 export interface CreateProductDto {
-  name: string;
-  description?: string;
-  amountCents: number;
+  code: string;
+  variant: 'NORMAL' | 'PLUS';
+  costCents: number;
+  totalPeriods: number;
+  commissionBps: number;
+  insuranceCents: number;
+  interestPerPeriodBps: number;
 }
 
 export interface UpdateProductDto {
-  name?: string;
-  description?: string;
-  amountCents?: number;
+  code?: string;
+  costCents?: number;
+  totalPeriods?: number;
   isActive?: boolean;
 }
 
