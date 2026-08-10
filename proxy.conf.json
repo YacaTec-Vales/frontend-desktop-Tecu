@@ -1,7 +1,7 @@
 {
     "/api": {
-        "target": "https://yacatec.devas-projects.sbs",
-        "secure": true,
+        "target": "http://utete.ddns.net:45000",
+        "secure": false,
         "changeOrigin": true,
         "logLevel": "debug"
     }
