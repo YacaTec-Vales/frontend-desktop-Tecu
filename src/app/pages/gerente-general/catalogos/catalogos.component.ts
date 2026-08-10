@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CardComponent } from '../../../components/ui/card/card';
@@ -7,6 +7,7 @@ import { ButtonComponent } from '../../../components/ui/button/button';
 import { ModalComponent } from '../../../components/ui/modal/modal';
 import { InputComponent } from '../../../components/ui/input/input';
 import { BadgeComponent } from '../../../components/ui/badge/badge';
+import { TableActionsComponent } from '../../../components/ui/table/table-actions';
 
 import { BranchService } from '../../../core/services/branch.service';
 import { StaffService } from '../../../core/services/staff.service';
@@ -20,7 +21,7 @@ type PersonalTab = 'coordinadores' | 'verificadores' | 'cajeros';
 @Component({
   selector: 'app-catalogos',
   standalone: true,
-  imports: [CommonModule, FormsModule, CardComponent, TableComponent, ButtonComponent, ModalComponent, InputComponent, BadgeComponent],
+  imports: [CommonModule, FormsModule, CardComponent, TableComponent, ButtonComponent, ModalComponent, InputComponent, BadgeComponent, TableActionsComponent],
   templateUrl: './catalogos.component.html'
 })
 export class CatalogosComponent implements OnInit {
@@ -29,10 +30,22 @@ export class CatalogosComponent implements OnInit {
 
   // State Modales
   isProductoModalOpen = false;
+  isEditProductoModalOpen = false;
+  isDeactivateProductoModalOpen = false; // DEPRECATED - to be removed
   isCategoriaModalOpen = false;
   isSucursalModalOpen = false;
   isPersonalModalOpen = false;
 
+  // Modales Unificados (Dinámicos)
+  isEditingMode = false;
+  isConfirmModalOpen = false;
+  entityToDeactivate: { type: string, id: string } | null = null;
+
+  // Load Flags
+  isProductsLoaded = false;
+  isBranchesLoaded = false;
+  isStaffLoaded = false;
+  
   // -- Datos Dummy (Categorías) --
   categorias = [
     { nombre: 'Plata', ganancia: 6 },
@@ -47,7 +60,17 @@ export class CatalogosComponent implements OnInit {
   cajeros: Cajero[] = [];
 
   // Forms Models
-  nuevoProducto = { name: '', description: '', montoPesos: null as number | null };
+  nuevoProducto = { 
+    code: '', 
+    variant: 'NORMAL' as 'NORMAL' | 'PLUS',
+    costPesos: null as number | null, 
+    totalPeriods: null as number | null,
+    commissionPorc: 0,
+    insurancePesos: 0,
+    interestPorc: 0
+  };
+  productoError: string | null = null;
+  productoActivo: Product | null = null; // Para editar/desactivar
   nuevaCategoria = { nombre: '', ganancia: null };
   
   nuevaSucursal = { name: '', address: '', phone: '' };
@@ -64,7 +87,8 @@ export class CatalogosComponent implements OnInit {
   constructor(
     private branchService: BranchService,
     private staffService: StaffService,
-    private productService: ProductService
+    private productService: ProductService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit() {
@@ -74,17 +98,46 @@ export class CatalogosComponent implements OnInit {
   }
 
   loadProducts() {
-    this.productService.getProducts().subscribe(data => this.productos = data);
+    this.productService.getProducts().subscribe(data => {
+      this.productos = data;
+      this.isProductsLoaded = true;
+      this.cdr.detectChanges();
+    });
   }
 
   loadBranches() {
-    this.branchService.getBranches().subscribe(data => this.sucursales = data);
+    this.branchService.getBranches().subscribe(data => {
+      this.sucursales = data;
+      this.isBranchesLoaded = true;
+      this.cdr.detectChanges();
+    });
   }
 
   loadStaff() {
-    this.staffService.getCoordinadores().subscribe(data => this.coordinadores = data);
-    this.staffService.getVerificadores().subscribe(data => this.verificadores = data);
-    this.staffService.getCajeros().subscribe(data => this.cajeros = data);
+    // Coordinadores
+    this.staffService.getCoordinadores().subscribe(data => {
+      this.coordinadores = data;
+      this.checkStaffLoaded();
+      this.cdr.detectChanges();
+    });
+    // Verificadores
+    this.staffService.getVerificadores().subscribe(data => {
+      this.verificadores = data;
+      this.checkStaffLoaded();
+      this.cdr.detectChanges();
+    });
+    // Cajeros
+    this.staffService.getCajeros().subscribe(data => {
+      this.cajeros = data;
+      this.checkStaffLoaded();
+      this.cdr.detectChanges();
+    });
+  }
+
+  private checkStaffLoaded() {
+    if (this.coordinadores.length > 0 || this.verificadores.length > 0 || this.cajeros.length > 0) {
+      this.isStaffLoaded = true;
+    }
   }
 
   setTab(tab: Tab) {
@@ -96,25 +149,114 @@ export class CatalogosComponent implements OnInit {
   }
 
   // Productos
-  abrirModalProducto() { this.isProductoModalOpen = true; }
-  cerrarModalProducto() { this.isProductoModalOpen = false; this.nuevoProducto = { name: '', description: '', montoPesos: null }; }
+  abrirModalProducto() { 
+    this.isEditingMode = false;
+    this.isProductoModalOpen = true; 
+  }
+  cerrarModalProducto() { 
+    this.isProductoModalOpen = false; 
+    this.isEditingMode = false;
+    this.productoError = null;
+    this.nuevoProducto = { code: '', variant: 'NORMAL', costPesos: null, totalPeriods: null, commissionPorc: 0, insurancePesos: 0, interestPorc: 0 };
+  }
+  
+  get isProductoValid(): boolean {
+    const p = this.nuevoProducto;
+    if (!p.code || !/^\d{1,3}\/\d{1,3}$/.test(p.code)) return false;
+    if (!p.costPesos || p.costPesos <= 0) return false;
+    if (!p.totalPeriods || p.totalPeriods < 1 || p.totalPeriods > 60) return false;
+    if (p.commissionPorc < 0 || p.insurancePesos < 0 || p.interestPorc < 0) return false;
+    return true;
+  }
+
   guardarProducto() {
-    if (this.nuevoProducto.montoPesos && this.nuevoProducto.name) {
+    this.productoError = null;
+    if (this.isProductoValid) {
       const dto: CreateProductDto = {
-        name: this.nuevoProducto.name,
-        description: this.nuevoProducto.description,
-        amountCents: Math.round(this.nuevoProducto.montoPesos * 100)
+        code: this.nuevoProducto.code,
+        variant: this.nuevoProducto.variant,
+        costCents: Math.round(this.nuevoProducto.costPesos! * 100),
+        totalPeriods: this.nuevoProducto.totalPeriods!,
+        commissionBps: Math.round(this.nuevoProducto.commissionPorc * 100),
+        insuranceCents: Math.round(this.nuevoProducto.insurancePesos * 100),
+        interestPerPeriodBps: Math.round(this.nuevoProducto.interestPorc * 100)
       };
-      this.productService.createProduct(dto).subscribe(() => {
-        this.loadProducts();
-        this.cerrarModalProducto();
+      
+      this.productService.createProduct(dto).subscribe({
+        next: () => {
+          this.loadProducts();
+          this.cerrarModalProducto();
+        },
+        error: (err) => {
+          this.productoError = err.error?.message || 'Error al crear el producto. Revisa que el código no exista.';
+          this.cdr.detectChanges();
+        }
       });
     }
   }
 
+  // Edit / Deactivate Product (UI Only for now as API lacks endpoints)
+  abrirEditProducto(prod: Product) {
+    this.isEditingMode = true;
+    this.nuevoProducto = {
+      code: prod.code,
+      variant: prod.variant as 'NORMAL' | 'PLUS',
+      costPesos: prod.costCents / 100,
+      totalPeriods: prod.totalPeriods,
+      commissionPorc: prod.commissionBps / 100,
+      insurancePesos: prod.insuranceCents / 100,
+      interestPorc: prod.interestPerPeriodBps / 100
+    };
+    this.isProductoModalOpen = true;
+  }
+  cerrarEditProducto() {
+    this.isEditProductoModalOpen = false; // DEPRECATED
+    this.productoActivo = null;
+  }
+  abrirDeactivateProducto(prod: Product) {
+    this.productoActivo = prod;
+    this.isDeactivateProductoModalOpen = true; // DEPRECATED
+  }
+  cerrarDeactivateProducto() {
+    this.isDeactivateProductoModalOpen = false; // DEPRECATED
+    this.productoActivo = null;
+  }
+
+  // Confirmar Desactivación Genérica
+  abrirConfirmacion(type: string, id: string) {
+    this.entityToDeactivate = { type, id };
+    this.isConfirmModalOpen = true;
+  }
+
+  ejecutarDesactivacion() {
+    if (!this.entityToDeactivate) return;
+    const { type, id } = this.entityToDeactivate;
+
+    // Aquí iría la lógica HTTP según el tipo
+    console.log(`Desactivando ${type} con ID: ${id}`);
+    
+    // Simulación
+    if (type === 'producto') {
+      const p = this.productos.find(x => x.code === id);
+      if (p) p.isActive = false;
+    }
+
+    this.isConfirmModalOpen = false;
+    this.entityToDeactivate = null;
+  }
+
   // Categorias
-  abrirModalCategoria() { this.isCategoriaModalOpen = true; }
-  cerrarModalCategoria() { this.isCategoriaModalOpen = false; this.nuevaCategoria = { nombre: '', ganancia: null }; }
+  abrirModalCategoria(cat?: any) { 
+    if (cat) {
+      this.isEditingMode = true;
+      this.nuevaCategoria = { ...cat };
+    } else {
+      this.isEditingMode = false;
+      this.nuevaCategoria = { nombre: '', ganancia: null };
+    }
+    this.isCategoriaModalOpen = true; 
+  }
+  cerrarModalCategoria() { this.isCategoriaModalOpen = false; this.isEditingMode = false; this.nuevaCategoria = { nombre: '', ganancia: null }; }
   guardarCategoria() {
     if (this.nuevaCategoria.nombre && this.nuevaCategoria.ganancia) {
       this.categorias.push({ ...this.nuevaCategoria } as any);
@@ -123,8 +265,17 @@ export class CatalogosComponent implements OnInit {
   }
 
   // Sucursales
-  abrirModalSucursal() { this.isSucursalModalOpen = true; }
-  cerrarModalSucursal() { this.isSucursalModalOpen = false; this.nuevaSucursal = { name: '', address: '', phone: '' }; }
+  abrirModalSucursal(suc?: any) { 
+    if (suc) {
+      this.isEditingMode = true;
+      this.nuevaSucursal = { ...suc };
+    } else {
+      this.isEditingMode = false;
+      this.nuevaSucursal = { name: '', address: '', phone: '' };
+    }
+    this.isSucursalModalOpen = true; 
+  }
+  cerrarModalSucursal() { this.isSucursalModalOpen = false; this.isEditingMode = false; this.nuevaSucursal = { name: '', address: '', phone: '' }; }
   guardarSucursal() {
     if (this.nuevaSucursal.name) {
       this.branchService.createBranch(this.nuevaSucursal).subscribe(() => {
@@ -135,9 +286,19 @@ export class CatalogosComponent implements OnInit {
   }
 
   // Personal
-  abrirModalPersonal() { this.isPersonalModalOpen = true; }
+  abrirModalPersonal(emp?: any) { 
+    if (emp) {
+      this.isEditingMode = true;
+      this.nuevoPersonal = { ...emp };
+    } else {
+      this.isEditingMode = false;
+      this.nuevoPersonal = { firstName: '', lastNamePaternal: '', lastNameMaternal: '', email: '', phone: '', branchId: '' };
+    }
+    this.isPersonalModalOpen = true; 
+  }
   cerrarModalPersonal() { 
     this.isPersonalModalOpen = false; 
+    this.isEditingMode = false;
     this.nuevoPersonal = { firstName: '', lastNamePaternal: '', lastNameMaternal: '', email: '', phone: '', branchId: '' }; 
   }
   guardarPersonal() {
@@ -152,6 +313,31 @@ export class CatalogosComponent implements OnInit {
         this.loadStaff();
         this.cerrarModalPersonal();
       });
+    }
+  }
+
+  // ==== DATATABLES EXT ====
+  handleTableAction(event: {action: string, id: string}, type: string) {
+    if (event.action === 'edit') {
+      if (type === 'producto') {
+        const p = this.productos.find(x => x.code === event.id);
+        if (p) this.abrirEditProducto(p);
+      } else if (type === 'categoria') {
+        const c = this.categorias.find(x => x.nombre === event.id);
+        if (c) this.abrirModalCategoria(c);
+      } else if (type === 'sucursal') {
+        const s = this.sucursales.find(x => x.id === event.id);
+        if (s) this.abrirModalSucursal(s);
+      } else if (['coordinador', 'verificador', 'cajero'].includes(type)) {
+        let list: any[] = [];
+        if (type === 'coordinador') list = this.coordinadores;
+        if (type === 'verificador') list = this.verificadores;
+        if (type === 'cajero') list = this.cajeros;
+        const emp = list.find(x => x.id === event.id);
+        if (emp) this.abrirModalPersonal(emp);
+      }
+    } else if (event.action === 'deactivate') {
+      this.abrirConfirmacion(type, event.id);
     }
   }
 }
