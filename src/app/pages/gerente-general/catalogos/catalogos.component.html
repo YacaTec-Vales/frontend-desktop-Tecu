@@ -87,15 +87,20 @@
   <div *ngIf="activeTab === 'sucursales'" class="animate-fade-in">
     <app-card title="Gestión de Sucursales" subtitle="Administra las sedes físicas de la empresa." [noPadding]="true">
       <app-table *ngIf="isBranchesLoaded" title="Sucursales" [dataTrigger]="sucursales" (onAction)="handleTableAction($event, 'sucursal')"
-        [columns]="['ID', 'Nombre', 'Dirección', 'Teléfono', 'Acciones']" [isEmpty]="sucursales.length === 0">
+        [columns]="['Nombre', 'Tipo', 'Es Matriz', 'Dirección', 'Estado', 'Acciones']" [isEmpty]="sucursales.length === 0">
         
         <app-button table-actions variant="primary" (onClick)="abrirModalSucursal()">+ Nueva Sucursal</app-button>
 
         <tr *ngFor="let s of sucursales" class="bg-white border-b hover:bg-gray-50">
-          <td class="px-6 py-4 font-bold text-xs truncate max-w-[100px]" [title]="s.id">{{ s.id }}</td>
-          <td class="px-6 py-4">{{ s.name }}</td>
-          <td class="px-6 py-4">{{ s.address }}</td>
-          <td class="px-6 py-4">{{ s.phone }}</td>
+          <td class="px-6 py-4 font-bold">{{ s.name }}</td>
+          <td class="px-6 py-4 text-xs font-bold text-gray-500">{{ s.branchType }}</td>
+          <td class="px-6 py-4">
+            <app-badge [text]="s.esMatriz ? 'Sí' : 'No'" [variant]="s.esMatriz ? 'info' : 'default'"></app-badge>
+          </td>
+          <td class="px-6 py-4 text-gray-500">{{ s.address || 'Sin dirección' }}</td>
+          <td class="px-6 py-4">
+            <app-badge [text]="s.isActive ? 'Activa' : 'Inactiva'" [variant]="s.isActive ? 'success' : 'error'"></app-badge>
+          </td>
           <td class="px-6 py-4 flex gap-2">
             <app-table-actions [id]="s.id"></app-table-actions>
           </td>
@@ -280,12 +285,28 @@
   <div class="space-y-4">
     <app-input label="Nombre de la Sucursal" type="text" placeholder="Ej: Sucursal Centro"
       [(ngModel)]="nuevaSucursal.name"></app-input>
-    <app-input label="Dirección" type="text" placeholder="Ej: Av. Principal 123"
+      
+    <div>
+      <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Tipo de Sucursal</label>
+      <select [(ngModel)]="nuevaSucursal.branchType"
+        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand focus:border-brand block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-brand dark:focus:border-brand">
+        <option value="SUCURSAL">SUCURSAL</option>
+        <option value="MATRIZ">MATRIZ</option>
+      </select>
+    </div>
+
+    <div class="flex items-center gap-2">
+      <input type="checkbox" id="esMatriz" [(ngModel)]="nuevaSucursal.esMatriz"
+        class="w-4 h-4 text-brand bg-gray-100 border-gray-300 rounded focus:ring-brand dark:focus:ring-brand dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
+      <label for="esMatriz" class="text-sm font-medium text-gray-900 dark:text-gray-300">¿Es la Matriz Principal?</label>
+    </div>
+
+    <app-input label="Dirección (Opcional)" type="text" placeholder="Ej: Av. Principal 123"
       [(ngModel)]="nuevaSucursal.address"></app-input>
-    <app-input label="Teléfono" type="text" placeholder="Ej: 8711234567" [(ngModel)]="nuevaSucursal.phone"></app-input>
+
     <div class="mt-6 flex justify-end gap-2">
       <app-button variant="text" (onClick)="cerrarModalSucursal()">Cancelar</app-button>
-      <app-button variant="primary" (onClick)="guardarSucursal()" [disabled]="!nuevaSucursal.name">{{ isEditingMode ? 'Guardar Cambios' : 'Registrar' }}</app-button>
+      <app-button variant="primary" (onClick)="guardarSucursal()" [disabled]="!nuevaSucursal.name || !nuevaSucursal.branchType">{{ isEditingMode ? 'Guardar Cambios' : 'Registrar' }}</app-button>
     </div>
   </div>
 </app-modal>

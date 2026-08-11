@@ -12,7 +12,7 @@ import { TableActionsComponent } from '../../../components/ui/table/table-action
 import { BranchService } from '../../../core/services/branch.service';
 import { StaffService } from '../../../core/services/staff.service';
 import { ProductService, Product, CreateProductDto } from '../../../core/services/product.service';
-import { Branch } from '../../../core/models/branch.model';
+import { Branch, CreateBranchDto, UpdateBranchDto } from '../../../core/models/branch.model';
 import { Coordinador, Verificador, Cajero, CreateStaffDto } from '../../../core/models/staff.model';
 
 type Tab = 'productos' | 'categorias' | 'sucursales' | 'personal';
@@ -73,7 +73,7 @@ export class CatalogosComponent implements OnInit {
   productoActivo: Product | null = null; // Para editar/desactivar
   nuevaCategoria = { nombre: '', ganancia: null };
   
-  nuevaSucursal = { name: '', address: '', phone: '' };
+  nuevaSucursal: CreateBranchDto = { name: '', branchType: 'SUCURSAL', esMatriz: false, address: '' };
   
   nuevoPersonal: CreateStaffDto = {
     firstName: '',
@@ -239,6 +239,10 @@ export class CatalogosComponent implements OnInit {
     if (type === 'producto') {
       const p = this.productos.find(x => x.code === id);
       if (p) p.isActive = false;
+    } else if (type === 'sucursal') {
+      this.branchService.deleteBranch(id).subscribe(() => {
+        this.loadBranches(); // Reload after delete
+      });
     }
 
     this.isConfirmModalOpen = false;
@@ -265,23 +269,42 @@ export class CatalogosComponent implements OnInit {
   }
 
   // Sucursales
-  abrirModalSucursal(suc?: any) { 
+  abrirModalSucursal(suc?: Branch) { 
     if (suc) {
       this.isEditingMode = true;
-      this.nuevaSucursal = { ...suc };
+      this.nuevaSucursal = { 
+        name: suc.name, 
+        branchType: suc.branchType,
+        esMatriz: suc.esMatriz,
+        address: suc.address || ''
+      };
+      // We will need the ID later for update. We can store it in a temporary variable or the active entity.
+      this.entityToDeactivate = { type: 'sucursal', id: suc.id }; 
     } else {
       this.isEditingMode = false;
-      this.nuevaSucursal = { name: '', address: '', phone: '' };
+      this.nuevaSucursal = { name: '', branchType: 'SUCURSAL', esMatriz: false, address: '' };
     }
     this.isSucursalModalOpen = true; 
   }
-  cerrarModalSucursal() { this.isSucursalModalOpen = false; this.isEditingMode = false; this.nuevaSucursal = { name: '', address: '', phone: '' }; }
+  cerrarModalSucursal() { 
+    this.isSucursalModalOpen = false; 
+    this.isEditingMode = false; 
+    this.nuevaSucursal = { name: '', branchType: 'SUCURSAL', esMatriz: false, address: '' }; 
+    this.entityToDeactivate = null;
+  }
   guardarSucursal() {
-    if (this.nuevaSucursal.name) {
-      this.branchService.createBranch(this.nuevaSucursal).subscribe(() => {
-        this.loadBranches();
-        this.cerrarModalSucursal();
-      });
+    if (this.nuevaSucursal.name && this.nuevaSucursal.branchType) {
+      if (this.isEditingMode && this.entityToDeactivate) {
+        this.branchService.updateBranch(this.entityToDeactivate.id, this.nuevaSucursal).subscribe(() => {
+          this.loadBranches();
+          this.cerrarModalSucursal();
+        });
+      } else {
+        this.branchService.createBranch(this.nuevaSucursal).subscribe(() => {
+          this.loadBranches();
+          this.cerrarModalSucursal();
+        });
+      }
     }
   }
 
