@@ -1,47 +1,103 @@
-<div class="max-w-7xl mx-auto space-y-6">
+<div class="max-w-7xl mx-auto space-y-6 pb-12">
   
   <div>
     <h2 class="text-3xl font-bold text-gray-900 dark:text-white">Plantilla Local</h2>
     <p class="text-gray-500 dark:text-gray-400 mt-1 text-lg">Directorio y gestión del personal asignado exclusivamente a tu sucursal.</p>
   </div>
 
-  <app-card title="Personal Operativo" subtitle="Coordinadores, Verificadores y Cajeras." [noPadding]="true">
-    <div class="p-4 flex justify-end border-b border-gray-100 dark:border-gray-700">
-      <app-button variant="primary" (onClick)="abrirModal()">+ Registrar Empleado</app-button>
+  <app-card title="Gestión de Personal" subtitle="Administra tu equipo de trabajo local." [noPadding]="true">
+    <!-- Sub-Pestañas de Personal -->
+    <div class="border-b border-gray-200 dark:border-gray-700">
+      <nav class="flex -mb-px px-4 gap-6" aria-label="Tabs">
+        <button (click)="setPersonalTab('coordinadores')" [ngClass]="{'border-indigo-500 text-indigo-600 dark:text-indigo-400': activePersonalTab === 'coordinadores', 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': activePersonalTab !== 'coordinadores'}" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors">
+          Coordinadores
+        </button>
+        <button (click)="setPersonalTab('verificadores')" [ngClass]="{'border-indigo-500 text-indigo-600 dark:text-indigo-400': activePersonalTab === 'verificadores', 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': activePersonalTab !== 'verificadores'}" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors">
+          Verificadores
+        </button>
+        <button (click)="setPersonalTab('cajeros')" [ngClass]="{'border-indigo-500 text-indigo-600 dark:text-indigo-400': activePersonalTab === 'cajeros', 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': activePersonalTab !== 'cajeros'}" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors">
+          Cajeros
+        </button>
+      </nav>
     </div>
-    <app-table [columns]="['ID Empleado', 'Nombre Completo', 'Rol Asignado', 'Estado', 'Acciones']" [isEmpty]="personal.length === 0">
-      <tr *ngFor="let emp of personal" class="bg-white border-b hover:bg-gray-50 transition-colors">
-        <td class="px-6 py-4 font-bold text-gray-900">{{ emp.id }}</td>
-        <td class="px-6 py-4">{{ emp.nombre }}</td>
-        <td class="px-6 py-4"><app-badge [text]="emp.rol" variant="info"></app-badge></td>
-        <td class="px-6 py-4">
-          <app-badge [text]="emp.estado" [variant]="emp.estado === 'Activo' ? 'success' : 'default'"></app-badge>
-        </td>
-        <td class="px-6 py-4 flex gap-2">
-          <app-button variant="text" size="sm">Editar</app-button>
-          <app-button variant="text" size="sm" *ngIf="emp.estado === 'Activo'">Baja</app-button>
-        </td>
-      </tr>
-    </app-table>
+
+    <!-- Acciones (Alta) -->
+    <div class="p-4 flex justify-end bg-gray-50 dark:bg-gray-800/50 border-b border-gray-100 dark:border-gray-700">
+      <app-button variant="primary" (onClick)="abrirModalPersonal()">
+        + Registrar {{ activePersonalTab === 'coordinadores' ? 'Coordinador' : activePersonalTab === 'verificadores' ? 'Verificador' : 'Cajero' }}
+      </app-button>
+    </div>
+
+    <!-- Contenido Coordinadores -->
+    <div *ngIf="activePersonalTab === 'coordinadores'">
+      <app-table [columns]="['ID', 'Nombre', 'Email', 'Teléfono', 'Acciones']" [isEmpty]="coordinadores.length === 0">
+        <tr *ngFor="let item of coordinadores" class="bg-white dark:bg-gray-800 border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
+          <td class="px-6 py-4 font-mono text-sm">{{ item.id.substring(0,8) }}</td>
+          <td class="px-6 py-4 font-medium text-gray-900 dark:text-white">{{ item.firstName }} {{ item.lastNamePaternal }}</td>
+          <td class="px-6 py-4 text-gray-500">{{ item.email }}</td>
+          <td class="px-6 py-4 text-gray-500">{{ item.phone || 'N/A' }}</td>
+          <td class="px-6 py-4 flex gap-2">
+            <app-button variant="text" size="sm">Editar</app-button>
+          </td>
+        </tr>
+      </app-table>
+    </div>
+
+    <!-- Contenido Verificadores -->
+    <div *ngIf="activePersonalTab === 'verificadores'">
+      <app-table [columns]="['ID', 'Nombre', 'Email', 'Teléfono', 'Coordinador ID', 'Acciones']" [isEmpty]="verificadores.length === 0">
+        <tr *ngFor="let item of verificadores" class="bg-white dark:bg-gray-800 border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
+          <td class="px-6 py-4 font-mono text-sm">{{ item.id.substring(0,8) }}</td>
+          <td class="px-6 py-4 font-medium text-gray-900 dark:text-white">{{ item.firstName }} {{ item.lastNamePaternal }}</td>
+          <td class="px-6 py-4 text-gray-500">{{ item.email }}</td>
+          <td class="px-6 py-4 text-gray-500">{{ item.phone || 'N/A' }}</td>
+          <td class="px-6 py-4 text-gray-500">N/A</td>
+          <td class="px-6 py-4 flex gap-2">
+            <app-button variant="text" size="sm">Editar</app-button>
+          </td>
+        </tr>
+      </app-table>
+    </div>
+
+    <!-- Contenido Cajeros -->
+    <div *ngIf="activePersonalTab === 'cajeros'">
+      <app-table [columns]="['ID', 'Nombre', 'Email', 'Teléfono', 'Acciones']" [isEmpty]="cajeros.length === 0">
+        <tr *ngFor="let item of cajeros" class="bg-white dark:bg-gray-800 border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
+          <td class="px-6 py-4 font-mono text-sm">{{ item.id.substring(0,8) }}</td>
+          <td class="px-6 py-4 font-medium text-gray-900 dark:text-white">{{ item.firstName }} {{ item.lastNamePaternal }}</td>
+          <td class="px-6 py-4 text-gray-500">{{ item.email }}</td>
+          <td class="px-6 py-4 text-gray-500">{{ item.phone || 'N/A' }}</td>
+          <td class="px-6 py-4 flex gap-2">
+            <app-button variant="text" size="sm">Editar</app-button>
+          </td>
+        </tr>
+      </app-table>
+    </div>
   </app-card>
 
 </div>
 
-<!-- Modal: Registrar Empleado -->
-<app-modal [isOpen]="isModalOpen" title="Registrar Empleado (Local)" maxWidth="md" (onClose)="cerrarModal()">
+<!-- Modal Personal -->
+<app-modal [isOpen]="isPersonalModalOpen" title="Registrar Personal" maxWidth="md" (onClose)="cerrarModalPersonal()">
   <div class="space-y-4">
-    <div class="p-3 bg-blue-50 text-blue-800 text-sm rounded-lg border border-blue-200">
-      Este empleado quedará vinculado automáticamente a tu sucursal.
+    
+    <div *ngIf="errorMessage" class="p-3 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400 font-medium">
+      {{ errorMessage }}
     </div>
 
-    <app-input label="Nombre Completo" type="text" placeholder="Ej: Laura Martínez" [(ngModel)]="nuevoEmpleado.nombre"></app-input>
-    
-    <!-- En un sistema real esto sería un app-select, lo simulamos con input -->
-    <app-input label="Rol en Sucursal" type="text" hint="Valores permitidos: Coordinador, Verificador, Cajera" placeholder="Ej: Cajera" [(ngModel)]="nuevoEmpleado.rol"></app-input>
-    
+    <app-input label="Nombre(s) *" type="text" [(ngModel)]="nuevoPersonal.firstName"></app-input>
+    <div class="grid grid-cols-2 gap-4">
+      <app-input label="Apellido Paterno *" type="text" [(ngModel)]="nuevoPersonal.lastNamePaternal"></app-input>
+      <app-input label="Apellido Materno *" type="text" [(ngModel)]="nuevoPersonal.lastNameMaternal"></app-input>
+    </div>
+    <app-input label="Correo Electrónico *" type="email" placeholder="usuario@yacatec.test" [(ngModel)]="nuevoPersonal.email"></app-input>
+    <app-input label="Teléfono (10 dígitos) *" type="text" placeholder="Ej: 8712345678" [(ngModel)]="nuevoPersonal.phone"></app-input>
+
     <div class="mt-6 flex justify-end gap-2 pt-4 border-t border-gray-100">
-      <app-button variant="text" (onClick)="cerrarModal()">Cancelar</app-button>
-      <app-button variant="primary" (onClick)="guardarEmpleado()" [disabled]="!nuevoEmpleado.nombre || !nuevoEmpleado.rol">Registrar Empleado</app-button>
+      <app-button variant="text" (onClick)="cerrarModalPersonal()" [disabled]="isSaving">Cancelar</app-button>
+      <app-button variant="primary" (onClick)="guardarPersonal()" [disabled]="!isFormValid || isSaving">
+        {{ isSaving ? 'Guardando...' : 'Crear ' + (activePersonalTab === 'coordinadores' ? 'Coordinador' : activePersonalTab === 'verificadores' ? 'Verificador' : 'Cajero') }}
+      </app-button>
     </div>
   </div>
 </app-modal>

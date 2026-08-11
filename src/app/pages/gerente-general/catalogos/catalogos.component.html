@@ -1,23 +1,32 @@
 <div class="max-w-7xl mx-auto space-y-6">
-  
+
   <div>
     <h2 class="text-3xl font-bold text-gray-900 dark:text-white">Catálogos Maestros</h2>
-    <p class="text-gray-500 dark:text-gray-400 mt-1 text-lg">Administración global del sistema. Crea, edita y desactiva parámetros core.</p>
+    <p class="text-gray-500 dark:text-gray-400 mt-1 text-lg">Administración global del sistema. Crea, edita y desactiva
+      parámetros core.</p>
   </div>
 
   <!-- Tabs Navigation -->
   <div class="border-b border-gray-200 dark:border-gray-700">
     <nav class="-mb-px flex space-x-8" aria-label="Tabs">
-      <a (click)="setTab('productos')" [class]="activeTab === 'productos' ? 'border-brand text-brand' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm cursor-pointer transition-colors">
+      <a (click)="setTab('productos')"
+        [class]="activeTab === 'productos' ? 'border-brand text-brand' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+        class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm cursor-pointer transition-colors">
         Productos (Vales)
       </a>
-      <a (click)="setTab('categorias')" [class]="activeTab === 'categorias' ? 'border-brand text-brand' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm cursor-pointer transition-colors">
+      <a (click)="setTab('categorias')"
+        [class]="activeTab === 'categorias' ? 'border-brand text-brand' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+        class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm cursor-pointer transition-colors">
         Categorías de Crédito
       </a>
-      <a (click)="setTab('sucursales')" [class]="activeTab === 'sucursales' ? 'border-brand text-brand' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm cursor-pointer transition-colors">
+      <a (click)="setTab('sucursales')"
+        [class]="activeTab === 'sucursales' ? 'border-brand text-brand' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+        class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm cursor-pointer transition-colors">
         Sucursales
       </a>
-      <a (click)="setTab('personal')" [class]="activeTab === 'personal' ? 'border-brand text-brand' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm cursor-pointer transition-colors">
+      <a (click)="setTab('personal')"
+        [class]="activeTab === 'personal' ? 'border-brand text-brand' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+        class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm cursor-pointer transition-colors">
         Gestión de Personal
       </a>
     </nav>
@@ -25,30 +34,44 @@
 
   <!-- Tab Content: PRODUCTOS -->
   <div *ngIf="activeTab === 'productos'" class="animate-fade-in">
-    <app-card title="Catálogo de Vales Permitidos" subtitle="Define montos cerrados estrictos. Sin múltiplos fraccionados." [noPadding]="true">
-      <div class="p-4 flex justify-end border-b border-gray-100">
-        <app-button variant="primary" (onClick)="abrirModalProducto()">+ Nuevo Vale</app-button>
-      </div>
-      <app-table [columns]="['Código', 'Monto del Vale', 'Estado', 'Acciones']">
+    <app-card title="Catálogo de Vales Permitidos"
+      subtitle="Define montos cerrados estrictos. Sin múltiplos fraccionados." [noPadding]="true">
+      <!-- Header / Acciones -->
+      <app-table *ngIf="isProductsLoaded" title="Productos (Vales)" [dataTrigger]="productos" (onAction)="handleTableAction($event, 'producto')"
+        [columns]="['Código', 'Variante', 'Costo', 'Quincenas', 'Comisión', 'Seguro', 'Interés/Q', 'Estado', 'Acciones']">
+        
+        <!-- Botones que se inyectan en la tabla -->
+        <app-button table-actions variant="primary" (onClick)="abrirModalProducto()">+ Nuevo Vale</app-button>
+        
         <tr *ngFor="let p of productos" class="bg-white border-b hover:bg-gray-50">
-          <td class="px-6 py-4 font-bold">{{ p.id }}</td>
-          <td class="px-6 py-4 font-bold text-brand">${{ p.monto | number }}</td>
-          <td class="px-6 py-4"><app-badge [text]="p.estado" variant="success"></app-badge></td>
-          <td class="px-6 py-4">
-            <app-button variant="text" size="sm">Baja</app-button>
-          </td>
-        </tr>
-      </app-table>
+            <td class="px-6 py-4 font-bold">{{ p.code }}</td>
+            <td class="px-6 py-4 text-xs font-bold text-gray-500">{{ p.variant }}</td>
+            <td class="px-6 py-4 font-bold text-brand">{{ p.costCents / 100 | currency:'MXN' }}</td>
+            <td class="px-6 py-4 text-gray-500">{{ p.totalPeriods }}</td>
+            <td class="px-6 py-4 text-gray-500">{{ p.commissionBps / 100 | number:'1.2-2' }}%</td>
+            <td class="px-6 py-4 text-gray-500">{{ p.insuranceCents / 100 | currency:'MXN' }}</td>
+            <td class="px-6 py-4 text-gray-500">{{ p.interestPerPeriodBps / 100 | number:'1.2-2' }}%</td>
+            <td class="px-6 py-4">
+              <app-badge [text]="p.isActive ? 'Activo' : 'Inactivo'"
+                [variant]="p.isActive ? 'success' : 'error'"></app-badge>
+            </td>
+            <td class="px-6 py-4 flex gap-2">
+              <app-table-actions [id]="p.code"></app-table-actions>
+            </td>
+          </tr>
+        </app-table>
     </app-card>
   </div>
 
   <!-- Tab Content: CATEGORÍAS -->
   <div *ngIf="activeTab === 'categorias'" class="animate-fade-in">
-    <app-card title="Categorías de Crédito" subtitle="Define niveles y porcentajes de ganancia para distribuidoras." [noPadding]="true">
-      <div class="p-4 flex justify-end border-b border-gray-100">
-        <app-button variant="primary" (onClick)="abrirModalCategoria()">+ Nueva Categoría</app-button>
-      </div>
-      <app-table [columns]="['Categoría', 'Porcentaje de Ganancia', 'Acciones']">
+    <app-card title="Categorías de Crédito" subtitle="Define niveles y porcentajes de ganancia para distribuidoras."
+      [noPadding]="true">
+      <app-table title="Categorías de Crédito" [dataTrigger]="categorias" (onAction)="handleTableAction($event, 'categoria')"
+        [columns]="['Nombre', 'Ganancia Base', 'Acciones']" [isEmpty]="categorias.length === 0">
+        
+        <app-button table-actions variant="primary" (onClick)="abrirModalCategoria()">+ Nueva Categoría</app-button>
+
         <tr *ngFor="let c of categorias" class="bg-white border-b hover:bg-gray-50">
           <td class="px-6 py-4 font-bold uppercase">{{ c.nombre }}</td>
           <td class="px-6 py-4 text-green-600 font-bold">{{ c.ganancia }}%</td>
@@ -62,17 +85,19 @@
 
   <!-- Tab Content: SUCURSALES -->
   <div *ngIf="activeTab === 'sucursales'" class="animate-fade-in">
-    <app-card title="Red de Sucursales" subtitle="Alta y baja de ubicaciones físicas." [noPadding]="true">
-      <div class="p-4 flex justify-end border-b border-gray-100">
-        <app-button variant="primary" (onClick)="abrirModalSucursal()">+ Nueva Sucursal</app-button>
-      </div>
-      <app-table [columns]="['ID', 'Nombre', 'Estado', 'Acciones']">
+    <app-card title="Gestión de Sucursales" subtitle="Administra las sedes físicas de la empresa." [noPadding]="true">
+      <app-table *ngIf="isBranchesLoaded" title="Sucursales" [dataTrigger]="sucursales" (onAction)="handleTableAction($event, 'sucursal')"
+        [columns]="['ID', 'Nombre', 'Dirección', 'Teléfono', 'Acciones']" [isEmpty]="sucursales.length === 0">
+        
+        <app-button table-actions variant="primary" (onClick)="abrirModalSucursal()">+ Nueva Sucursal</app-button>
+
         <tr *ngFor="let s of sucursales" class="bg-white border-b hover:bg-gray-50">
-          <td class="px-6 py-4 font-bold">{{ s.id }}</td>
-          <td class="px-6 py-4">{{ s.nombre }}</td>
-          <td class="px-6 py-4"><app-badge [text]="s.estado" variant="success"></app-badge></td>
-          <td class="px-6 py-4">
-            <app-button variant="text" size="sm">Baja</app-button>
+          <td class="px-6 py-4 font-bold text-xs truncate max-w-[100px]" [title]="s.id">{{ s.id }}</td>
+          <td class="px-6 py-4">{{ s.name }}</td>
+          <td class="px-6 py-4">{{ s.address }}</td>
+          <td class="px-6 py-4">{{ s.phone }}</td>
+          <td class="px-6 py-4 flex gap-2">
+            <app-table-actions [id]="s.id"></app-table-actions>
           </td>
         </tr>
       </app-table>
@@ -80,21 +105,69 @@
   </div>
 
   <!-- Tab Content: PERSONAL -->
-  <div *ngIf="activeTab === 'personal'" class="animate-fade-in">
-    <app-card title="Gestión de Empleados" subtitle="Directorio y roles del sistema." [noPadding]="true">
-      <div class="p-4 flex justify-end border-b border-gray-100">
-        <app-button variant="primary" (onClick)="abrirModalPersonal()">+ Nuevo Empleado</app-button>
-      </div>
-      <app-table [columns]="['ID', 'Nombre', 'Rol', 'Sucursal', 'Acciones']">
-        <tr *ngFor="let emp of personal" class="bg-white border-b hover:bg-gray-50">
-          <td class="px-6 py-4 font-bold">{{ emp.id }}</td>
-          <td class="px-6 py-4">{{ emp.nombre }}</td>
-          <td class="px-6 py-4"><app-badge [text]="emp.rol" variant="info"></app-badge></td>
-          <td class="px-6 py-4 text-gray-500">{{ emp.sucursal }}</td>
-          <td class="px-6 py-4 flex gap-2">
-            <app-button variant="text" size="sm">Editar</app-button>
-          </td>
-        </tr>
+  <div *ngIf="activeTab === 'personal'" class="animate-fade-in space-y-4">
+    <div class="flex space-x-2 bg-gray-100 p-1 rounded-lg w-fit">
+      <button (click)="setPersonalTab('coordinadores')"
+        [class]="activePersonalTab === 'coordinadores' ? 'bg-white shadow text-gray-900' : 'text-gray-500 hover:text-gray-700'"
+        class="px-4 py-2 text-sm font-medium rounded-md transition-all">Coordinadores</button>
+      <button (click)="setPersonalTab('verificadores')"
+        [class]="activePersonalTab === 'verificadores' ? 'bg-white shadow text-gray-900' : 'text-gray-500 hover:text-gray-700'"
+        class="px-4 py-2 text-sm font-medium rounded-md transition-all">Verificadores</button>
+      <button (click)="setPersonalTab('cajeros')"
+        [class]="activePersonalTab === 'cajeros' ? 'bg-white shadow text-gray-900' : 'text-gray-500 hover:text-gray-700'"
+        class="px-4 py-2 text-sm font-medium rounded-md transition-all">Cajeros</button>
+    </div>
+
+    <app-card title="Gestión de Empleados" [subtitle]="'Directorio de ' + activePersonalTab" [noPadding]="true">
+      <app-table *ngIf="isStaffLoaded" title="Gestión de Empleados" [subtitle]="'Directorio de ' + activePersonalTab" 
+        [dataTrigger]="activePersonalTab === 'coordinadores' ? coordinadores : activePersonalTab === 'verificadores' ? verificadores : cajeros"
+        (onAction)="handleTableAction($event, activePersonalTab.substring(0, activePersonalTab.length - 1))"
+        [columns]="['ID', 'Nombre', 'Email', 'Teléfono', 'Sucursal', 'Acciones']"
+        [isEmpty]="activePersonalTab === 'coordinadores' && coordinadores.length === 0 || activePersonalTab === 'verificadores' && verificadores.length === 0 || activePersonalTab === 'cajeros' && cajeros.length === 0">
+        
+        <app-button table-actions variant="primary" (onClick)="abrirModalPersonal()">+ Registrar Empleado</app-button>
+
+        <ng-container *ngIf="activePersonalTab === 'coordinadores'">
+          <tr *ngFor="let emp of coordinadores" class="bg-white border-b hover:bg-gray-50">
+            <td class="px-6 py-4 font-bold text-xs truncate max-w-[80px]" [title]="emp.id">{{ emp.id }}</td>
+            <td class="px-6 py-4">{{ emp.firstName }} {{ emp.lastNamePaternal }}</td>
+            <td class="px-6 py-4 text-gray-500">{{ emp.email }}</td>
+            <td class="px-6 py-4">{{ emp.phone }}</td>
+            <td class="px-6 py-4 text-gray-500 truncate max-w-[100px]" [title]="emp.branchId">{{ emp.branchId || 'N/A'
+              }}</td>
+            <td class="px-6 py-4 flex gap-2">
+              <app-table-actions [id]="emp.id"></app-table-actions>
+            </td>
+          </tr>
+        </ng-container>
+
+        <ng-container *ngIf="activePersonalTab === 'verificadores'">
+          <tr *ngFor="let emp of verificadores" class="bg-white border-b hover:bg-gray-50">
+            <td class="px-6 py-4 font-bold text-xs truncate max-w-[80px]" [title]="emp.id">{{ emp.id }}</td>
+            <td class="px-6 py-4">{{ emp.firstName }} {{ emp.lastNamePaternal }}</td>
+            <td class="px-6 py-4 text-gray-500">{{ emp.email }}</td>
+            <td class="px-6 py-4">{{ emp.phone }}</td>
+            <td class="px-6 py-4 text-gray-500 truncate max-w-[100px]" [title]="emp.branchId">{{ emp.branchId || 'N/A'
+              }}</td>
+            <td class="px-6 py-4 flex gap-2">
+              <app-table-actions [id]="emp.id"></app-table-actions>
+            </td>
+          </tr>
+        </ng-container>
+
+        <ng-container *ngIf="activePersonalTab === 'cajeros'">
+          <tr *ngFor="let emp of cajeros" class="bg-white border-b hover:bg-gray-50">
+            <td class="px-6 py-4 font-bold text-xs truncate max-w-[80px]" [title]="emp.id">{{ emp.id }}</td>
+            <td class="px-6 py-4">{{ emp.firstName }} {{ emp.lastNamePaternal }}</td>
+            <td class="px-6 py-4 text-gray-500">{{ emp.email }}</td>
+            <td class="px-6 py-4">{{ emp.phone }}</td>
+            <td class="px-6 py-4 text-gray-500 truncate max-w-[100px]" [title]="emp.branchId">{{ emp.branchId || 'N/A'
+              }}</td>
+            <td class="px-6 py-4 flex gap-2">
+              <app-table-actions [id]="emp.id"></app-table-actions>
+            </td>
+          </tr>
+        </ng-container>
       </app-table>
     </app-card>
   </div>
@@ -106,49 +179,149 @@
      MODALES (CRUD)
 =============================== -->
 
-<!-- Modal Nuevo Producto -->
-<app-modal [isOpen]="isProductoModalOpen" title="Crear Nuevo Vale" (onClose)="cerrarModalProducto()">
+<!-- Modal Producto -->
+<app-modal [isOpen]="isProductoModalOpen" [title]="(isEditingMode ? 'Editar' : 'Crear Nuevo') + ' Vale'" maxWidth="lg" (onClose)="cerrarModalProducto()">
   <div class="space-y-4">
-    <p class="text-sm text-gray-500">Recuerda que solo se permiten montos cerrados (ej. $500, $1000). No fracciones.</p>
-    <app-input label="Monto del Vale ($)" type="number" placeholder="Ej: 5000" [(ngModel)]="nuevoProducto.monto"></app-input>
+    <div *ngIf="productoError"
+      class="p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400" role="alert">
+      <span class="font-medium">Error:</span> {{ productoError }}
+    </div>
+
+    <p class="text-sm text-gray-500">Asegúrate de capturar el formato correcto para cada campo.</p>
+
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <app-input label="Código del Vale" type="text" placeholder="Ej: 5/10" [(ngModel)]="nuevoProducto.code"
+          [maxlength]="7"></app-input>
+        <p *ngIf="nuevoProducto.code && !nuevoProducto.code.match('^\\d{1,3}/\\d{1,3}$')"
+          class="mt-1 text-xs text-red-600">Formato inválido. Debe ser X/Y (ej: 5/10).</p>
+      </div>
+      <div>
+        <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Variante</label>
+        <select [(ngModel)]="nuevoProducto.variant"
+          class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand focus:border-brand block w-full p-2.5">
+          <option value="NORMAL">NORMAL</option>
+          <option value="PLUS">PLUS</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <app-input label="Costo del Vale ($ MXN)" type="number" placeholder="Ej: 500"
+          [(ngModel)]="nuevoProducto.costPesos" [maxlength]="6"></app-input>
+        <p *ngIf="nuevoProducto.costPesos !== null && nuevoProducto.costPesos <= 0" class="mt-1 text-xs text-red-600">El
+          costo debe ser mayor a 0.</p>
+      </div>
+      <div>
+        <app-input label="Total de Quincenas" type="number" placeholder="Ej: 10"
+          [(ngModel)]="nuevoProducto.totalPeriods" [maxlength]="2"></app-input>
+        <p *ngIf="nuevoProducto.totalPeriods !== null && (nuevoProducto.totalPeriods < 1 || nuevoProducto.totalPeriods > 60)"
+          class="mt-1 text-xs text-red-600">Debe ser entre 1 y 60.</p>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-3 gap-4">
+      <div>
+        <app-input label="Comisión (%)" type="number" placeholder="0" [(ngModel)]="nuevoProducto.commissionPorc"
+          [maxlength]="4"></app-input>
+        <p *ngIf="nuevoProducto.commissionPorc < 0" class="mt-1 text-xs text-red-600">Mínimo 0.</p>
+      </div>
+      <div>
+        <app-input label="Seguro ($ MXN)" type="number" placeholder="0" [(ngModel)]="nuevoProducto.insurancePesos"
+          [maxlength]="6"></app-input>
+        <p *ngIf="nuevoProducto.insurancePesos < 0" class="mt-1 text-xs text-red-600">Mínimo 0.</p>
+      </div>
+      <div>
+        <app-input label="Interés/Q (%)" type="number" placeholder="5" [(ngModel)]="nuevoProducto.interestPorc"
+          [maxlength]="4"></app-input>
+        <p *ngIf="nuevoProducto.interestPorc < 0" class="mt-1 text-xs text-red-600">Mínimo 0.</p>
+      </div>
+    </div>
+
     <div class="mt-6 flex justify-end gap-2">
       <app-button variant="text" (onClick)="cerrarModalProducto()">Cancelar</app-button>
-      <app-button variant="primary" (onClick)="guardarProducto()" [disabled]="!nuevoProducto.monto">Guardar Vale</app-button>
+      <app-button variant="primary" (onClick)="guardarProducto()" [disabled]="!isProductoValid">{{ isEditingMode ? 'Guardar Cambios' : 'Confirmar Registro' }}</app-button>
     </div>
   </div>
 </app-modal>
 
-<!-- Modal Nueva Categoría -->
-<app-modal [isOpen]="isCategoriaModalOpen" title="Crear Categoría de Crédito" (onClose)="cerrarModalCategoria()">
+<!-- Modal Confirmación Unificado -->
+<app-modal [isOpen]="isConfirmModalOpen" title="Confirmar Acción" (onClose)="isConfirmModalOpen = false">
   <div class="space-y-4">
-    <app-input label="Nombre de Categoría" type="text" placeholder="Ej: Diamante" [(ngModel)]="nuevaCategoria.nombre"></app-input>
-    <app-input label="Porcentaje de Ganancia (%)" type="number" placeholder="Ej: 12" [(ngModel)]="nuevaCategoria.ganancia"></app-input>
+    <div class="p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400" role="alert">
+      <span class="font-medium">¡Atención!</span> ¿Estás seguro de que deseas desactivar/eliminar el elemento seleccionado? Esta acción puede tener repercusiones en el sistema.
+    </div>
+
+    <div class="flex justify-end gap-2 mt-6">
+      <app-button variant="text" (onClick)="isConfirmModalOpen = false">Cancelar</app-button>
+      <app-button variant="error" (onClick)="ejecutarDesactivacion()">Confirmar Acción</app-button>
+    </div>
+  </div>
+</app-modal>
+
+<!-- Modal Categoría -->
+<app-modal [isOpen]="isCategoriaModalOpen" [title]="(isEditingMode ? 'Editar' : 'Crear') + ' Categoría de Crédito'" (onClose)="cerrarModalCategoria()">
+  <div class="space-y-4">
+    <app-input label="Nombre de Categoría" type="text" placeholder="Ej: Diamante"
+      [(ngModel)]="nuevaCategoria.nombre"></app-input>
+    <app-input label="Porcentaje de Ganancia (%)" type="number" placeholder="Ej: 12"
+      [(ngModel)]="nuevaCategoria.ganancia"></app-input>
     <div class="mt-6 flex justify-end gap-2">
       <app-button variant="text" (onClick)="cerrarModalCategoria()">Cancelar</app-button>
-      <app-button variant="primary" (onClick)="guardarCategoria()" [disabled]="!nuevaCategoria.nombre || !nuevaCategoria.ganancia">Guardar Categoría</app-button>
+      <app-button variant="primary" (onClick)="guardarCategoria()"
+        [disabled]="!nuevaCategoria.nombre || !nuevaCategoria.ganancia">{{ isEditingMode ? 'Guardar Cambios' : 'Registrar' }}</app-button>
     </div>
   </div>
 </app-modal>
 
-<!-- Modal Nueva Sucursal -->
-<app-modal [isOpen]="isSucursalModalOpen" title="Alta de Sucursal" (onClose)="cerrarModalSucursal()">
+<!-- Modal Sucursal -->
+<app-modal [isOpen]="isSucursalModalOpen" [title]="(isEditingMode ? 'Editar' : 'Alta de') + ' Sucursal'" (onClose)="cerrarModalSucursal()">
   <div class="space-y-4">
-    <app-input label="Nombre de la Sucursal" type="text" placeholder="Ej: Sucursal Centro" [(ngModel)]="nuevaSucursal.nombre"></app-input>
+    <app-input label="Nombre de la Sucursal" type="text" placeholder="Ej: Sucursal Centro"
+      [(ngModel)]="nuevaSucursal.name"></app-input>
+    <app-input label="Dirección" type="text" placeholder="Ej: Av. Principal 123"
+      [(ngModel)]="nuevaSucursal.address"></app-input>
+    <app-input label="Teléfono" type="text" placeholder="Ej: 8711234567" [(ngModel)]="nuevaSucursal.phone"></app-input>
     <div class="mt-6 flex justify-end gap-2">
       <app-button variant="text" (onClick)="cerrarModalSucursal()">Cancelar</app-button>
-      <app-button variant="primary" (onClick)="guardarSucursal()" [disabled]="!nuevaSucursal.nombre">Crear Sucursal</app-button>
+      <app-button variant="primary" (onClick)="guardarSucursal()" [disabled]="!nuevaSucursal.name">{{ isEditingMode ? 'Guardar Cambios' : 'Registrar' }}</app-button>
     </div>
   </div>
 </app-modal>
 
-<!-- Modal Nuevo Personal -->
-<app-modal [isOpen]="isPersonalModalOpen" title="Registrar Empleado" maxWidth="lg" (onClose)="cerrarModalPersonal()">
+<!-- Modal Personal -->
+<app-modal [isOpen]="isPersonalModalOpen" [title]="(isEditingMode ? 'Editar ' : 'Registrar ') + activePersonalTab" maxWidth="lg"
+  (onClose)="cerrarModalPersonal()">
   <div class="space-y-4">
-    <app-input label="Nombre Completo" type="text" placeholder="Juan Pérez" [(ngModel)]="nuevoPersonal.nombre"></app-input>
-    <app-input label="Rol en Sistema" type="text" placeholder="Ej: Cajera, Coordinador, Verificador" [(ngModel)]="nuevoPersonal.rol"></app-input>
+    <div class="grid grid-cols-2 gap-4">
+      <app-input label="Nombre(s)" type="text" placeholder="Juan" [(ngModel)]="nuevoPersonal.firstName"></app-input>
+      <app-input label="Apellido Paterno" type="text" placeholder="Pérez"
+        [(ngModel)]="nuevoPersonal.lastNamePaternal"></app-input>
+    </div>
+    <div class="grid grid-cols-2 gap-4">
+      <app-input label="Apellido Materno" type="text" placeholder="López"
+        [(ngModel)]="nuevoPersonal.lastNameMaternal"></app-input>
+      <app-input label="Correo Electrónico" type="email" placeholder="juan@yacatec.com"
+        [(ngModel)]="nuevoPersonal.email"></app-input>
+    </div>
+    <div class="grid grid-cols-2 gap-4">
+      <app-input label="Teléfono" type="text" placeholder="8712345678" [(ngModel)]="nuevoPersonal.phone"></app-input>
+
+      <div>
+        <label class="block mb-2 text-sm font-extrabold text-gray-900 dark:text-white">Sucursal Asignada</label>
+        <select [(ngModel)]="nuevoPersonal.branchId"
+          class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand focus:border-brand block w-full p-2.5">
+          <option value="" disabled selected>Seleccione una sucursal</option>
+          <option *ngFor="let branch of sucursales" [value]="branch.id">{{ branch.name }}</option>
+        </select>
+      </div>
+    </div>
+
     <div class="mt-6 flex justify-end gap-2">
       <app-button variant="text" (onClick)="cerrarModalPersonal()">Cancelar</app-button>
-      <app-button variant="primary" (onClick)="guardarPersonal()" [disabled]="!nuevoPersonal.nombre || !nuevoPersonal.rol">Registrar</app-button>
+      <app-button variant="primary" (onClick)="guardarPersonal()"
+        [disabled]="!nuevoPersonal.firstName || !nuevoPersonal.email">{{ isEditingMode ? 'Guardar Cambios' : 'Registrar' }}</app-button>
     </div>
   </div>
 </app-modal>

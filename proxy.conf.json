@@ -1,0 +1,8 @@
+{
+    "/api": {
+        "target": "http://utete.ddns.net:45000",
+        "secure": false,
+        "changeOrigin": true,
+        "logLevel": "debug"
+    }
+}
