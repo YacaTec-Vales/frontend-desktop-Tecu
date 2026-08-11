@@ -175,7 +175,7 @@ export class TableComponent implements AfterViewInit, OnDestroy, OnChanges {
       const rows = tbody.querySelectorAll('tr');
       const expectedCount = this.dataTrigger ? this.dataTrigger.length : 1;
 
-      if (rows.length >= expectedCount || rows.length > 0) {
+      if (this.dataTrigger ? rows.length === expectedCount : rows.length > 0) {
         this.initTable();
       } else {
         setTimeout(checkRows, 50); // Polling hasta que Angular termine el *ngFor
