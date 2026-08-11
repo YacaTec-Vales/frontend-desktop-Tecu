@@ -5,7 +5,7 @@ import { environment } from '../../../environments/environment';
 
 export interface CreditRaiseRequest {
   id: string;
-  distribuidorId: string;
+  distributorId: string;
   requestedAmountCents: number;
   status: string;
   createdAt: string;
@@ -24,11 +24,11 @@ export class CreditRaiseService {
       .pipe(map(res => res.data));
   }
 
-  approveRequest(id: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/${id}/approve`, {});
+  approveRequest(id: string, payload?: { montoCentavos?: number, notas?: string }): Observable<any> {
+    return this.http.post(`${this.apiUrl}/${id}/approve`, payload || {});
   }
 
-  rejectRequest(id: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/${id}/reject`, {});
+  rejectRequest(id: string, payload?: { notas?: string }): Observable<any> {
+    return this.http.post(`${this.apiUrl}/${id}/reject`, payload || {});
   }
 }
