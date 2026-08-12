@@ -5,10 +5,46 @@ import { environment } from '../../../environments/environment';
 
 export interface Solicitud {
   id: string;
-  distribuidorId: string;
+  coordinatorId: string;
+  verifierId: string;
+  branchId: string;
+  generalData: {
+    rfc: string;
+    nombre: string;
+    apellido_paterno: string;
+    apellido_materno: string;
+    fecha_nacimiento?: string;
+    lugar_nacimiento?: string;
+    calle?: string;
+    numero?: string;
+    colonia?: string;
+    codigo_postal?: string;
+    ciudad?: string;
+    estado?: string;
+    [key: string]: any;
+  };
+  additionalData: {
+    domicilio?: {
+      situacion?: string;
+      num_recamaras?: number;
+      m2_construccion?: number;
+      [key: string]: any;
+    };
+    vehiculos?: any[];
+    familiares?: any[];
+    referencias_laborales?: any[];
+    [key: string]: any;
+  };
+  verificationPhotos: string[];
+  verdict: string;
+  verifierComments: string;
+  verifiedAt: string;
   status: string;
+  distributorId: string | null;
+  rejectionReason: string | null;
+  solicitationStatusAt: string;
   createdAt: string;
-  // Agrega más campos si es necesario según el API real
+  updatedAt: string;
 }
 
 @Injectable({
@@ -24,11 +60,11 @@ export class SolicitudService {
       .pipe(map(res => res.data));
   }
 
-  autorizarSolicitud(id: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/${id}/autorizar`, {});
+  autorizarSolicitud(id: string, payload: { limite_credito_centavos: number, comentarios_decision?: string }): Observable<any> {
+    return this.http.post(`${this.apiUrl}/${id}/autorizar`, payload);
   }
 
-  rechazarSolicitud(id: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/${id}/rechazar`, {});
+  rechazarSolicitud(id: string, payload: { razon: string }): Observable<any> {
+    return this.http.post(`${this.apiUrl}/${id}/rechazar`, payload);
   }
 }
