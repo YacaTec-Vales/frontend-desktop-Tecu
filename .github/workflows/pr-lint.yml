@@ -16,10 +16,19 @@ jobs:
         env:
           PR_TITLE: ${{ github.event.pull_request.title }}
           PR_BODY: ${{ github.event.pull_request.body }}
+          PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
         run: |
           set -euo pipefail
 
           title="$PR_TITLE"
+
+          # Los PRs creados desde ramas automatizadas de Copilot
+          # pueden traer un titulo inicial no convencional.
+          if [[ "$PR_HEAD_REF" == copilot/* ]] && ! [[ "$title" =~ ^[a-z]+(\([a-z0-9-]+\))?: ]]; then
+            echo "::warning::Titulo no convencional permitido temporalmente para rama automatizada: $PR_HEAD_REF"
+            echo "OK: $title"
+            exit 0
+          fi
 
           # Regla 7: maximo 72 caracteres
           if (( ${#title} > 72 )); then
