@@ -60,7 +60,8 @@ export class AuthService {
    * Obtiene la información del usuario autenticado actual.
    */
   getMe(): Observable<AuthUserResponseDto> {
-    return this.http.get<AuthUserResponseDto>(`${this.baseUrl}/me`).pipe(
+    return this.http.get<{ message: string, data: AuthUserResponseDto }>(`${this.baseUrl}/me`).pipe(
+      map(res => res.data),
       tap(user => {
         this.currentUser.set(user);
         this.isAuthenticated.set(true);
