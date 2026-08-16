@@ -32,10 +32,10 @@
           <td class="px-6 py-4 font-semibold text-gray-900">{{ item.name }}</td>
           <td class="px-6 py-4">
             <ng-container *ngIf="item.type === 'ALTA'">
-              <app-badge [text]="item.amountOrVerdict" [variant]="item.amountOrVerdict === 'CUMPLE' ? 'success' : 'error'"></app-badge>
+              <app-badge [text]="item.verdict || ''" [variant]="item.verdict === 'CUMPLE' ? 'success' : 'error'"></app-badge>
             </ng-container>
             <ng-container *ngIf="item.type === 'AUMENTO'">
-              <span class="font-bold text-green-600">{{ item.amountOrVerdict / 100 | currency:'MXN' }}</span>
+              <span class="font-bold text-green-600">{{ (item.amount || 0) / 100 | currency:'MXN' }}</span>
             </ng-container>
           </td>
           <td class="px-6 py-4"><app-badge [text]="item.status" variant="warning"></app-badge></td>

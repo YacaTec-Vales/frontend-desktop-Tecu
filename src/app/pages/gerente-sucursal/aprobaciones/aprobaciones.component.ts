@@ -16,7 +16,8 @@ export interface UnifiedRequest {
   type: 'ALTA' | 'AUMENTO';
   description: string;
   name: string;
-  amountOrVerdict: string | number;
+  verdict?: string;
+  amount?: number;
   status: string;
   createdAt: Date;
   originalData: any;
@@ -110,7 +111,7 @@ export class AprobacionesComponent implements OnInit {
         type: 'ALTA',
         description: 'Alta de Distribuidora',
         name: `${d.generalData?.nombre || ''} ${d.generalData?.apellido_paterno || ''}`.trim() || 'Sin Nombre',
-        amountOrVerdict: d.verdict,
+        verdict: d.verdict,
         status: d.status,
         createdAt: new Date(d.createdAt),
         originalData: d
@@ -123,7 +124,7 @@ export class AprobacionesComponent implements OnInit {
         type: 'AUMENTO',
         description: 'Aumento de Crédito',
         name: i.distributorId,
-        amountOrVerdict: i.requestedAmountCents,
+        amount: i.requestedAmountCents,
         status: i.status,
         createdAt: new Date(i.createdAt),
         originalData: i
