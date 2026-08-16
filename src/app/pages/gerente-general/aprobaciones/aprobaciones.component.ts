@@ -41,6 +41,7 @@ export class AprobacionesComponent implements OnInit {
   
   loadedCount = 0;
   isDataLoaded = false;
+  renderTable = true;
 
   isModalOpen = false;
   selectedItem: UnifiedRequest | null = null;
@@ -147,6 +148,13 @@ export class AprobacionesComponent implements OnInit {
     } else if (this.filterType === 'AUMENTOS') {
       this.filteredList = this.unifiedList.filter(req => req.type === 'AUMENTO');
     }
+
+    this.renderTable = false;
+    this.cdr.detectChanges();
+    setTimeout(() => {
+      this.renderTable = true;
+      this.cdr.detectChanges();
+    }, 10);
   }
 
   abrirModal(item: UnifiedRequest) {
