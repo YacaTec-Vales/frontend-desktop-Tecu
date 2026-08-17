@@ -9,7 +9,10 @@ import { BadgeComponent } from '../../../components/ui/badge/badge';
 
 import { SolicitudService, Solicitud } from '../../../core/services/solicitud.service';
 import { CreditRaiseService, CreditRaiseRequest } from '../../../core/services/credit-raise.service';
+import { DistribuidorService } from '../../../core/services/distribuidor.service';
 import { AlertService } from '../../../core/services/alert.service';
+import { forkJoin, of } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
 
 export interface UnifiedRequest {
   id: string;
@@ -51,6 +54,10 @@ export class AprobacionesComponent implements OnInit {
   montoAprobacion: number | null = null;
   notasGerencia: string = '';
   
+  trackById(index: number, item: UnifiedRequest): string {
+    return item.id;
+  }
+
   // Rejection Mode
   isRejectingMode = false;
   motivoRechazo = '';
@@ -58,6 +65,7 @@ export class AprobacionesComponent implements OnInit {
   constructor(
     private solicitudService: SolicitudService,
     private creditRaiseService: CreditRaiseService,
+    private distribuidorService: DistribuidorService,
     private alertService: AlertService,
     private cdr: ChangeDetectorRef
   ) {}
@@ -75,7 +83,7 @@ export class AprobacionesComponent implements OnInit {
   loadDictamenes() {
     this.solicitudService.getSolicitudes().subscribe({
       next: (data) => {
-        this.dictamenes = data;
+        this.dictamenes = data.filter(d => d.status === 'DICTAMINADA');
         this.checkIfAllLoaded();
       },
       error: () => {
@@ -87,7 +95,7 @@ export class AprobacionesComponent implements OnInit {
   loadIncrementos() {
     this.creditRaiseService.getPendingRequests().subscribe({
       next: (data) => {
-        this.incrementos = data;
+        this.incrementos = data.filter(i => i.status === 'PENDING');
         this.checkIfAllLoaded();
       },
       error: () => {
@@ -119,25 +127,46 @@ export class AprobacionesComponent implements OnInit {
       });
     });
 
-    this.incrementos.forEach(i => {
-      this.unifiedList.push({
-        id: i.id,
-        type: 'AUMENTO',
-        description: 'Aumento de Crédito',
-        name: i.distributorId,
-        amount: i.requestedAmountCents,
-        status: i.status,
-        createdAt: new Date(i.createdAt),
-        originalData: i
-      });
+    const fetchObservables = this.incrementos.map(i => {
+      return this.distribuidorService.getDistribuidorById(i.distributorId).pipe(
+        catchError(() => of(null)), // If error, return null so we don't break forkJoin
+        map((distInfo: any) => {
+          let name = i.distributorId;
+          if (distInfo && distInfo.generalData) {
+            name = `${distInfo.generalData.nombre || ''} ${distInfo.generalData.apellido_paterno || ''} ${distInfo.generalData.apellido_materno || ''}`.trim() || name;
+          } else if (distInfo && distInfo.user) {
+            name = `${distInfo.user.name || ''} ${distInfo.user.lastName || ''} ${distInfo.user.secondLastName || ''}`.trim() || name;
+          }
+          
+          return {
+            id: i.id,
+            type: 'AUMENTO' as const,
+            description: 'Aumento de Crédito',
+            name: name,
+            amount: i.requestedAmountCents,
+            status: i.status,
+            createdAt: new Date(i.createdAt),
+            originalData: i
+          };
+        })
+      );
     });
 
-    // Ordenar de más reciente a más antiguo
-    this.unifiedList.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-    
-    this.applyFilter();
-    this.isDataLoaded = true;
-    this.cdr.detectChanges();
+    if (fetchObservables.length > 0) {
+      forkJoin(fetchObservables).subscribe((incrementosConNombre: any) => {
+        this.unifiedList.push(...(incrementosConNombre as UnifiedRequest[]));
+        this.unifiedList.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+        this.applyFilter();
+        this.isLoading = false;
+        this.isDataLoaded = true;
+        this.cdr.detectChanges();
+      });
+    } else {
+      this.unifiedList.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+      this.applyFilter();
+      this.isDataLoaded = true;
+      this.cdr.detectChanges();
+    }
   }
 
   applyFilter() {
@@ -158,15 +187,22 @@ export class AprobacionesComponent implements OnInit {
   }
 
   abrirModal(item: UnifiedRequest) {
+    console.log('abrirModal called', item.id, item.type);
     this.selectedItem = item;
-    this.isModalOpen = true;
     this.notasGerencia = '';
-    
+
     if (this.selectedItem.type === 'AUMENTO') {
-      this.montoAprobacion = this.selectedItem.originalData.requestedAmountCents / 100;
+      const cents = this.selectedItem.originalData?.requestedAmountCents ?? 0;
+      this.montoAprobacion = cents / 100;
     } else {
       this.montoAprobacion = null;
     }
+
+    // Open modal after a micro‑task to avoid clashes with table re‑render
+    setTimeout(() => {
+      this.isModalOpen = true;
+      this.cdr.detectChanges();
+    }, 0);
   }
 
   cerrarModal() {

@@ -194,10 +194,8 @@
         <!-- Botones modo Normal -->
         <ng-container *ngIf="!isRejectingMode">
           <app-button variant="secondary" (onClick)="cerrarModal()" [disabled]="isLoading">Cerrar</app-button>
-          <ng-container *ngIf="selectedItem.status === 'DICTAMINADA' || selectedItem.status === 'PENDING'">
-            <app-button variant="error" (onClick)="iniciarRechazo()" [disabled]="isLoading">Rechazar</app-button>
-            <app-button variant="primary" (onClick)="aprobar()" [disabled]="isLoading">{{ isLoading ? 'Procesando...' : 'Aprobar Trámite' }}</app-button>
-          </ng-container>
+          <app-button variant="error" (onClick)="iniciarRechazo()" [disabled]="isLoading">Rechazar</app-button>
+          <app-button variant="primary" (onClick)="aprobar()" [disabled]="isLoading">{{ isLoading ? 'Procesando...' : 'Aprobar Trámite' }}</app-button>
         </ng-container>
         
         <!-- Botones modo Rechazo -->

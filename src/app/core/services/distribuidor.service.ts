@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { Distribuidor, CreateDistribuidorDto } from '../models/distribuidor.model';
 
@@ -22,5 +22,10 @@ export class DistribuidorService {
 
   changeCoordinator(id: string, coordId: string): Observable<any> {
     return this.http.put(`${this.apiUrl}/${id}/coord-change`, { coordId });
+  }
+
+  getDistribuidorById(id: string): Observable<Distribuidor> {
+    return this.http.get<{ message: string, data: Distribuidor }>(`${this.apiUrl}/${id}`)
+      .pipe(map((res: any) => res.data || res));
   }
 }

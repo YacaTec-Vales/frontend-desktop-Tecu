@@ -22,7 +22,7 @@
     <app-card [noPadding]="true">
       <div *ngIf="!isDataLoaded" class="p-8 text-center text-gray-500">Cargando solicitudes...</div>
       <app-table *ngIf="isDataLoaded && renderTable" [dataTrigger]="filteredList" [columns]="['Folio', 'Tipo', 'Solicitante', 'Detalle', 'Estado', 'Fecha', 'Acción']" [isEmpty]="filteredList.length === 0" emptyMessage="No hay solicitudes pendientes con este filtro.">
-        <tr *ngFor="let item of filteredList" class="bg-white border-b hover:bg-gray-50">
+        <tr *ngFor="let item of filteredList; trackBy: trackById" class="bg-white border-b hover:bg-gray-50">
           <td class="px-6 py-4 font-bold text-xs truncate max-w-[100px]" [title]="item.id">{{ item.id }}</td>
           <td class="px-6 py-4">
             <span class="px-2 py-1 text-xs font-semibold rounded-full border" [ngClass]="item.type === 'ALTA' ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-green-50 text-green-700 border-green-200'">
@@ -194,10 +194,8 @@
         <!-- Botones modo Normal -->
         <ng-container *ngIf="!isRejectingMode">
           <app-button variant="secondary" (onClick)="cerrarModal()" [disabled]="isLoading">Cerrar</app-button>
-          <ng-container *ngIf="selectedItem.status === 'DICTAMINADA' || selectedItem.status === 'PENDING'">
-            <app-button variant="error" (onClick)="iniciarRechazo()" [disabled]="isLoading">Rechazar</app-button>
-            <app-button variant="primary" (onClick)="aprobar()" [disabled]="isLoading">{{ isLoading ? 'Procesando...' : 'Aprobar Trámite' }}</app-button>
-          </ng-container>
+          <app-button variant="error" (onClick)="iniciarRechazo()" [disabled]="isLoading">Rechazar</app-button>
+          <app-button variant="primary" (onClick)="aprobar()" [disabled]="isLoading">{{ isLoading ? 'Procesando...' : 'Aprobar Trámite' }}</app-button>
         </ng-container>
         
         <!-- Botones modo Rechazo -->
