@@ -40,7 +40,10 @@ export class LiberacionComponent {
 
   buscarFolio() {
     const folioLimpio = this.folioBuscado.trim();
-    if (!folioLimpio) return;
+    if (!folioLimpio) {
+      this.reset();
+      return;
+    }
     
     this.isLoading = true;
     this.errorBusqueda = '';
@@ -117,5 +120,15 @@ export class LiberacionComponent {
 
   guardarEdicion() {
     this.modoEdicionActivo = false;
+  }
+
+  reset() {
+    this.folioBuscado = '';
+    this.valeEncontrado = null;
+    this.liberacionExitosa = false;
+    this.errorBusqueda = '';
+    this.ineValidado = false;
+    this.comprobanteValidado = false;
+    this.autorizacionBancaria = '';
   }
 }

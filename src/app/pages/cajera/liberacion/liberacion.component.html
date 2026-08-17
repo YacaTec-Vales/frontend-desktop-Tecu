@@ -90,7 +90,7 @@
     <h3 class="text-2xl font-black text-emerald-900 mb-2">Pago Liberado Exitosamente</h3>
     <p class="text-emerald-700">El monto de {{ valeEncontrado?.montoPesos | currency:'MXN' }} fue registrado bajo la autorización {{ autorizacionBancaria }}.</p>
     <div class="mt-6">
-      <app-button variant="outline" (onClick)="folioBuscado = ''; buscarFolio()">Liberar Nuevo Folio</app-button>
+      <app-button variant="outline" (onClick)="reset()">Liberar Nuevo Folio</app-button>
     </div>
   </div>
 
