@@ -87,7 +87,7 @@
   <div *ngIf="activeTab === 'sucursales'" class="animate-fade-in">
     <app-card title="Gestión de Sucursales" subtitle="Administra las sedes físicas de la empresa." [noPadding]="true">
       <app-table *ngIf="isBranchesLoaded" title="Sucursales" [dataTrigger]="sucursales" (onAction)="handleTableAction($event, 'sucursal')"
-        [columns]="['Nombre', 'Tipo', 'Es Matriz', 'Dirección', 'Estado', 'Acciones']" [isEmpty]="sucursales.length === 0">
+        [columns]="['Nombre', 'Tipo', 'Es Matriz', 'Gerente', 'Dirección', 'Estado', 'Acciones']" [isEmpty]="sucursales.length === 0">
         
         <app-button table-actions variant="primary" (onClick)="abrirModalSucursal()">+ Nueva Sucursal</app-button>
 
@@ -96,6 +96,10 @@
           <td class="px-6 py-4 text-xs font-bold text-gray-500">{{ s.branchType }}</td>
           <td class="px-6 py-4">
             <app-badge [text]="s.esMatriz ? 'Sí' : 'No'" [variant]="s.esMatriz ? 'info' : 'default'"></app-badge>
+          </td>
+          <td class="px-6 py-4 text-gray-700">
+            <span *ngIf="s.manager; else noManager">{{ s.manager.firstName }} {{ s.manager.lastNamePaternal }}</span>
+            <ng-template #noManager><span class="text-gray-400 italic">Sin asignar</span></ng-template>
           </td>
           <td class="px-6 py-4 text-gray-500">{{ s.address || 'Sin dirección' }}</td>
           <td class="px-6 py-4">
@@ -112,6 +116,9 @@
   <!-- Tab Content: PERSONAL -->
   <div *ngIf="activeTab === 'personal'" class="animate-fade-in space-y-4">
     <div class="flex space-x-2 bg-gray-100 p-1 rounded-lg w-fit">
+      <button (click)="setPersonalTab('gerentes')"
+        [class]="activePersonalTab === 'gerentes' ? 'bg-white shadow text-gray-900' : 'text-gray-500 hover:text-gray-700'"
+        class="px-4 py-2 text-sm font-medium rounded-md transition-all">Gerentes de Sucursal</button>
       <button (click)="setPersonalTab('coordinadores')"
         [class]="activePersonalTab === 'coordinadores' ? 'bg-white shadow text-gray-900' : 'text-gray-500 hover:text-gray-700'"
         class="px-4 py-2 text-sm font-medium rounded-md transition-all">Coordinadores</button>
@@ -125,12 +132,26 @@
 
     <app-card title="Gestión de Empleados" [subtitle]="'Directorio de ' + activePersonalTab" [noPadding]="true">
       <app-table *ngIf="isStaffLoaded" title="Gestión de Empleados" [subtitle]="'Directorio de ' + activePersonalTab" 
-        [dataTrigger]="activePersonalTab === 'coordinadores' ? coordinadores : activePersonalTab === 'verificadores' ? verificadores : cajeros"
+        [dataTrigger]="activePersonalTab === 'gerentes' ? gerentes : activePersonalTab === 'coordinadores' ? coordinadores : activePersonalTab === 'verificadores' ? verificadores : cajeros"
         (onAction)="handleTableAction($event, activePersonalTab.substring(0, activePersonalTab.length - 1))"
         [columns]="['ID', 'Nombre', 'Email', 'Teléfono', 'Sucursal', 'Acciones']"
-        [isEmpty]="activePersonalTab === 'coordinadores' && coordinadores.length === 0 || activePersonalTab === 'verificadores' && verificadores.length === 0 || activePersonalTab === 'cajeros' && cajeros.length === 0">
+        [isEmpty]="activePersonalTab === 'gerentes' && gerentes.length === 0 || activePersonalTab === 'coordinadores' && coordinadores.length === 0 || activePersonalTab === 'verificadores' && verificadores.length === 0 || activePersonalTab === 'cajeros' && cajeros.length === 0">
         
-        <app-button table-actions variant="primary" (onClick)="abrirModalPersonal()">+ Registrar Empleado</app-button>
+        <app-button table-actions variant="primary" (onClick)="abrirModalPersonal()" *ngIf="activePersonalTab !== 'gerentes'">+ Registrar Empleado</app-button>
+
+        <ng-container *ngIf="activePersonalTab === 'gerentes'">
+          <tr *ngFor="let emp of gerentes" class="bg-white border-b hover:bg-gray-50">
+            <td class="px-6 py-4 font-bold text-xs truncate max-w-[80px]" [title]="emp.id">{{ emp.id }}</td>
+            <td class="px-6 py-4">{{ emp.firstName }} {{ emp.lastNamePaternal }}</td>
+            <td class="px-6 py-4 text-gray-500">{{ emp.email }}</td>
+            <td class="px-6 py-4">{{ emp.phone }}</td>
+            <td class="px-6 py-4 text-gray-500 truncate max-w-[100px]" [title]="emp.branchId">{{ emp.branchId || 'N/A'
+              }}</td>
+            <td class="px-6 py-4 flex gap-2">
+              <app-table-actions [id]="emp.id"></app-table-actions>
+            </td>
+          </tr>
+        </ng-container>
 
         <ng-container *ngIf="activePersonalTab === 'coordinadores'">
           <tr *ngFor="let emp of coordinadores" class="bg-white border-b hover:bg-gray-50">

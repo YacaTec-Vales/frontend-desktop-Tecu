@@ -4,7 +4,14 @@ export interface Branch {
   branchType: 'MATRIZ' | 'SUCURSAL';
   esMatriz: boolean;
   address: string | null;
-  managerUserId: string | null;
+  managerUserId?: string | null;
+  manager?: {
+    id: string;
+    firstName: string;
+    lastNamePaternal: string;
+    email: string;
+  } | null;
+  cutoffDay: number;
   isActive: boolean;
   createdAt?: string;
   updatedAt?: string;

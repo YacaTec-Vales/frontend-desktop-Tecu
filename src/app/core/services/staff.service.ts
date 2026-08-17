@@ -4,6 +4,18 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { Coordinador, Verificador, Cajero, CreateStaffDto } from '../models/staff.model';
 
+export interface Gerente {
+  id: string;
+  firstName: string;
+  lastNamePaternal: string;
+  lastNameMaternal: string;
+  email: string;
+  phone: string;
+  branchId: string;
+}
+
+import { map } from 'rxjs/operators';
+
 @Injectable({
   providedIn: 'root'
 })
@@ -12,30 +24,49 @@ export class StaffService {
 
   constructor(private http: HttpClient) {}
 
+  // Gerentes de Sucursal
+  getGerentes(): Observable<Gerente[]> {
+    return this.http.get<{data: {data: Gerente[]}}>(`${this.baseUrl}/users?roleCode=GERENTE_SUCURSAL`).pipe(
+      map(res => res.data.data)
+    );
+  }
+
   // Coordinadores
   getCoordinadores(): Observable<Coordinador[]> {
-    return this.http.get<Coordinador[]>(`${this.baseUrl}/coordinadores`);
+    return this.http.get<{data: {data: Coordinador[]}}>(`${this.baseUrl}/coordinadores`).pipe(
+      map(res => res.data.data)
+    );
   }
 
   createCoordinador(data: CreateStaffDto): Observable<Coordinador> {
-    return this.http.post<Coordinador>(`${this.baseUrl}/coordinadores`, data);
+    return this.http.post<{data: Coordinador}>(`${this.baseUrl}/coordinadores`, data).pipe(
+      map(res => res.data)
+    );
   }
 
   // Verificadores
   getVerificadores(): Observable<Verificador[]> {
-    return this.http.get<Verificador[]>(`${this.baseUrl}/verificadores`);
+    return this.http.get<{data: {data: Verificador[]}}>(`${this.baseUrl}/verificadores`).pipe(
+      map(res => res.data.data)
+    );
   }
 
   createVerificador(data: CreateStaffDto): Observable<Verificador> {
-    return this.http.post<Verificador>(`${this.baseUrl}/verificadores`, data);
+    return this.http.post<{data: Verificador}>(`${this.baseUrl}/verificadores`, data).pipe(
+      map(res => res.data)
+    );
   }
 
   // Cajeros
   getCajeros(): Observable<Cajero[]> {
-    return this.http.get<Cajero[]>(`${this.baseUrl}/cajeros`);
+    return this.http.get<{data: {data: Cajero[]}}>(`${this.baseUrl}/cajeros`).pipe(
+      map(res => res.data.data)
+    );
   }
 
   createCajero(data: CreateStaffDto): Observable<Cajero> {
-    return this.http.post<Cajero>(`${this.baseUrl}/cajeros`, data);
+    return this.http.post<{data: Cajero}>(`${this.baseUrl}/cajeros`, data).pipe(
+      map(res => res.data)
+    );
   }
 }

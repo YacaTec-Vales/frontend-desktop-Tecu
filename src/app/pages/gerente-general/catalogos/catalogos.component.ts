@@ -16,7 +16,7 @@ import { Branch, CreateBranchDto, UpdateBranchDto } from '../../../core/models/b
 import { Coordinador, Verificador, Cajero, CreateStaffDto } from '../../../core/models/staff.model';
 
 type Tab = 'productos' | 'categorias' | 'sucursales' | 'personal';
-type PersonalTab = 'coordinadores' | 'verificadores' | 'cajeros';
+type PersonalTab = 'gerentes' | 'coordinadores' | 'verificadores' | 'cajeros';
 
 @Component({
   selector: 'app-catalogos',
@@ -26,7 +26,7 @@ type PersonalTab = 'coordinadores' | 'verificadores' | 'cajeros';
 })
 export class CatalogosComponent implements OnInit {
   activeTab: Tab = 'productos';
-  activePersonalTab: PersonalTab = 'coordinadores';
+  activePersonalTab: PersonalTab = 'gerentes';
 
   // State Modales
   isProductoModalOpen = false;
@@ -55,6 +55,7 @@ export class CatalogosComponent implements OnInit {
   // API Data
   productos: Product[] = [];
   sucursales: Branch[] = [];
+  gerentes: any[] = [];
   coordinadores: Coordinador[] = [];
   verificadores: Verificador[] = [];
   cajeros: Cajero[] = [];
@@ -114,6 +115,12 @@ export class CatalogosComponent implements OnInit {
   }
 
   loadStaff() {
+    // Gerentes
+    this.staffService.getGerentes().subscribe(data => {
+      this.gerentes = data;
+      this.checkStaffLoaded();
+      this.cdr.detectChanges();
+    });
     // Coordinadores
     this.staffService.getCoordinadores().subscribe(data => {
       this.coordinadores = data;
@@ -135,7 +142,7 @@ export class CatalogosComponent implements OnInit {
   }
 
   private checkStaffLoaded() {
-    if (this.coordinadores.length > 0 || this.verificadores.length > 0 || this.cajeros.length > 0) {
+    if (this.gerentes.length > 0 || this.coordinadores.length > 0 || this.verificadores.length > 0 || this.cajeros.length > 0) {
       this.isStaffLoaded = true;
     }
   }
@@ -351,8 +358,9 @@ export class CatalogosComponent implements OnInit {
       } else if (type === 'sucursal') {
         const s = this.sucursales.find(x => x.id === event.id);
         if (s) this.abrirModalSucursal(s);
-      } else if (['coordinador', 'verificador', 'cajero'].includes(type)) {
+      } else if (['gerente', 'coordinador', 'verificador', 'cajero'].includes(type)) {
         let list: any[] = [];
+        if (type === 'gerente') list = this.gerentes;
         if (type === 'coordinador') list = this.coordinadores;
         if (type === 'verificador') list = this.verificadores;
         if (type === 'cajero') list = this.cajeros;
