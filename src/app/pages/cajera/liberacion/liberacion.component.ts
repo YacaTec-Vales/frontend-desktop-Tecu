@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CardComponent } from '../../../components/ui/card/card';
@@ -33,7 +33,10 @@ export class LiberacionComponent {
   tokenInput: string = '';
   modoEdicionActivo = false;
 
-  constructor(private voucherService: VoucherService) {}
+  constructor(
+    private voucherService: VoucherService,
+    private cdr: ChangeDetectorRef
+  ) {}
 
   buscarFolio() {
     const folioLimpio = this.folioBuscado.trim();
@@ -49,12 +52,16 @@ export class LiberacionComponent {
 
     this.voucherService.findVoucher(folioLimpio).subscribe({
       next: (vale) => {
+        console.log('Vale encontrado procesado:', vale);
         this.isLoading = false;
         this.valeEncontrado = vale;
+        this.cdr.detectChanges();
       },
       error: (err) => {
+        console.error('Error en findVoucher:', err);
         this.isLoading = false;
-        this.errorBusqueda = err.error?.message || 'Error al buscar el folio. Verifique e intente nuevamente.';
+        this.errorBusqueda = err.error?.message || err.message || 'Error al buscar el folio. Verifique e intente nuevamente.';
+        this.cdr.detectChanges();
       }
     });
   }

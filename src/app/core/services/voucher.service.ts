@@ -21,8 +21,18 @@ export class VoucherService {
   constructor(private http: HttpClient) {}
 
   findVoucher(folio: string): Observable<VoucherDetails> {
-    return this.http.post<{ message: string, data: VoucherDetails }>(`${this.apiUrl}/find/${folio}`, {})
-      .pipe(map(res => res.data));
+    return this.http.post<{ message: string, data: any }>(`${this.apiUrl}/find/${folio}`, {})
+      .pipe(map(res => {
+        const d = res.data;
+        return {
+          folio: d.voucher.folio,
+          tipo: d.voucher.voucherType === 'PREVALE' ? 'Pre-Vale' : 'Digital',
+          cliente: d.client.fullName,
+          montoPesos: d.voucher.amountCents / 100,
+          status: d.voucher.status,
+          requiresIdentityVerification: d.isPrevale
+        } as VoucherDetails;
+      }));
   }
 
   confirmVoucher(folio: string, payload: { authorizationNumber: string, dataConfirmed: boolean, documents?: any[] }): Observable<any> {
