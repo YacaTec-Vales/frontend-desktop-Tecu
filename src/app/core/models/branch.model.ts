@@ -12,6 +12,8 @@ export interface Branch {
     email: string;
   } | null;
   cutoffDay: number;
+  paymentDay: number;
+  earlyPaymentDays: number;
   isActive: boolean;
   createdAt?: string;
   updatedAt?: string;
@@ -22,7 +24,10 @@ export interface CreateBranchDto {
   branchType: 'MATRIZ' | 'SUCURSAL';
   esMatriz?: boolean;
   address?: string;
-  managerUserId?: string;
+  managerUserId?: string | null;
+  cutoffDay?: number;
+  paymentDay?: number;
+  earlyPaymentDays?: number;
 }
 
 export interface UpdateBranchDto {
@@ -30,5 +35,8 @@ export interface UpdateBranchDto {
   branchType?: 'MATRIZ' | 'SUCURSAL';
   esMatriz?: boolean;
   address?: string;
-  managerUserId?: string;
+  managerUserId?: string | null;
+  cutoffDay?: number;
+  paymentDay?: number;
+  earlyPaymentDays?: number;
 }

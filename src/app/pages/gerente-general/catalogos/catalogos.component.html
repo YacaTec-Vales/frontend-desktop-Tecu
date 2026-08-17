@@ -137,7 +137,7 @@
         [columns]="['ID', 'Nombre', 'Email', 'Teléfono', 'Sucursal', 'Acciones']"
         [isEmpty]="activePersonalTab === 'gerentes' && gerentes.length === 0 || activePersonalTab === 'coordinadores' && coordinadores.length === 0 || activePersonalTab === 'verificadores' && verificadores.length === 0 || activePersonalTab === 'cajeros' && cajeros.length === 0">
         
-        <app-button table-actions variant="primary" (onClick)="abrirModalPersonal()" *ngIf="activePersonalTab !== 'gerentes'">+ Registrar Empleado</app-button>
+        <app-button table-actions variant="primary" (onClick)="abrirModalPersonal()">+ Registrar Empleado</app-button>
 
         <ng-container *ngIf="activePersonalTab === 'gerentes'">
           <tr *ngFor="let emp of gerentes" class="bg-white border-b hover:bg-gray-50">
@@ -304,6 +304,10 @@
 <!-- Modal Sucursal -->
 <app-modal [isOpen]="isSucursalModalOpen" [title]="(isEditingMode ? 'Editar' : 'Alta de') + ' Sucursal'" (onClose)="cerrarModalSucursal()">
   <div class="space-y-4">
+    <div *ngIf="sucursalError" class="p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400" role="alert">
+      <span class="font-medium">Error:</span> {{ sucursalError }}
+    </div>
+
     <app-input label="Nombre de la Sucursal" type="text" placeholder="Ej: Sucursal Centro"
       [(ngModel)]="nuevaSucursal.name"></app-input>
       
@@ -322,6 +326,27 @@
       <label for="esMatriz" class="text-sm font-medium text-gray-900 dark:text-gray-300">¿Es la Matriz Principal?</label>
     </div>
 
+    <div>
+      <label class="block mb-2 text-sm font-extrabold text-gray-900 dark:text-white">Gerente de Sucursal</label>
+      <select [(ngModel)]="nuevaSucursal.managerUserId"
+        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand focus:border-brand block w-full p-2.5">
+        <option value="" [disabled]="!isEditingMode">Seleccione un gerente (opcional)</option>
+        <option *ngFor="let gerente of gerentes" [value]="gerente.id">{{ gerente.firstName }} {{ gerente.lastNamePaternal }}</option>
+      </select>
+    </div>
+
+    <div class="grid grid-cols-3 gap-4">
+      <div>
+        <app-input label="Día de Corte" type="number" placeholder="Ej: 15" [(ngModel)]="nuevaSucursal.cutoffDay"></app-input>
+      </div>
+      <div>
+        <app-input label="Día de Pago" type="number" placeholder="Ej: 20" [(ngModel)]="nuevaSucursal.paymentDay"></app-input>
+      </div>
+      <div>
+        <app-input label="Días Anticipo" type="number" placeholder="Ej: 3" [(ngModel)]="nuevaSucursal.earlyPaymentDays"></app-input>
+      </div>
+    </div>
+
     <app-input label="Dirección (Opcional)" type="text" placeholder="Ej: Av. Principal 123"
       [(ngModel)]="nuevaSucursal.address"></app-input>
 
@@ -336,6 +361,10 @@
 <app-modal [isOpen]="isPersonalModalOpen" [title]="(isEditingMode ? 'Editar ' : 'Registrar ') + activePersonalTab" maxWidth="lg"
   (onClose)="cerrarModalPersonal()">
   <div class="space-y-4">
+    <div *ngIf="personalError" class="p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400" role="alert">
+      <span class="font-medium">Error:</span> {{ personalError }}
+    </div>
+
     <div class="grid grid-cols-2 gap-4">
       <app-input label="Nombre(s)" type="text" placeholder="Juan" [(ngModel)]="nuevoPersonal.firstName"></app-input>
       <app-input label="Apellido Paterno" type="text" placeholder="Pérez"

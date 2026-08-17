@@ -85,6 +85,9 @@ export class CatalogosComponent implements OnInit {
     branchId: ''
   };
 
+  sucursalError: string | null = null;
+  personalError: string | null = null;
+
   constructor(
     private branchService: BranchService,
     private staffService: StaffService,
@@ -250,6 +253,16 @@ export class CatalogosComponent implements OnInit {
       this.branchService.deleteBranch(id).subscribe(() => {
         this.loadBranches(); // Reload after delete
       });
+    } else if (['gerente', 'coordinador', 'verificador', 'cajero'].includes(type)) {
+      let deleteAction;
+      if (type === 'gerente') deleteAction = this.staffService.deactivateGerente(id);
+      else if (type === 'coordinador') deleteAction = this.staffService.deactivateCoordinador(id);
+      else if (type === 'verificador') deleteAction = this.staffService.deactivateVerificador(id);
+      else deleteAction = this.staffService.deactivateCajero(id);
+
+      deleteAction.subscribe(() => {
+        this.loadStaff();
+      });
     }
 
     this.isConfirmModalOpen = false;
@@ -277,39 +290,70 @@ export class CatalogosComponent implements OnInit {
 
   // Sucursales
   abrirModalSucursal(suc?: Branch) { 
+    this.sucursalError = null;
     if (suc) {
       this.isEditingMode = true;
       this.nuevaSucursal = { 
         name: suc.name, 
         branchType: suc.branchType,
         esMatriz: suc.esMatriz,
-        address: suc.address || ''
+        address: suc.address || '',
+        managerUserId: suc.managerUserId || '',
+        cutoffDay: suc.cutoffDay || 15,
+        paymentDay: suc.paymentDay || 20,
+        earlyPaymentDays: suc.earlyPaymentDays || 3
       };
-      // We will need the ID later for update. We can store it in a temporary variable or the active entity.
       this.entityToDeactivate = { type: 'sucursal', id: suc.id }; 
     } else {
       this.isEditingMode = false;
-      this.nuevaSucursal = { name: '', branchType: 'SUCURSAL', esMatriz: false, address: '' };
+      this.nuevaSucursal = { 
+        name: '', 
+        branchType: 'SUCURSAL', 
+        esMatriz: false, 
+        address: '',
+        managerUserId: '',
+        cutoffDay: 15,
+        paymentDay: 20,
+        earlyPaymentDays: 3
+      };
     }
     this.isSucursalModalOpen = true; 
   }
   cerrarModalSucursal() { 
     this.isSucursalModalOpen = false; 
     this.isEditingMode = false; 
+    this.sucursalError = null;
     this.nuevaSucursal = { name: '', branchType: 'SUCURSAL', esMatriz: false, address: '' }; 
     this.entityToDeactivate = null;
   }
   guardarSucursal() {
+    this.sucursalError = null;
     if (this.nuevaSucursal.name && this.nuevaSucursal.branchType) {
+      const payload = { ...this.nuevaSucursal };
+      if (!payload.managerUserId || payload.managerUserId === '') {
+        payload.managerUserId = null;
+      }
       if (this.isEditingMode && this.entityToDeactivate) {
-        this.branchService.updateBranch(this.entityToDeactivate.id, this.nuevaSucursal).subscribe(() => {
-          this.loadBranches();
-          this.cerrarModalSucursal();
+        this.branchService.updateBranch(this.entityToDeactivate.id, payload).subscribe({
+          next: () => {
+            this.loadBranches();
+            this.cerrarModalSucursal();
+          },
+          error: (err) => {
+            this.sucursalError = err.error?.message || err.message || 'Error al actualizar la sucursal.';
+            this.cdr.detectChanges();
+          }
         });
       } else {
-        this.branchService.createBranch(this.nuevaSucursal).subscribe(() => {
-          this.loadBranches();
-          this.cerrarModalSucursal();
+        this.branchService.createBranch(payload).subscribe({
+          next: () => {
+            this.loadBranches();
+            this.cerrarModalSucursal();
+          },
+          error: (err) => {
+            this.sucursalError = err.error?.message || err.message || 'Error al crear la sucursal.';
+            this.cdr.detectChanges();
+          }
         });
       }
     }
@@ -317,9 +361,24 @@ export class CatalogosComponent implements OnInit {
 
   // Personal
   abrirModalPersonal(emp?: any) { 
+    this.personalError = null;
     if (emp) {
       this.isEditingMode = true;
-      this.nuevoPersonal = { ...emp };
+      // Sólo enviamos campos que se pueden editar
+      this.nuevoPersonal = { 
+        firstName: emp.firstName,
+        lastNamePaternal: emp.lastNamePaternal,
+        lastNameMaternal: emp.lastNameMaternal || '',
+        email: emp.email,
+        phone: emp.phone || '',
+        branchId: emp.branchId || ''
+      };
+      let tipo = this.activePersonalTab.substring(0, this.activePersonalTab.length - 1);
+      if (this.activePersonalTab === 'gerentes') tipo = 'gerente';
+      else if (this.activePersonalTab === 'coordinadores') tipo = 'coordinador';
+      else if (this.activePersonalTab === 'verificadores') tipo = 'verificador';
+      else tipo = 'cajero';
+      this.entityToDeactivate = { type: tipo, id: emp.id };
     } else {
       this.isEditingMode = false;
       this.nuevoPersonal = { firstName: '', lastNamePaternal: '', lastNameMaternal: '', email: '', phone: '', branchId: '' };
@@ -329,19 +388,43 @@ export class CatalogosComponent implements OnInit {
   cerrarModalPersonal() { 
     this.isPersonalModalOpen = false; 
     this.isEditingMode = false;
+    this.personalError = null;
     this.nuevoPersonal = { firstName: '', lastNamePaternal: '', lastNameMaternal: '', email: '', phone: '', branchId: '' }; 
   }
   guardarPersonal() {
+    this.personalError = null;
     if (this.nuevoPersonal.firstName && this.nuevoPersonal.email) {
-      const saveAction = this.activePersonalTab === 'coordinadores' 
-        ? this.staffService.createCoordinador(this.nuevoPersonal)
-        : this.activePersonalTab === 'verificadores' 
-        ? this.staffService.createVerificador(this.nuevoPersonal)
-        : this.staffService.createCajero(this.nuevoPersonal);
+      const payload: any = { ...this.nuevoPersonal };
+      if (!payload.branchId || payload.branchId === '') {
+        delete payload.branchId;
+      }
+      if (this.activePersonalTab === 'gerentes') {
+        payload.roleCode = 'GERENTE_SUCURSAL';
+      }
 
-      saveAction.subscribe(() => {
-        this.loadStaff();
-        this.cerrarModalPersonal();
+      let saveAction: import('rxjs').Observable<any>;
+      if (this.isEditingMode && this.entityToDeactivate) {
+        const id = this.entityToDeactivate.id;
+        saveAction = this.activePersonalTab === 'gerentes' ? this.staffService.updateGerente(id, payload) :
+                     this.activePersonalTab === 'coordinadores' ? this.staffService.updateCoordinador(id, payload) :
+                     this.activePersonalTab === 'verificadores' ? this.staffService.updateVerificador(id, payload) :
+                     this.staffService.updateCajero(id, payload);
+      } else {
+        saveAction = this.activePersonalTab === 'gerentes' ? this.staffService.createGerente(payload) :
+                     this.activePersonalTab === 'coordinadores' ? this.staffService.createCoordinador(payload) :
+                     this.activePersonalTab === 'verificadores' ? this.staffService.createVerificador(payload) :
+                     this.staffService.createCajero(payload);
+      }
+
+      saveAction.subscribe({
+        next: () => {
+          this.loadStaff();
+          this.cerrarModalPersonal();
+        },
+        error: (err: any) => {
+          this.personalError = err.error?.message || err.message || 'Error al guardar el empleado.';
+          this.cdr.detectChanges();
+        }
       });
     }
   }
