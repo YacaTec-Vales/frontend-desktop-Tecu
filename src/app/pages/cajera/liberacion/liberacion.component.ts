@@ -86,10 +86,12 @@ export class LiberacionComponent {
         next: () => {
           this.isConfirming = false;
           this.liberacionExitosa = true;
+          this.cdr.detectChanges();
         },
         error: (err) => {
           this.isConfirming = false;
           alert('Error al confirmar pago: ' + (err.error?.message || err.message));
+          this.cdr.detectChanges();
         }
       });
     }
