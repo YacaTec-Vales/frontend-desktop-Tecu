@@ -75,7 +75,7 @@ export class AprobacionesComponent implements OnInit {
   loadDictamenes() {
     this.solicitudService.getSolicitudes().subscribe({
       next: (data) => {
-        this.dictamenes = data.filter(d => d.status === 'DICTAMINADA');
+        this.dictamenes = data;
         this.checkIfAllLoaded();
       },
       error: () => {
