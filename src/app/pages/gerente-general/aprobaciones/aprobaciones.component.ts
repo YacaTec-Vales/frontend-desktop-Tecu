@@ -13,6 +13,8 @@ import { DistribuidorService } from '../../../core/services/distribuidor.service
 import { AlertService } from '../../../core/services/alert.service';
 import { forkJoin, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
+import { BranchService } from '../../../core/services/branch.service';
+import { Branch } from '../../../core/models/branch.model';
 
 export interface UnifiedRequest {
   id: string;
@@ -24,6 +26,7 @@ export interface UnifiedRequest {
   status: string;
   createdAt: Date;
   originalData: any;
+  branchName?: string;
 }
 
 type FilterType = 'TODAS' | 'ALTAS' | 'AUMENTOS';
@@ -45,6 +48,8 @@ export class AprobacionesComponent implements OnInit {
   loadedCount = 0;
   isDataLoaded = false;
   renderTable = true;
+  
+  branchesMap: Record<string, string> = {};
 
   isModalOpen = false;
   selectedItem: UnifiedRequest | null = null;
@@ -67,12 +72,29 @@ export class AprobacionesComponent implements OnInit {
     private creditRaiseService: CreditRaiseService,
     private distribuidorService: DistribuidorService,
     private alertService: AlertService,
+    private branchService: BranchService,
     private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit() {
-    this.loadDictamenes();
-    this.loadIncrementos();
+    this.loadBranches();
+  }
+
+  loadBranches() {
+    this.branchService.getBranches().subscribe({
+      next: (branches) => {
+        branches.forEach(b => {
+          this.branchesMap[b.id] = b.name;
+        });
+        this.loadDictamenes();
+        this.loadIncrementos();
+      },
+      error: () => {
+        // If error fetching branches, continue anyway
+        this.loadDictamenes();
+        this.loadIncrementos();
+      }
+    });
   }
 
   setFilter(type: FilterType) {
@@ -123,7 +145,8 @@ export class AprobacionesComponent implements OnInit {
         verdict: d.verdict,
         status: d.status,
         createdAt: new Date(d.createdAt),
-        originalData: d
+        originalData: d,
+        branchName: d.branchId ? (this.branchesMap[d.branchId] || 'Desconocida') : 'Desconocida'
       });
     });
 
@@ -146,7 +169,8 @@ export class AprobacionesComponent implements OnInit {
             amount: i.requestedAmountCents,
             status: i.status,
             createdAt: new Date(i.createdAt),
-            originalData: i
+            originalData: i,
+            branchName: i.branchId ? (this.branchesMap[i.branchId] || 'Desconocida') : 'Desconocida'
           };
         })
       );

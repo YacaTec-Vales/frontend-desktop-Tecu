@@ -21,7 +21,7 @@
   <div class="animate-fade-in mt-6">
     <app-card [noPadding]="true">
       <div *ngIf="!isDataLoaded" class="p-8 text-center text-gray-500">Cargando solicitudes...</div>
-      <app-table *ngIf="isDataLoaded && renderTable" [dataTrigger]="filteredList" [columns]="['Folio', 'Tipo', 'Solicitante', 'Detalle', 'Estado', 'Fecha', 'Acción']" [isEmpty]="filteredList.length === 0" emptyMessage="No hay solicitudes pendientes con este filtro.">
+      <app-table *ngIf="isDataLoaded && renderTable" [dataTrigger]="filteredList" [columns]="['Folio', 'Tipo', 'Sucursal', 'Solicitante', 'Detalle', 'Estado', 'Fecha', 'Acción']" [isEmpty]="filteredList.length === 0" emptyMessage="No hay solicitudes pendientes con este filtro.">
         <tr *ngFor="let item of filteredList; trackBy: trackById" class="bg-white border-b hover:bg-gray-50">
           <td class="px-6 py-4 font-bold text-xs truncate max-w-[100px]" [title]="item.id">{{ item.id }}</td>
           <td class="px-6 py-4">
@@ -29,6 +29,7 @@
               {{ item.description }}
             </span>
           </td>
+          <td class="px-6 py-4 font-semibold text-gray-700 text-xs truncate max-w-[150px]" [title]="item.branchName">{{ item.branchName }}</td>
           <td class="px-6 py-4 font-semibold text-gray-900">{{ item.name }}</td>
           <td class="px-6 py-4">
             <ng-container *ngIf="item.type === 'ALTA'">
