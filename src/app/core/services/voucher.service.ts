@@ -25,7 +25,7 @@ export class VoucherService {
       .pipe(map(res => res.data));
   }
 
-  confirmVoucher(folio: string): Observable<any> {
-    return this.http.post<{ message: string }>(`${this.apiUrl}/confirm/${folio}`, {});
+  confirmVoucher(folio: string, payload: { authorizationNumber: string, dataConfirmed: boolean, documents?: any[] }): Observable<any> {
+    return this.http.post<{ message: string }>(`${this.apiUrl}/confirm/${folio}`, payload);
   }
 }

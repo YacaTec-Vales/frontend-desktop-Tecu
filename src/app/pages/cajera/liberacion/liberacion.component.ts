@@ -36,7 +36,8 @@ export class LiberacionComponent {
   constructor(private voucherService: VoucherService) {}
 
   buscarFolio() {
-    if (!this.folioBuscado) return;
+    const folioLimpio = this.folioBuscado.trim();
+    if (!folioLimpio) return;
     
     this.isLoading = true;
     this.errorBusqueda = '';
@@ -46,7 +47,7 @@ export class LiberacionComponent {
     this.comprobanteValidado = false;
     this.autorizacionBancaria = '';
 
-    this.voucherService.findVoucher(this.folioBuscado).subscribe({
+    this.voucherService.findVoucher(folioLimpio).subscribe({
       next: (vale) => {
         this.isLoading = false;
         this.valeEncontrado = vale;
@@ -69,7 +70,12 @@ export class LiberacionComponent {
   liberarPago() {
     if (this.puedeLiberar() && this.valeEncontrado) {
       this.isConfirming = true;
-      this.voucherService.confirmVoucher(this.valeEncontrado.folio).subscribe({
+      const payload = {
+        authorizationNumber: this.autorizacionBancaria,
+        dataConfirmed: true,
+        documents: []
+      };
+      this.voucherService.confirmVoucher(this.valeEncontrado.folio, payload).subscribe({
         next: () => {
           this.isConfirming = false;
           this.liberacionExitosa = true;
