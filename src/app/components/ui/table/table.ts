@@ -152,8 +152,10 @@ export class TableComponent implements AfterViewInit, OnDestroy, OnChanges {
       this.dtInstance = null;
     }
 
-    // Esperar a que Angular renderice las filas (<tr>) en el DOM
-    this.waitForRowsAndInit();
+    // Esperar a que Angular renderice las filas (<tr>) en el DOM después del ciclo de detección de cambios
+    setTimeout(() => {
+      this.waitForRowsAndInit();
+    }, 0);
   }
 
   private waitForRowsAndInit() {

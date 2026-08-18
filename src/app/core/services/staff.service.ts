@@ -49,8 +49,12 @@ export class StaffService {
 
   // Coordinadores
   getCoordinadores(): Observable<Coordinador[]> {
-    return this.http.get<{data: {data: Coordinador[]}}>(`${this.baseUrl}/coordinadores`).pipe(
-      map(res => res.data.data)
+    return this.http.get<any>(`${this.baseUrl}/coordinadores`).pipe(
+      map(res => {
+        if (res?.data?.data) return res.data.data;
+        if (res?.data) return res.data;
+        return res || [];
+      })
     );
   }
 
@@ -72,8 +76,12 @@ export class StaffService {
 
   // Verificadores
   getVerificadores(): Observable<Verificador[]> {
-    return this.http.get<{data: {data: Verificador[]}}>(`${this.baseUrl}/verificadores`).pipe(
-      map(res => res.data.data)
+    return this.http.get<any>(`${this.baseUrl}/verificadores`).pipe(
+      map(res => {
+        if (res?.data?.data) return res.data.data;
+        if (res?.data) return res.data;
+        return res || [];
+      })
     );
   }
 
@@ -95,8 +103,12 @@ export class StaffService {
 
   // Cajeros
   getCajeros(): Observable<Cajero[]> {
-    return this.http.get<{data: {data: Cajero[]}}>(`${this.baseUrl}/cajeros`).pipe(
-      map(res => res.data.data)
+    return this.http.get<any>(`${this.baseUrl}/cajeros`).pipe(
+      map(res => {
+        if (res?.data?.data) return res.data.data;
+        if (res?.data) return res.data;
+        return res || [];
+      })
     );
   }
 

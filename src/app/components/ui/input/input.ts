@@ -29,6 +29,9 @@ export class InputComponent implements ControlValueAccessor {
   @Input() rows: number = 4; // Para textarea
   @Input() accept: string = ''; // Para file
   @Input() maxlength?: number;
+  @Input() min?: string | number;
+  @Input() max?: string | number;
+  @Input() title?: string;
 
   value: any = '';
 

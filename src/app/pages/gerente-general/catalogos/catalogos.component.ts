@@ -77,6 +77,7 @@ export class CatalogosComponent implements OnInit {
   nuevaSucursal: CreateBranchDto = { name: '', branchType: 'SUCURSAL', esMatriz: false, address: '' };
   
   nuevoPersonal: CreateStaffDto = {
+    username: '',
     firstName: '',
     lastNamePaternal: '',
     lastNameMaternal: '',
@@ -105,7 +106,7 @@ export class CatalogosComponent implements OnInit {
     this.productService.getProducts().subscribe(data => {
       this.productos = data;
       this.isProductsLoaded = true;
-      this.cdr.detectChanges();
+      this.refreshProductsTable();
     });
   }
 
@@ -113,7 +114,7 @@ export class CatalogosComponent implements OnInit {
     this.branchService.getBranches().subscribe(data => {
       this.sucursales = data;
       this.isBranchesLoaded = true;
-      this.cdr.detectChanges();
+      this.refreshBranchesTable();
     });
   }
 
@@ -122,25 +123,25 @@ export class CatalogosComponent implements OnInit {
     this.staffService.getGerentes().subscribe(data => {
       this.gerentes = data;
       this.checkStaffLoaded();
-      this.cdr.detectChanges();
+      this.refreshPersonalTable();
     });
     // Coordinadores
     this.staffService.getCoordinadores().subscribe(data => {
       this.coordinadores = data;
       this.checkStaffLoaded();
-      this.cdr.detectChanges();
+      this.refreshPersonalTable();
     });
     // Verificadores
     this.staffService.getVerificadores().subscribe(data => {
       this.verificadores = data;
       this.checkStaffLoaded();
-      this.cdr.detectChanges();
+      this.refreshPersonalTable();
     });
     // Cajeros
     this.staffService.getCajeros().subscribe(data => {
       this.cajeros = data;
       this.checkStaffLoaded();
-      this.cdr.detectChanges();
+      this.refreshPersonalTable();
     });
   }
 
@@ -150,12 +151,58 @@ export class CatalogosComponent implements OnInit {
     }
   }
 
+  getBranchName(branchId: string | null | undefined): string {
+    if (!branchId) return 'N/A';
+    const sucursal = this.sucursales.find(s => s.id === branchId);
+    return sucursal ? sucursal.name : 'Desconocida';
+  }
+
   setTab(tab: Tab) {
     this.activeTab = tab;
   }
 
+  showProductsTable = true;
+  showBranchesTable = true;
+  showPersonalTable = true;
+
+  private productsTableTimeout: any;
+  refreshProductsTable() {
+    this.showProductsTable = false;
+    this.cdr.detectChanges();
+    if (this.productsTableTimeout) clearTimeout(this.productsTableTimeout);
+    this.productsTableTimeout = setTimeout(() => {
+      this.showProductsTable = true;
+      this.cdr.detectChanges();
+    }, 10);
+  }
+
+  private branchesTableTimeout: any;
+  refreshBranchesTable() {
+    this.showBranchesTable = false;
+    this.cdr.detectChanges();
+    if (this.branchesTableTimeout) clearTimeout(this.branchesTableTimeout);
+    this.branchesTableTimeout = setTimeout(() => {
+      this.showBranchesTable = true;
+      this.cdr.detectChanges();
+    }, 10);
+  }
+
+  private personalTableTimeout: any;
+  refreshPersonalTable() {
+    this.showPersonalTable = false;
+    this.cdr.detectChanges();
+    if (this.personalTableTimeout) clearTimeout(this.personalTableTimeout);
+    this.personalTableTimeout = setTimeout(() => {
+      this.showPersonalTable = true;
+      this.cdr.detectChanges();
+    }, 10);
+  }
+
   setPersonalTab(tab: PersonalTab) {
-    this.activePersonalTab = tab;
+    if (this.activePersonalTab !== tab) {
+      this.activePersonalTab = tab;
+      this.refreshPersonalTable();
+    }
   }
 
   // Productos
@@ -288,9 +335,37 @@ export class CatalogosComponent implements OnInit {
     }
   }
 
+  tempCutoffDateFull: string = '';
+  tempPaymentDateFull: string = '';
+
+  getTodayDateStr(): string {
+    const d = new Date();
+    // We adjust timezone offset if needed, or simply build the YYYY-MM-DD
+    const month = '' + (d.getMonth() + 1);
+    const day = '' + d.getDate();
+    const year = d.getFullYear();
+    return [year, month.padStart(2, '0'), day.padStart(2, '0')].join('-');
+  }
+
+  onCutoffDateChange(val: string) {
+    this.tempCutoffDateFull = val;
+    if (val) {
+      this.nuevaSucursal.cutoffDay = parseInt(val.split('-')[2], 10);
+    }
+  }
+
+  onPaymentDateChange(val: string) {
+    this.tempPaymentDateFull = val;
+    if (val) {
+      this.nuevaSucursal.paymentDay = parseInt(val.split('-')[2], 10);
+    }
+  }
+
   // Sucursales
   abrirModalSucursal(suc?: Branch) { 
     this.sucursalError = null;
+    const now = new Date();
+    
     if (suc) {
       this.isEditingMode = true;
       this.nuevaSucursal = { 
@@ -303,6 +378,10 @@ export class CatalogosComponent implements OnInit {
         paymentDay: suc.paymentDay || 20,
         earlyPaymentDays: suc.earlyPaymentDays || 3
       };
+      now.setDate(suc.cutoffDay || 15);
+      this.tempCutoffDateFull = [now.getFullYear(), (now.getMonth() + 1).toString().padStart(2, '0'), now.getDate().toString().padStart(2, '0')].join('-');
+      now.setDate(suc.paymentDay || 20);
+      this.tempPaymentDateFull = [now.getFullYear(), (now.getMonth() + 1).toString().padStart(2, '0'), now.getDate().toString().padStart(2, '0')].join('-');
       this.entityToDeactivate = { type: 'sucursal', id: suc.id }; 
     } else {
       this.isEditingMode = false;
@@ -316,6 +395,10 @@ export class CatalogosComponent implements OnInit {
         paymentDay: 20,
         earlyPaymentDays: 3
       };
+      now.setDate(15);
+      this.tempCutoffDateFull = [now.getFullYear(), (now.getMonth() + 1).toString().padStart(2, '0'), now.getDate().toString().padStart(2, '0')].join('-');
+      now.setDate(20);
+      this.tempPaymentDateFull = [now.getFullYear(), (now.getMonth() + 1).toString().padStart(2, '0'), now.getDate().toString().padStart(2, '0')].join('-');
     }
     this.isSucursalModalOpen = true; 
   }
@@ -329,10 +412,11 @@ export class CatalogosComponent implements OnInit {
   guardarSucursal() {
     this.sucursalError = null;
     if (this.nuevaSucursal.name && this.nuevaSucursal.branchType) {
-      const payload = { ...this.nuevaSucursal };
+      const payload: any = { ...this.nuevaSucursal };
       if (!payload.managerUserId || payload.managerUserId === '') {
-        payload.managerUserId = null;
+        delete payload.managerUserId;
       }
+
       if (this.isEditingMode && this.entityToDeactivate) {
         this.branchService.updateBranch(this.entityToDeactivate.id, payload).subscribe({
           next: () => {
@@ -366,6 +450,7 @@ export class CatalogosComponent implements OnInit {
       this.isEditingMode = true;
       // Sólo enviamos campos que se pueden editar
       this.nuevoPersonal = { 
+        username: emp.username || '',
         firstName: emp.firstName,
         lastNamePaternal: emp.lastNamePaternal,
         lastNameMaternal: emp.lastNameMaternal || '',
@@ -381,7 +466,7 @@ export class CatalogosComponent implements OnInit {
       this.entityToDeactivate = { type: tipo, id: emp.id };
     } else {
       this.isEditingMode = false;
-      this.nuevoPersonal = { firstName: '', lastNamePaternal: '', lastNameMaternal: '', email: '', phone: '', branchId: '' };
+      this.nuevoPersonal = { username: '', firstName: '', lastNamePaternal: '', lastNameMaternal: '', email: '', phone: '', branchId: '' };
     }
     this.isPersonalModalOpen = true; 
   }
@@ -389,7 +474,7 @@ export class CatalogosComponent implements OnInit {
     this.isPersonalModalOpen = false; 
     this.isEditingMode = false;
     this.personalError = null;
-    this.nuevoPersonal = { firstName: '', lastNamePaternal: '', lastNameMaternal: '', email: '', phone: '', branchId: '' }; 
+    this.nuevoPersonal = { username: '', firstName: '', lastNamePaternal: '', lastNameMaternal: '', email: '', phone: '', branchId: '' }; 
   }
   guardarPersonal() {
     this.personalError = null;
@@ -405,15 +490,15 @@ export class CatalogosComponent implements OnInit {
       let saveAction: import('rxjs').Observable<any>;
       if (this.isEditingMode && this.entityToDeactivate) {
         const id = this.entityToDeactivate.id;
-        saveAction = this.activePersonalTab === 'gerentes' ? this.staffService.updateGerente(id, payload) :
-                     this.activePersonalTab === 'coordinadores' ? this.staffService.updateCoordinador(id, payload) :
-                     this.activePersonalTab === 'verificadores' ? this.staffService.updateVerificador(id, payload) :
-                     this.staffService.updateCajero(id, payload);
+        if (this.activePersonalTab === 'gerentes') saveAction = this.staffService.updateGerente(id, payload);
+        else if (this.activePersonalTab === 'coordinadores') { delete payload.username; saveAction = this.staffService.updateCoordinador(id, payload); }
+        else if (this.activePersonalTab === 'verificadores') { delete payload.username; saveAction = this.staffService.updateVerificador(id, payload); }
+        else { delete payload.username; saveAction = this.staffService.updateCajero(id, payload); }
       } else {
-        saveAction = this.activePersonalTab === 'gerentes' ? this.staffService.createGerente(payload) :
-                     this.activePersonalTab === 'coordinadores' ? this.staffService.createCoordinador(payload) :
-                     this.activePersonalTab === 'verificadores' ? this.staffService.createVerificador(payload) :
-                     this.staffService.createCajero(payload);
+        if (this.activePersonalTab === 'gerentes') saveAction = this.staffService.createGerente(payload);
+        else if (this.activePersonalTab === 'coordinadores') { delete payload.username; saveAction = this.staffService.createCoordinador(payload); }
+        else if (this.activePersonalTab === 'verificadores') { delete payload.username; saveAction = this.staffService.createVerificador(payload); }
+        else { delete payload.username; saveAction = this.staffService.createCajero(payload); }
       }
 
       saveAction.subscribe({

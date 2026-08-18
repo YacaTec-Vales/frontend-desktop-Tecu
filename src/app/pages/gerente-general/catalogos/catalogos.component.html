@@ -37,29 +37,31 @@
     <app-card title="Catálogo de Vales Permitidos"
       subtitle="Define montos cerrados estrictos. Sin múltiplos fraccionados." [noPadding]="true">
       <!-- Header / Acciones -->
-      <app-table *ngIf="isProductsLoaded" title="Productos (Vales)" [dataTrigger]="productos" (onAction)="handleTableAction($event, 'producto')"
-        [columns]="['Código', 'Variante', 'Costo', 'Quincenas', 'Comisión', 'Seguro', 'Interés/Q', 'Estado', 'Acciones']">
-        
-        <!-- Botones que se inyectan en la tabla -->
-        <app-button table-actions variant="primary" (onClick)="abrirModalProducto()">+ Nuevo Vale</app-button>
-        
-        <tr *ngFor="let p of productos" class="bg-white border-b hover:bg-gray-50">
-            <td class="px-6 py-4 font-bold">{{ p.code }}</td>
-            <td class="px-6 py-4 text-xs font-bold text-gray-500">{{ p.variant }}</td>
-            <td class="px-6 py-4 font-bold text-brand">{{ p.costCents / 100 | currency:'MXN' }}</td>
-            <td class="px-6 py-4 text-gray-500">{{ p.totalPeriods }}</td>
-            <td class="px-6 py-4 text-gray-500">{{ p.commissionBps / 100 | number:'1.2-2' }}%</td>
-            <td class="px-6 py-4 text-gray-500">{{ p.insuranceCents / 100 | currency:'MXN' }}</td>
-            <td class="px-6 py-4 text-gray-500">{{ p.interestPerPeriodBps / 100 | number:'1.2-2' }}%</td>
-            <td class="px-6 py-4">
-              <app-badge [text]="p.isActive ? 'Activo' : 'Inactivo'"
-                [variant]="p.isActive ? 'success' : 'error'"></app-badge>
-            </td>
-            <td class="px-6 py-4 flex gap-2">
-              <app-table-actions [id]="p.code"></app-table-actions>
-            </td>
-          </tr>
-        </app-table>
+      <ng-container *ngIf="showProductsTable">
+        <app-table *ngIf="isProductsLoaded" title="Productos (Vales)" [dataTrigger]="productos" (onAction)="handleTableAction($event, 'producto')"
+          [columns]="['Código', 'Variante', 'Costo', 'Quincenas', 'Comisión', 'Seguro', 'Interés/Q', 'Estado', 'Acciones']">
+          
+          <!-- Botones que se inyectan en la tabla -->
+          <app-button table-actions variant="primary" (onClick)="abrirModalProducto()">+ Nuevo Vale</app-button>
+          
+          <tr *ngFor="let p of productos" class="bg-white border-b hover:bg-gray-50">
+              <td class="px-6 py-4 font-bold">{{ p.code }}</td>
+              <td class="px-6 py-4 text-xs font-bold text-gray-500">{{ p.variant }}</td>
+              <td class="px-6 py-4 font-bold text-brand">{{ p.costCents / 100 | currency:'MXN' }}</td>
+              <td class="px-6 py-4 text-gray-500">{{ p.totalPeriods }}</td>
+              <td class="px-6 py-4 text-gray-500">{{ p.commissionBps / 100 | number:'1.2-2' }}%</td>
+              <td class="px-6 py-4 text-gray-500">{{ p.insuranceCents / 100 | currency:'MXN' }}</td>
+              <td class="px-6 py-4 text-gray-500">{{ p.interestPerPeriodBps / 100 | number:'1.2-2' }}%</td>
+              <td class="px-6 py-4">
+                <app-badge [text]="p.isActive ? 'Activo' : 'Inactivo'"
+                  [variant]="p.isActive ? 'success' : 'error'"></app-badge>
+              </td>
+              <td class="px-6 py-4 flex gap-2">
+                <app-table-actions [id]="p.code"></app-table-actions>
+              </td>
+            </tr>
+          </app-table>
+        </ng-container>
     </app-card>
   </div>
 
@@ -86,30 +88,32 @@
   <!-- Tab Content: SUCURSALES -->
   <div *ngIf="activeTab === 'sucursales'" class="animate-fade-in">
     <app-card title="Gestión de Sucursales" subtitle="Administra las sedes físicas de la empresa." [noPadding]="true">
-      <app-table *ngIf="isBranchesLoaded" title="Sucursales" [dataTrigger]="sucursales" (onAction)="handleTableAction($event, 'sucursal')"
-        [columns]="['Nombre', 'Tipo', 'Es Matriz', 'Gerente', 'Dirección', 'Estado', 'Acciones']" [isEmpty]="sucursales.length === 0">
-        
-        <app-button table-actions variant="primary" (onClick)="abrirModalSucursal()">+ Nueva Sucursal</app-button>
+      <ng-container *ngIf="showBranchesTable">
+        <app-table *ngIf="isBranchesLoaded" title="Sucursales" [dataTrigger]="sucursales" (onAction)="handleTableAction($event, 'sucursal')"
+          [columns]="['Nombre', 'Tipo', 'Es Matriz', 'Gerente', 'Dirección', 'Estado', 'Acciones']" [isEmpty]="sucursales.length === 0">
+          
+          <app-button table-actions variant="primary" (onClick)="abrirModalSucursal()">+ Nueva Sucursal</app-button>
 
-        <tr *ngFor="let s of sucursales" class="bg-white border-b hover:bg-gray-50">
-          <td class="px-6 py-4 font-bold">{{ s.name }}</td>
-          <td class="px-6 py-4 text-xs font-bold text-gray-500">{{ s.branchType }}</td>
-          <td class="px-6 py-4">
-            <app-badge [text]="s.esMatriz ? 'Sí' : 'No'" [variant]="s.esMatriz ? 'info' : 'default'"></app-badge>
-          </td>
-          <td class="px-6 py-4 text-gray-700">
-            <span *ngIf="s.manager; else noManager">{{ s.manager.firstName }} {{ s.manager.lastNamePaternal }}</span>
-            <ng-template #noManager><span class="text-gray-400 italic">Sin asignar</span></ng-template>
-          </td>
-          <td class="px-6 py-4 text-gray-500">{{ s.address || 'Sin dirección' }}</td>
-          <td class="px-6 py-4">
-            <app-badge [text]="s.isActive ? 'Activa' : 'Inactiva'" [variant]="s.isActive ? 'success' : 'error'"></app-badge>
-          </td>
-          <td class="px-6 py-4 flex gap-2">
-            <app-table-actions [id]="s.id"></app-table-actions>
-          </td>
-        </tr>
-      </app-table>
+          <tr *ngFor="let s of sucursales" class="bg-white border-b hover:bg-gray-50">
+            <td class="px-6 py-4 font-bold">{{ s.name }}</td>
+            <td class="px-6 py-4 text-xs font-bold text-gray-500">{{ s.branchType }}</td>
+            <td class="px-6 py-4">
+              <app-badge [text]="s.esMatriz ? 'Sí' : 'No'" [variant]="s.esMatriz ? 'info' : 'default'"></app-badge>
+            </td>
+            <td class="px-6 py-4 text-gray-700">
+              <span *ngIf="s.manager; else noManager">{{ s.manager.firstName }} {{ s.manager.lastNamePaternal }}</span>
+              <ng-template #noManager><span class="text-gray-400 italic">Sin asignar</span></ng-template>
+            </td>
+            <td class="px-6 py-4 text-gray-500">{{ s.address || 'Sin dirección' }}</td>
+            <td class="px-6 py-4">
+              <app-badge [text]="s.isActive ? 'Activa' : 'Inactiva'" [variant]="s.isActive ? 'success' : 'error'"></app-badge>
+            </td>
+            <td class="px-6 py-4 flex gap-2">
+              <app-table-actions [id]="s.id"></app-table-actions>
+            </td>
+          </tr>
+        </app-table>
+      </ng-container>
     </app-card>
   </div>
 
@@ -131,13 +135,14 @@
     </div>
 
     <app-card title="Gestión de Empleados" [subtitle]="'Directorio de ' + activePersonalTab" [noPadding]="true">
-      <app-table *ngIf="isStaffLoaded" title="Gestión de Empleados" [subtitle]="'Directorio de ' + activePersonalTab" 
-        [dataTrigger]="activePersonalTab === 'gerentes' ? gerentes : activePersonalTab === 'coordinadores' ? coordinadores : activePersonalTab === 'verificadores' ? verificadores : cajeros"
-        (onAction)="handleTableAction($event, activePersonalTab.substring(0, activePersonalTab.length - 1))"
-        [columns]="['ID', 'Nombre', 'Email', 'Teléfono', 'Sucursal', 'Acciones']"
-        [isEmpty]="activePersonalTab === 'gerentes' && gerentes.length === 0 || activePersonalTab === 'coordinadores' && coordinadores.length === 0 || activePersonalTab === 'verificadores' && verificadores.length === 0 || activePersonalTab === 'cajeros' && cajeros.length === 0">
-        
-        <app-button table-actions variant="primary" (onClick)="abrirModalPersonal()">+ Registrar Empleado</app-button>
+      <ng-container *ngIf="showPersonalTable">
+        <app-table *ngIf="isStaffLoaded" title="Gestión de Empleados" [subtitle]="'Directorio de ' + activePersonalTab" 
+          [dataTrigger]="activePersonalTab === 'gerentes' ? gerentes : activePersonalTab === 'coordinadores' ? coordinadores : activePersonalTab === 'verificadores' ? verificadores : cajeros"
+          (onAction)="handleTableAction($event, activePersonalTab.substring(0, activePersonalTab.length - 1))"
+          [columns]="['ID', 'Nombre', 'Email', 'Teléfono', 'Sucursal', 'Acciones']"
+          [isEmpty]="activePersonalTab === 'gerentes' && gerentes.length === 0 || activePersonalTab === 'coordinadores' && coordinadores.length === 0 || activePersonalTab === 'verificadores' && verificadores.length === 0 || activePersonalTab === 'cajeros' && cajeros.length === 0">
+          
+          <app-button table-actions variant="primary" (onClick)="abrirModalPersonal()">+ Registrar Empleado</app-button>
 
         <ng-container *ngIf="activePersonalTab === 'gerentes'">
           <tr *ngFor="let emp of gerentes" class="bg-white border-b hover:bg-gray-50">
@@ -145,8 +150,7 @@
             <td class="px-6 py-4">{{ emp.firstName }} {{ emp.lastNamePaternal }}</td>
             <td class="px-6 py-4 text-gray-500">{{ emp.email }}</td>
             <td class="px-6 py-4">{{ emp.phone }}</td>
-            <td class="px-6 py-4 text-gray-500 truncate max-w-[100px]" [title]="emp.branchId">{{ emp.branchId || 'N/A'
-              }}</td>
+            <td class="px-6 py-4 text-gray-500 truncate max-w-[150px]" [title]="getBranchName(emp.branchId)">{{ getBranchName(emp.branchId) }}</td>
             <td class="px-6 py-4 flex gap-2">
               <app-table-actions [id]="emp.id"></app-table-actions>
             </td>
@@ -159,8 +163,7 @@
             <td class="px-6 py-4">{{ emp.firstName }} {{ emp.lastNamePaternal }}</td>
             <td class="px-6 py-4 text-gray-500">{{ emp.email }}</td>
             <td class="px-6 py-4">{{ emp.phone }}</td>
-            <td class="px-6 py-4 text-gray-500 truncate max-w-[100px]" [title]="emp.branchId">{{ emp.branchId || 'N/A'
-              }}</td>
+            <td class="px-6 py-4 text-gray-500 truncate max-w-[150px]" [title]="getBranchName(emp.branchId)">{{ getBranchName(emp.branchId) }}</td>
             <td class="px-6 py-4 flex gap-2">
               <app-table-actions [id]="emp.id"></app-table-actions>
             </td>
@@ -173,8 +176,7 @@
             <td class="px-6 py-4">{{ emp.firstName }} {{ emp.lastNamePaternal }}</td>
             <td class="px-6 py-4 text-gray-500">{{ emp.email }}</td>
             <td class="px-6 py-4">{{ emp.phone }}</td>
-            <td class="px-6 py-4 text-gray-500 truncate max-w-[100px]" [title]="emp.branchId">{{ emp.branchId || 'N/A'
-              }}</td>
+            <td class="px-6 py-4 text-gray-500 truncate max-w-[150px]" [title]="getBranchName(emp.branchId)">{{ getBranchName(emp.branchId) }}</td>
             <td class="px-6 py-4 flex gap-2">
               <app-table-actions [id]="emp.id"></app-table-actions>
             </td>
@@ -187,14 +189,14 @@
             <td class="px-6 py-4">{{ emp.firstName }} {{ emp.lastNamePaternal }}</td>
             <td class="px-6 py-4 text-gray-500">{{ emp.email }}</td>
             <td class="px-6 py-4">{{ emp.phone }}</td>
-            <td class="px-6 py-4 text-gray-500 truncate max-w-[100px]" [title]="emp.branchId">{{ emp.branchId || 'N/A'
-              }}</td>
+            <td class="px-6 py-4 text-gray-500 truncate max-w-[150px]" [title]="getBranchName(emp.branchId)">{{ getBranchName(emp.branchId) }}</td>
             <td class="px-6 py-4 flex gap-2">
               <app-table-actions [id]="emp.id"></app-table-actions>
             </td>
           </tr>
         </ng-container>
       </app-table>
+      </ng-container>
     </app-card>
   </div>
 
@@ -335,17 +337,26 @@
       </select>
     </div>
 
-    <div class="grid grid-cols-3 gap-4">
-      <div>
-        <app-input label="Día de Corte" type="number" placeholder="Ej: 15" [(ngModel)]="nuevaSucursal.cutoffDay"></app-input>
+      <div class="grid grid-cols-3 gap-4">
+        <div>
+          <app-input label="Fecha de Corte" type="date" 
+                     hint="Fecha de pago elegida: {{ tempPaymentDateFull }}"
+                     title="Fecha Corte"
+                     [ngModel]="tempCutoffDateFull" 
+                     (ngModelChange)="onCutoffDateChange($event)"></app-input>
+        </div>
+        <div>
+          <app-input label="Fecha de Pago" type="date" 
+                     hint="Fecha de corte elegida: {{ tempCutoffDateFull }}"
+                     title="Fecha Pago"
+                     [ngModel]="tempPaymentDateFull" 
+                     (ngModelChange)="onPaymentDateChange($event)"></app-input>
+        </div>
+        <div>
+          <app-input label="Días Anticipo" type="number" placeholder="Ej: 3" hint="Ej: 3 (Periodo de gracia)."
+                     [(ngModel)]="nuevaSucursal.earlyPaymentDays"></app-input>
+        </div>
       </div>
-      <div>
-        <app-input label="Día de Pago" type="number" placeholder="Ej: 20" [(ngModel)]="nuevaSucursal.paymentDay"></app-input>
-      </div>
-      <div>
-        <app-input label="Días Anticipo" type="number" placeholder="Ej: 3" [(ngModel)]="nuevaSucursal.earlyPaymentDays"></app-input>
-      </div>
-    </div>
 
     <app-input label="Dirección (Opcional)" type="text" placeholder="Ej: Av. Principal 123"
       [(ngModel)]="nuevaSucursal.address"></app-input>
@@ -366,18 +377,20 @@
     </div>
 
     <div class="grid grid-cols-2 gap-4">
+      <app-input label="Nombre de Usuario (Login)" type="text" placeholder="juan_perez" [(ngModel)]="nuevoPersonal.username" [disabled]="isEditingMode"></app-input>
       <app-input label="Nombre(s)" type="text" placeholder="Juan" [(ngModel)]="nuevoPersonal.firstName"></app-input>
+    </div>
+    <div class="grid grid-cols-2 gap-4">
       <app-input label="Apellido Paterno" type="text" placeholder="Pérez"
         [(ngModel)]="nuevoPersonal.lastNamePaternal"></app-input>
-    </div>
-    <div class="grid grid-cols-2 gap-4">
       <app-input label="Apellido Materno" type="text" placeholder="López"
         [(ngModel)]="nuevoPersonal.lastNameMaternal"></app-input>
-      <app-input label="Correo Electrónico" type="email" placeholder="juan@yacatec.com"
-        [(ngModel)]="nuevoPersonal.email"></app-input>
     </div>
     <div class="grid grid-cols-2 gap-4">
+      <app-input label="Correo Electrónico" type="email" placeholder="juan@yacatec.com"
+        [(ngModel)]="nuevoPersonal.email"></app-input>
       <app-input label="Teléfono" type="text" placeholder="8712345678" [(ngModel)]="nuevoPersonal.phone"></app-input>
+    </div>
 
       <div>
         <label class="block mb-2 text-sm font-extrabold text-gray-900 dark:text-white">Sucursal Asignada</label>
@@ -387,12 +400,11 @@
           <option *ngFor="let branch of sucursales" [value]="branch.id">{{ branch.name }}</option>
         </select>
       </div>
-    </div>
 
     <div class="mt-6 flex justify-end gap-2">
       <app-button variant="text" (onClick)="cerrarModalPersonal()">Cancelar</app-button>
       <app-button variant="primary" (onClick)="guardarPersonal()"
-        [disabled]="!nuevoPersonal.firstName || !nuevoPersonal.email">{{ isEditingMode ? 'Guardar Cambios' : 'Registrar' }}</app-button>
+        [disabled]="!nuevoPersonal.firstName || !nuevoPersonal.email || (!isEditingMode && !nuevoPersonal.username)">{{ isEditingMode ? 'Guardar Cambios' : 'Registrar' }}</app-button>
     </div>
   </div>
 </app-modal>
