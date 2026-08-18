@@ -7,14 +7,14 @@ import { InputComponent } from '../../../components/ui/input/input';
 import { BadgeComponent } from '../../../components/ui/badge/badge';
 import { ModalComponent } from '../../../components/ui/modal/modal';
 import { TableComponent } from '../../../components/ui/table/table';
-import { TableActionsComponent } from '../../../components/ui/table/table-actions';
+
 import { ReconciliationService, BankMovement, ReconciliationBatch } from '../../../core/services/reconciliation.service';
 import { RelationService, RelationDetails } from '../../../core/services/relation.service';
 
 @Component({
   selector: 'app-conciliacion',
   standalone: true,
-  imports: [CommonModule, FormsModule, CardComponent, ButtonComponent, InputComponent, BadgeComponent, ModalComponent, TableComponent, TableActionsComponent],
+  imports: [CommonModule, FormsModule, CardComponent, ButtonComponent, InputComponent, BadgeComponent, ModalComponent, TableComponent],
   templateUrl: './conciliacion.component.html'
 })
 export class ConciliacionComponent implements OnInit {
