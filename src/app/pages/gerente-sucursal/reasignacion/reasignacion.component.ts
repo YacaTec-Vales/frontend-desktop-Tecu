@@ -35,7 +35,7 @@ export class ReasignacionComponent implements OnInit {
 
   ngOnInit() {
     this.staffService.getCoordinadores().subscribe({
-      next: (coords) => this.coordinadores = coords,
+      next: (res) => this.coordinadores = res.data,
       error: (err) => console.error('Error al cargar coordinadores', err)
     });
   }
