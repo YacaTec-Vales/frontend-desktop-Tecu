@@ -44,7 +44,7 @@ export class ConciliacionComponent implements OnInit {
   pendingRelations: RelationDetails[] = [];
   pendingSearch = '';
   selectedRelationId = '';
-  authorizationId = '';
+  justification = '';
   isProcessingManual = false;
   manualErrorMessage = '';
 
@@ -134,7 +134,7 @@ export class ConciliacionComponent implements OnInit {
   abrirModalManual(movement: BankMovement) {
     this.selectedMovement = movement;
     this.selectedRelationId = '';
-    this.authorizationId = '';
+    this.justification = '';
     this.manualErrorMessage = '';
     this.pendingSearch = '';
     this.isManualModalOpen = true;
@@ -163,15 +163,17 @@ export class ConciliacionComponent implements OnInit {
     this.isProcessingManual = true;
     this.manualErrorMessage = '';
 
-    this.reconciliationService.manualReconciliation(this.selectedMovement.id, this.selectedRelationId, this.authorizationId).subscribe({
+    this.reconciliationService.requestManualReconciliation(this.selectedMovement.id, this.selectedRelationId, this.justification).subscribe({
       next: () => {
         this.isProcessingManual = false;
         this.cerrarModalManual();
-        this.loadUnmatched(); // Refresh list
+        // Option B flow implies we just send the request, so we don't necessarily remove it from unmatched yet until approved.
+        // But we can reload just in case or show a success alert.
+        this.loadUnmatched(); 
       },
       error: (err) => {
         this.isProcessingManual = false;
-        this.manualErrorMessage = err.error?.message || err.message || 'Error al procesar la conciliación manual.';
+        this.manualErrorMessage = err.error?.message || err.message || 'Error al solicitar la conciliación manual.';
       }
     });
   }

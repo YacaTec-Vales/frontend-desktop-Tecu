@@ -120,13 +120,13 @@
       </select>
     </div>
 
-    <!-- Autorización -->
-    <app-input label="Código de Autorización (Gerencia)" type="text" placeholder="Ej: AUTH-12345" [(ngModel)]="authorizationId" hint="Requerido para cruce manual"></app-input>
+    <!-- Justificación -->
+    <app-input label="Justificación de Conciliación Manual" type="text" placeholder="Ej: El folio en el estado de cuenta está ilegible..." [(ngModel)]="justification" hint="Motivo por el cual se cruzan estos registros"></app-input>
 
     <div class="mt-6 flex justify-end gap-2">
       <app-button variant="text" (onClick)="cerrarModalManual()">Cancelar</app-button>
-      <app-button variant="primary" (onClick)="confirmManualReconciliation()" [disabled]="!selectedRelationId || !authorizationId || isProcessingManual">
-        {{ isProcessingManual ? 'Procesando...' : 'Confirmar Conciliación' }}
+      <app-button variant="primary" (onClick)="confirmManualReconciliation()" [disabled]="!selectedRelationId || !justification || isProcessingManual">
+        {{ isProcessingManual ? 'Procesando...' : 'Solicitar Conciliación' }}
       </app-button>
     </div>
   </div>

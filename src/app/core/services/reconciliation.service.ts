@@ -38,35 +38,30 @@ export class ReconciliationService {
     return this.http.post<{ message: string }>(`${this.apiUrl}/upload`, formData);
   }
 
-  manualReconciliation(bankMovementId: string, relationId: string, authorizationId: string): Observable<{ message: string }> {
-    return this.http.post<{ message: string }>(`${this.apiUrl}/manual`, {
-      bankMovementId,
-      relationId,
-      authorizationId
+  requestManualReconciliation(bankMovementId: string, relationId: string, justification: string): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${environment.apiUrl}/authorizations`, {
+      authorizationType: 'CONCILIACION_MANUAL',
+      justification,
+      affectedEntity: {
+        bankMovementId,
+        relationId
+      }
     });
   }
 
   getBatches(page: number = 1, limit: number = 100): Observable<PaginatedResponse<ReconciliationBatch>> {
-    const mockBatches: ReconciliationBatch[] = [
-      { id: 'batch-1', originalFileName: 'estado_cuenta_01.xlsx', totalMovements: 120, totalReconciled: 118, totalBranchCreditBalance: 200000, status: 'COMPLETADO', createdAt: new Date().toISOString() },
-      { id: 'batch-2', originalFileName: 'estado_cuenta_02.xlsx', totalMovements: 50, totalReconciled: 50, totalBranchCreditBalance: 0, status: 'COMPLETADO', createdAt: new Date().toISOString() }
-    ];
+    let params = new HttpParams()
+      .set('page', page.toString())
+      .set('limit', limit.toString());
 
-    return of({
-      data: mockBatches,
-      meta: { page, limit, itemCount: mockBatches.length, pageCount: 1, hasPreviousPage: false, hasNextPage: false }
-    }).pipe(delay(500));
+    return this.http.get<PaginatedResponse<ReconciliationBatch>>(`${this.apiUrl}/batches`, { params });
   }
 
   getUnmatchedMovements(page: number = 1, limit: number = 100): Observable<PaginatedResponse<BankMovement>> {
-    const mockMovements: BankMovement[] = [
-      { id: 'mov-1', batchId: 'batch-1', reference: 'REF-ERR-001', paymentCents: 150050, paymentDate: '2026-08-15', reconciliationId: null },
-      { id: 'mov-2', batchId: 'batch-1', reference: 'REF-INCOMPLETA', paymentCents: 50000, paymentDate: '2026-08-16', reconciliationId: null }
-    ];
+    let params = new HttpParams()
+      .set('page', page.toString())
+      .set('limit', limit.toString());
 
-    return of({
-      data: mockMovements,
-      meta: { page, limit, itemCount: mockMovements.length, pageCount: 1, hasPreviousPage: false, hasNextPage: false }
-    }).pipe(delay(500));
+    return this.http.get<PaginatedResponse<BankMovement>>(`${this.apiUrl}/bank-movements/unmatched`, { params });
   }
 }
