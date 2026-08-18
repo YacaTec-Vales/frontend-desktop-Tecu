@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
@@ -40,9 +40,40 @@ export class ProductService {
 
   constructor(private http: HttpClient) {}
 
-  getProducts(): Observable<Product[]> {
-    return this.http.get<{ message: string, data: Product[] }>(this.apiUrl)
-      .pipe(map(res => res.data));
+  private buildParams(page: number, limit: number, search?: string): HttpParams {
+    let params = new HttpParams();
+    // No enviamos page y limit al backend porque tira 400 BAD REQUEST 
+    // si no tiene el DTO actualizado. Haremos la paginación local en el map.
+    // OJO: Tampoco enviamos search si el backend de products no lo soporta.
+    // De momento lo quitamos todo para asegurar que devuelva los datos sin caerse.
+    return params;
+  }
+
+  getProducts(page: number = 1, limit: number = 100, search?: string): Observable<import('./staff.service').PaginatedResponse<Product>> {
+    return this.http.get<any>(this.apiUrl, { params: this.buildParams(page, limit, search) })
+      .pipe(map(res => {
+        let allData = res?.data?.data || res?.data || [];
+        if (search) {
+          const lowerSearch = search.toLowerCase();
+          allData = allData.filter((p: any) => p.code?.toLowerCase().includes(lowerSearch) || p.variant?.toLowerCase().includes(lowerSearch));
+        }
+        const total = allData.length;
+        const startIndex = (page - 1) * limit;
+        const endIndex = startIndex + limit;
+        const slicedData = allData.slice(startIndex, endIndex);
+
+        return {
+          data: slicedData,
+          meta: { 
+            page, 
+            limit, 
+            itemCount: total, 
+            pageCount: Math.ceil(total / limit) || 1, 
+            hasPreviousPage: page > 1, 
+            hasNextPage: endIndex < total 
+          }
+        };
+      }));
   }
 
   getProduct(id: string): Observable<Product> {

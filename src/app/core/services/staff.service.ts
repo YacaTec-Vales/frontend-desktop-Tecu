@@ -15,6 +15,21 @@ export interface Gerente {
 }
 
 import { map } from 'rxjs/operators';
+import { HttpParams } from '@angular/common/http';
+
+export interface PaginatedMeta {
+  page: number;
+  limit: number;
+  itemCount: number;
+  pageCount: number;
+  hasPreviousPage: boolean;
+  hasNextPage: boolean;
+}
+
+export interface PaginatedResponse<T> {
+  data: T[];
+  meta: PaginatedMeta;
+}
 
 @Injectable({
   providedIn: 'root'
@@ -24,10 +39,24 @@ export class StaffService {
 
   constructor(private http: HttpClient) {}
 
+  private buildParams(page: number, limit: number, search?: string): HttpParams {
+    let params = new HttpParams()
+      .set('page', page.toString())
+      .set('limit', limit.toString());
+    if (search) {
+      params = params.set('search', search);
+    }
+    return params;
+  }
+
   // Gerentes de Sucursal
-  getGerentes(): Observable<Gerente[]> {
-    return this.http.get<{data: {data: Gerente[]}}>(`${this.baseUrl}/users?roleCode=GERENTE_SUCURSAL`).pipe(
-      map(res => res.data.data)
+  getGerentes(page: number = 1, limit: number = 100, search?: string): Observable<PaginatedResponse<Gerente>> {
+    let params = this.buildParams(page, limit, search).set('roleCode', 'GERENTE_SUCURSAL');
+    return this.http.get<any>(`${this.baseUrl}/users`, { params }).pipe(
+      map(res => ({
+        data: res?.data?.data || [],
+        meta: res?.data?.meta || { page: 1, limit: 100, itemCount: (res?.data?.data || []).length, pageCount: 1, hasPreviousPage: false, hasNextPage: false }
+      }))
     );
   }
 
@@ -48,13 +77,12 @@ export class StaffService {
   }
 
   // Coordinadores
-  getCoordinadores(): Observable<Coordinador[]> {
-    return this.http.get<any>(`${this.baseUrl}/coordinadores`).pipe(
-      map(res => {
-        if (res?.data?.data) return res.data.data;
-        if (res?.data) return res.data;
-        return res || [];
-      })
+  getCoordinadores(page: number = 1, limit: number = 100, search?: string): Observable<PaginatedResponse<Coordinador>> {
+    return this.http.get<any>(`${this.baseUrl}/coordinadores`, { params: this.buildParams(page, limit, search) }).pipe(
+      map(res => ({
+        data: res?.data?.data || res?.data || [],
+        meta: res?.data?.meta || { page: 1, limit: 100, itemCount: (res?.data?.data || res?.data || []).length, pageCount: 1, hasPreviousPage: false, hasNextPage: false }
+      }))
     );
   }
 
@@ -75,13 +103,12 @@ export class StaffService {
   }
 
   // Verificadores
-  getVerificadores(): Observable<Verificador[]> {
-    return this.http.get<any>(`${this.baseUrl}/verificadores`).pipe(
-      map(res => {
-        if (res?.data?.data) return res.data.data;
-        if (res?.data) return res.data;
-        return res || [];
-      })
+  getVerificadores(page: number = 1, limit: number = 100, search?: string): Observable<PaginatedResponse<Verificador>> {
+    return this.http.get<any>(`${this.baseUrl}/verificadores`, { params: this.buildParams(page, limit, search) }).pipe(
+      map(res => ({
+        data: res?.data?.data || res?.data || [],
+        meta: res?.data?.meta || { page: 1, limit: 100, itemCount: (res?.data?.data || res?.data || []).length, pageCount: 1, hasPreviousPage: false, hasNextPage: false }
+      }))
     );
   }
 
@@ -102,13 +129,12 @@ export class StaffService {
   }
 
   // Cajeros
-  getCajeros(): Observable<Cajero[]> {
-    return this.http.get<any>(`${this.baseUrl}/cajeros`).pipe(
-      map(res => {
-        if (res?.data?.data) return res.data.data;
-        if (res?.data) return res.data;
-        return res || [];
-      })
+  getCajeros(page: number = 1, limit: number = 100, search?: string): Observable<PaginatedResponse<Cajero>> {
+    return this.http.get<any>(`${this.baseUrl}/cajeros`, { params: this.buildParams(page, limit, search) }).pipe(
+      map(res => ({
+        data: res?.data?.data || res?.data || [],
+        meta: res?.data?.meta || { page: 1, limit: 100, itemCount: (res?.data?.data || res?.data || []).length, pageCount: 1, hasPreviousPage: false, hasNextPage: false }
+      }))
     );
   }
 
