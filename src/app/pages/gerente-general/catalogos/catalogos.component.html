@@ -39,7 +39,9 @@
       <!-- Header / Acciones -->
       <ng-container *ngIf="showProductsTable">
         <app-table *ngIf="isProductsLoaded" title="Productos (Vales)" [dataTrigger]="productos" (onAction)="handleTableAction($event, 'producto')"
-          [columns]="['Código', 'Variante', 'Costo', 'Quincenas', 'Comisión', 'Seguro', 'Interés/Q', 'Estado', 'Acciones']">
+          [columns]="['Código', 'Variante', 'Costo', 'Quincenas', 'Comisión', 'Seguro', 'Interés/Q', 'Estado', 'Acciones']"
+          [useServerPagination]="true" [currentPage]="productosPage" [totalItems]="productosTotal" [limit]="100"
+          (pageChange)="onPageChange($event, 'productos')" (searchChange)="onSearch($event, 'productos')">
           
           <!-- Botones que se inyectan en la tabla -->
           <app-button table-actions variant="primary" (onClick)="abrirModalProducto()">+ Nuevo Vale</app-button>
@@ -90,7 +92,9 @@
     <app-card title="Gestión de Sucursales" subtitle="Administra las sedes físicas de la empresa." [noPadding]="true">
       <ng-container *ngIf="showBranchesTable">
         <app-table *ngIf="isBranchesLoaded" title="Sucursales" [dataTrigger]="sucursales" (onAction)="handleTableAction($event, 'sucursal')"
-          [columns]="['Nombre', 'Tipo', 'Es Matriz', 'Gerente', 'Dirección', 'Estado', 'Acciones']" [isEmpty]="sucursales.length === 0">
+          [columns]="['Nombre', 'Tipo', 'Es Matriz', 'Gerente', 'Dirección', 'Estado', 'Acciones']" [isEmpty]="sucursales.length === 0"
+          [useServerPagination]="true" [currentPage]="sucursalesPage" [totalItems]="sucursalesTotal" [limit]="100"
+          (pageChange)="onPageChange($event, 'sucursales')" (searchChange)="onSearch($event, 'sucursales')">
           
           <app-button table-actions variant="primary" (onClick)="abrirModalSucursal()">+ Nueva Sucursal</app-button>
 
@@ -136,11 +140,16 @@
 
     <app-card title="Gestión de Empleados" [subtitle]="'Directorio de ' + activePersonalTab" [noPadding]="true">
       <ng-container *ngIf="showPersonalTable">
-        <app-table *ngIf="isStaffLoaded" title="Gestión de Empleados" [subtitle]="'Directorio de ' + activePersonalTab" 
+        <app-table *ngIf="activePersonalTab === 'gerentes' ? isGerentesLoaded : activePersonalTab === 'coordinadores' ? isCoordinadoresLoaded : activePersonalTab === 'verificadores' ? isVerificadoresLoaded : isCajerosLoaded" title="Gestión de Empleados" [subtitle]="'Directorio de ' + activePersonalTab" 
           [dataTrigger]="activePersonalTab === 'gerentes' ? gerentes : activePersonalTab === 'coordinadores' ? coordinadores : activePersonalTab === 'verificadores' ? verificadores : cajeros"
           (onAction)="handleTableAction($event, activePersonalTab.substring(0, activePersonalTab.length - 1))"
           [columns]="['ID', 'Nombre', 'Email', 'Teléfono', 'Sucursal', 'Acciones']"
-          [isEmpty]="activePersonalTab === 'gerentes' && gerentes.length === 0 || activePersonalTab === 'coordinadores' && coordinadores.length === 0 || activePersonalTab === 'verificadores' && verificadores.length === 0 || activePersonalTab === 'cajeros' && cajeros.length === 0">
+          [isEmpty]="activePersonalTab === 'gerentes' && gerentes.length === 0 || activePersonalTab === 'coordinadores' && coordinadores.length === 0 || activePersonalTab === 'verificadores' && verificadores.length === 0 || activePersonalTab === 'cajeros' && cajeros.length === 0"
+          [useServerPagination]="true" 
+          [currentPage]="activePersonalTab === 'gerentes' ? gerentesPage : activePersonalTab === 'coordinadores' ? coordinadoresPage : activePersonalTab === 'verificadores' ? verificadoresPage : cajerosPage" 
+          [totalItems]="activePersonalTab === 'gerentes' ? gerentesTotal : activePersonalTab === 'coordinadores' ? coordinadoresTotal : activePersonalTab === 'verificadores' ? verificadoresTotal : cajerosTotal" 
+          [limit]="100"
+          (pageChange)="onPersonalPageChange($event, activePersonalTab)" (searchChange)="onPersonalSearch($event, activePersonalTab)">
           
           <app-button table-actions variant="primary" (onClick)="abrirModalPersonal()">+ Registrar Empleado</app-button>
 

@@ -37,8 +37,13 @@
           [dataTrigger]="activePersonalTab === 'coordinadores' ? coordinadores : activePersonalTab === 'verificadores' ? verificadores : cajeros"
           [columns]="['ID', 'Nombre', 'Email', 'Teléfono', 'Acciones']"
           [isEmpty]="(activePersonalTab === 'coordinadores' ? coordinadores : activePersonalTab === 'verificadores' ? verificadores : cajeros).length === 0"
+          [useServerPagination]="true"
+          [currentPage]="activePersonalTab === 'coordinadores' ? coordinadoresPage : activePersonalTab === 'verificadores' ? verificadoresPage : cajerosPage"
+          [totalItems]="activePersonalTab === 'coordinadores' ? coordinadoresTotal : activePersonalTab === 'verificadores' ? verificadoresTotal : cajerosTotal"
+          [limit]="100"
+          (pageChange)="onPageChange($event, activePersonalTab)"
+          (searchChange)="onSearch($event, activePersonalTab)"
           (onAction)="handleTableAction($event, activePersonalTab)">
-
           <app-button table-actions variant="primary" (onClick)="abrirModalPersonal()">
             + Registrar {{ activePersonalTab === 'coordinadores' ? 'Coordinador' : activePersonalTab === 'verificadores' ? 'Verificador' : 'Cajero' }}
           </app-button>

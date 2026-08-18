@@ -44,7 +44,18 @@ export class CatalogosComponent implements OnInit {
   // Load Flags
   isProductsLoaded = false;
   isBranchesLoaded = false;
-  isStaffLoaded = false;
+  isGerentesLoaded = false;
+  isCoordinadoresLoaded = false;
+  isVerificadoresLoaded = false;
+  isCajerosLoaded = false;
+  
+  // Pagination & Search States
+  productosPage = 1; productosTotal = 0; productosSearch = '';
+  sucursalesPage = 1; sucursalesTotal = 0; sucursalesSearch = '';
+  gerentesPage = 1; gerentesTotal = 0; gerentesSearch = '';
+  coordinadoresPage = 1; coordinadoresTotal = 0; coordinadoresSearch = '';
+  verificadoresPage = 1; verificadoresTotal = 0; verificadoresSearch = '';
+  cajerosPage = 1; cajerosTotal = 0; cajerosSearch = '';
   
   // -- Datos Dummy (Categorías) --
   categorias = [
@@ -97,57 +108,70 @@ export class CatalogosComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    this.loadBranches();
-    this.loadStaff();
-    this.loadProducts();
+    this.loadActiveTab();
   }
 
-  loadProducts() {
-    this.productService.getProducts().subscribe(data => {
-      this.productos = data;
-      this.isProductsLoaded = true;
-      this.refreshProductsTable();
-    });
+  loadActiveTab(forceRefresh: boolean = false) {
+    if (this.activeTab === 'productos') {
+      if (this.isProductsLoaded && !forceRefresh) return;
+      this.isProductsLoaded = false;
+      this.productService.getProducts(this.productosPage, 100, this.productosSearch).subscribe(res => {
+        this.productos = res.data;
+        this.productosTotal = res.meta.itemCount;
+        this.isProductsLoaded = true;
+        this.refreshProductsTable();
+      });
+    } else if (this.activeTab === 'sucursales') {
+      if (this.isBranchesLoaded && !forceRefresh) return;
+      this.isBranchesLoaded = false;
+      this.branchService.getBranches(this.sucursalesPage, 100, this.sucursalesSearch).subscribe(res => {
+        this.sucursales = res.data;
+        this.sucursalesTotal = res.meta.itemCount;
+        this.isBranchesLoaded = true;
+        this.refreshBranchesTable();
+      });
+    } else if (this.activeTab === 'personal') {
+      this.loadActivePersonalTab(forceRefresh);
+    }
   }
 
-  loadBranches() {
-    this.branchService.getBranches().subscribe(data => {
-      this.sucursales = data;
-      this.isBranchesLoaded = true;
-      this.refreshBranchesTable();
-    });
-  }
-
-  loadStaff() {
-    // Gerentes
-    this.staffService.getGerentes().subscribe(data => {
-      this.gerentes = data;
-      this.checkStaffLoaded();
-      this.refreshPersonalTable();
-    });
-    // Coordinadores
-    this.staffService.getCoordinadores().subscribe(data => {
-      this.coordinadores = data;
-      this.checkStaffLoaded();
-      this.refreshPersonalTable();
-    });
-    // Verificadores
-    this.staffService.getVerificadores().subscribe(data => {
-      this.verificadores = data;
-      this.checkStaffLoaded();
-      this.refreshPersonalTable();
-    });
-    // Cajeros
-    this.staffService.getCajeros().subscribe(data => {
-      this.cajeros = data;
-      this.checkStaffLoaded();
-      this.refreshPersonalTable();
-    });
-  }
-
-  private checkStaffLoaded() {
-    if (this.gerentes.length > 0 || this.coordinadores.length > 0 || this.verificadores.length > 0 || this.cajeros.length > 0) {
-      this.isStaffLoaded = true;
+  loadActivePersonalTab(forceRefresh: boolean = false) {
+    if (this.activePersonalTab === 'gerentes') {
+      if (this.isGerentesLoaded && !forceRefresh) return;
+      this.isGerentesLoaded = false;
+      this.staffService.getGerentes(this.gerentesPage, 100, this.gerentesSearch).subscribe(res => {
+        this.gerentes = res.data;
+        this.gerentesTotal = res.meta.itemCount;
+        this.isGerentesLoaded = true;
+        this.refreshPersonalTable();
+      });
+    } else if (this.activePersonalTab === 'coordinadores') {
+      if (this.isCoordinadoresLoaded && !forceRefresh) return;
+      this.isCoordinadoresLoaded = false;
+      this.staffService.getCoordinadores(this.coordinadoresPage, 100, this.coordinadoresSearch).subscribe(res => {
+        this.coordinadores = res.data;
+        this.coordinadoresTotal = res.meta.itemCount;
+        this.isCoordinadoresLoaded = true;
+        this.refreshPersonalTable();
+      });
+    } else if (this.activePersonalTab === 'verificadores') {
+      if (this.isVerificadoresLoaded && !forceRefresh) return;
+      this.isVerificadoresLoaded = false;
+      this.staffService.getVerificadores(this.verificadoresPage, 100, this.verificadoresSearch).subscribe(res => {
+        this.verificadores = res.data;
+        this.verificadoresTotal = res.meta.itemCount;
+        this.isVerificadoresLoaded = true;
+        this.refreshPersonalTable();
+      });
+    } else if (this.activePersonalTab === 'cajeros') {
+      if (this.isCajerosLoaded && !forceRefresh) return;
+      this.isCajerosLoaded = false;
+      this.staffService.getCajeros(this.cajerosPage, 100, this.cajerosSearch).subscribe(res => {
+        this.cajeros = res.data;
+        this.cajerosTotal = res.meta.itemCount;
+        this.isCajerosLoaded = true;
+        this.refreshPersonalTable();
+      });
     }
   }
 
@@ -158,7 +182,10 @@ export class CatalogosComponent implements OnInit {
   }
 
   setTab(tab: Tab) {
-    this.activeTab = tab;
+    if (this.activeTab !== tab) {
+      this.activeTab = tab;
+      this.loadActiveTab();
+    }
   }
 
   showProductsTable = true;
@@ -201,8 +228,36 @@ export class CatalogosComponent implements OnInit {
   setPersonalTab(tab: PersonalTab) {
     if (this.activePersonalTab !== tab) {
       this.activePersonalTab = tab;
-      this.refreshPersonalTable();
+      this.loadActivePersonalTab();
     }
+  }
+
+  // Paginación principal
+  onPageChange(page: number, type: string) {
+    if (type === 'productos') { this.productosPage = page; }
+    else if (type === 'sucursales') { this.sucursalesPage = page; }
+    this.loadActiveTab(true);
+  }
+  onSearch(term: string, type: string) {
+    if (type === 'productos') { this.productosSearch = term; this.productosPage = 1; }
+    else if (type === 'sucursales') { this.sucursalesSearch = term; this.sucursalesPage = 1; }
+    this.loadActiveTab(true);
+  }
+
+  // Paginación Personal
+  onPersonalPageChange(page: number, type: string) {
+    if (type === 'gerentes') { this.gerentesPage = page; }
+    else if (type === 'coordinadores') { this.coordinadoresPage = page; }
+    else if (type === 'verificadores') { this.verificadoresPage = page; }
+    else if (type === 'cajeros') { this.cajerosPage = page; }
+    this.loadActivePersonalTab(true);
+  }
+  onPersonalSearch(term: string, type: string) {
+    if (type === 'gerentes') { this.gerentesSearch = term; this.gerentesPage = 1; }
+    else if (type === 'coordinadores') { this.coordinadoresSearch = term; this.coordinadoresPage = 1; }
+    else if (type === 'verificadores') { this.verificadoresSearch = term; this.verificadoresPage = 1; }
+    else if (type === 'cajeros') { this.cajerosSearch = term; this.cajerosPage = 1; }
+    this.loadActivePersonalTab(true);
   }
 
   // Productos
@@ -241,7 +296,7 @@ export class CatalogosComponent implements OnInit {
       
       this.productService.createProduct(dto).subscribe({
         next: () => {
-          this.loadProducts();
+          this.loadActiveTab(true);
           this.cerrarModalProducto();
         },
         error: (err) => {
@@ -298,7 +353,7 @@ export class CatalogosComponent implements OnInit {
       if (p) p.isActive = false;
     } else if (type === 'sucursal') {
       this.branchService.deleteBranch(id).subscribe(() => {
-        this.loadBranches(); // Reload after delete
+        this.loadActiveTab(true); // Reload after delete
       });
     } else if (['gerente', 'coordinador', 'verificador', 'cajero'].includes(type)) {
       let deleteAction;
@@ -308,7 +363,7 @@ export class CatalogosComponent implements OnInit {
       else deleteAction = this.staffService.deactivateCajero(id);
 
       deleteAction.subscribe(() => {
-        this.loadStaff();
+        this.loadActivePersonalTab(true);
       });
     }
 
@@ -420,7 +475,7 @@ export class CatalogosComponent implements OnInit {
       if (this.isEditingMode && this.entityToDeactivate) {
         this.branchService.updateBranch(this.entityToDeactivate.id, payload).subscribe({
           next: () => {
-            this.loadBranches();
+            this.loadActiveTab(true);
             this.cerrarModalSucursal();
           },
           error: (err) => {
@@ -431,7 +486,7 @@ export class CatalogosComponent implements OnInit {
       } else {
         this.branchService.createBranch(payload).subscribe({
           next: () => {
-            this.loadBranches();
+            this.loadActiveTab(true);
             this.cerrarModalSucursal();
           },
           error: (err) => {
@@ -503,7 +558,7 @@ export class CatalogosComponent implements OnInit {
 
       saveAction.subscribe({
         next: () => {
-          this.loadStaff();
+          this.loadActivePersonalTab(true);
           this.cerrarModalPersonal();
         },
         error: (err: any) => {

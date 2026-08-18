@@ -38,6 +38,19 @@ export class PlantillaComponent implements OnInit {
   isVerificadoresLoaded = false;
   isCajerosLoaded = false;
 
+  // Pagination & Search States
+  coordinadoresPage = 1;
+  coordinadoresTotal = 0;
+  coordinadoresSearch = '';
+
+  verificadoresPage = 1;
+  verificadoresTotal = 0;
+  verificadoresSearch = '';
+
+  cajerosPage = 1;
+  cajerosTotal = 0;
+  cajerosSearch = '';
+
   // Forms Models
   nuevoPersonal: CreateStaffDto = {
     firstName: '',
@@ -54,69 +67,86 @@ export class PlantillaComponent implements OnInit {
   constructor(private staffService: StaffService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit() {
-    this.loadStaff();
+    this.loadActiveTab();
   }
 
-  loadStaff() {
-    this.isCoordinadoresLoaded = false;
-    this.isVerificadoresLoaded = false;
-    this.isCajerosLoaded = false;
-    
-    console.log('Iniciando loadStaff()...');
-
-    this.staffService.getCoordinadores().subscribe({
-      next: (data) => {
-        console.log('getCoordinadores SUCCESS:', data);
-        this.coordinadores = data;
-        this.isCoordinadoresLoaded = true;
-        this.cdr.detectChanges();
-        this.refreshPersonalTable();
-      },
-      error: (err) => {
-        console.error('Error cargando coordinadores', err);
-        this.coordinadores = [];
-        this.isCoordinadoresLoaded = true;
-        this.cdr.detectChanges();
-      }
-    });
-
-    this.staffService.getVerificadores().subscribe({
-      next: (data) => {
-        console.log('getVerificadores SUCCESS:', data);
-        this.verificadores = data;
-        this.isVerificadoresLoaded = true;
-        this.cdr.detectChanges();
-        this.refreshPersonalTable();
-      },
-      error: (err) => {
-        console.error('Error cargando verificadores', err);
-        this.verificadores = [];
-        this.isVerificadoresLoaded = true;
-        this.cdr.detectChanges();
-      }
-    });
-
-    this.staffService.getCajeros().subscribe({
-      next: (data) => {
-        this.cajeros = data;
-        this.isCajerosLoaded = true;
-        this.cdr.detectChanges();
-        this.refreshPersonalTable();
-      },
-      error: (err) => {
-        console.error('Error cargando cajeros', err);
-        this.cajeros = [];
-        this.isCajerosLoaded = true;
-        this.cdr.detectChanges();
-      }
-    });
+  loadActiveTab(forceRefresh: boolean = false) {
+    if (this.activePersonalTab === 'coordinadores') {
+      if (this.isCoordinadoresLoaded && !forceRefresh) return;
+      this.isCoordinadoresLoaded = false;
+      this.staffService.getCoordinadores(this.coordinadoresPage, 100, this.coordinadoresSearch).subscribe({
+        next: (res) => {
+          this.coordinadores = res.data;
+          this.coordinadoresTotal = res.meta.itemCount;
+          this.isCoordinadoresLoaded = true;
+          this.cdr.detectChanges();
+          this.refreshPersonalTable();
+        },
+        error: (err) => {
+          console.error('Error cargando coordinadores', err);
+          this.coordinadores = [];
+          this.isCoordinadoresLoaded = true;
+          this.cdr.detectChanges();
+        }
+      });
+    } else if (this.activePersonalTab === 'verificadores') {
+      if (this.isVerificadoresLoaded && !forceRefresh) return;
+      this.isVerificadoresLoaded = false;
+      this.staffService.getVerificadores(this.verificadoresPage, 100, this.verificadoresSearch).subscribe({
+        next: (res) => {
+          this.verificadores = res.data;
+          this.verificadoresTotal = res.meta.itemCount;
+          this.isVerificadoresLoaded = true;
+          this.cdr.detectChanges();
+          this.refreshPersonalTable();
+        },
+        error: (err) => {
+          console.error('Error cargando verificadores', err);
+          this.verificadores = [];
+          this.isVerificadoresLoaded = true;
+          this.cdr.detectChanges();
+        }
+      });
+    } else if (this.activePersonalTab === 'cajeros') {
+      if (this.isCajerosLoaded && !forceRefresh) return;
+      this.isCajerosLoaded = false;
+      this.staffService.getCajeros(this.cajerosPage, 100, this.cajerosSearch).subscribe({
+        next: (res) => {
+          this.cajeros = res.data;
+          this.cajerosTotal = res.meta.itemCount;
+          this.isCajerosLoaded = true;
+          this.cdr.detectChanges();
+          this.refreshPersonalTable();
+        },
+        error: (err) => {
+          console.error('Error cargando cajeros', err);
+          this.cajeros = [];
+          this.isCajerosLoaded = true;
+          this.cdr.detectChanges();
+        }
+      });
+    }
   }
 
   setPersonalTab(tab: PersonalTab) {
     if (this.activePersonalTab !== tab) {
       this.activePersonalTab = tab;
-      this.refreshPersonalTable();
+      this.loadActiveTab();
     }
+  }
+
+  onPageChange(page: number, type: string) {
+    if (type === 'coordinadores') { this.coordinadoresPage = page; }
+    else if (type === 'verificadores') { this.verificadoresPage = page; }
+    else if (type === 'cajeros') { this.cajerosPage = page; }
+    this.loadActiveTab(true);
+  }
+
+  onSearch(term: string, type: string) {
+    if (type === 'coordinadores') { this.coordinadoresSearch = term; this.coordinadoresPage = 1; }
+    else if (type === 'verificadores') { this.verificadoresSearch = term; this.verificadoresPage = 1; }
+    else if (type === 'cajeros') { this.cajerosSearch = term; this.cajerosPage = 1; }
+    this.loadActiveTab(true);
   }
 
   refreshPersonalTable() {
@@ -188,7 +218,7 @@ export class PlantillaComponent implements OnInit {
     saveAction.subscribe({
       next: () => {
         this.isSaving = false;
-        this.loadStaff();
+        this.loadActiveTab(true);
         this.cerrarModalPersonal();
       },
       error: (err: any) => {
