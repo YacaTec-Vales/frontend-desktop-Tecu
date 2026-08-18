@@ -22,6 +22,7 @@ export class ConciliacionComponent {
   errorBusqueda = '';
 
   isPaying = false;
+  paymentMethod: string = 'EFECTIVO';
   referenciaPago: string = '';
   pagoExitoso = false;
   
@@ -41,7 +42,7 @@ export class ConciliacionComponent {
       next: (rel) => {
         this.relationEncontrada = rel;
         // Cargar ventana de pago también
-        this.relationService.getPaymentWindow(rel.relationId).subscribe({
+        this.relationService.getPaymentWindow(rel.id).subscribe({
           next: (window) => {
             this.paymentWindow = window;
             this.isLoadingBusqueda = false;
@@ -63,17 +64,24 @@ export class ConciliacionComponent {
   aplicarPago() {
     if (!this.relationEncontrada) return;
 
-    // TODO: En el futuro podría haber cobros parciales. 
-    // Por ahora la cajera cobra el totalToPayCents.
-    const montoACobrarCents = this.relationEncontrada.totalToPayCents;
+    // El saldo a cobrar por defecto es el remainingCents
+    const montoACobrarCents = this.relationEncontrada.remainingCents;
 
     this.isPaying = true;
-    this.relationService.payRelation(this.relationEncontrada.relationId, montoACobrarCents, this.referenciaPago).subscribe({
+    
+    // Concatenar referencia al método de pago si es EFECTIVO y hay referencia (opcional)
+    let finalPaymentMethod = this.paymentMethod;
+    if (this.referenciaPago) {
+      finalPaymentMethod += ` - ${this.referenciaPago}`;
+    }
+
+    this.relationService.payRelation(this.relationEncontrada.id, montoACobrarCents, finalPaymentMethod).subscribe({
       next: () => {
         this.isPaying = false;
         this.pagoExitoso = true;
         if (this.relationEncontrada) {
-          this.relationEncontrada.paymentStatus = 'PAID';
+          // Si el pago se procesó y enviamos todo el restante, se liquida
+          this.relationEncontrada.reconciliationStatus = 'LIQUIDADO';
         }
       },
       error: (err) => {

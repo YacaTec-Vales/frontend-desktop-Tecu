@@ -1,103 +1,144 @@
 <div class="max-w-7xl mx-auto space-y-6 pb-12">
-  
+
   <div>
     <h2 class="text-3xl font-bold text-gray-900 dark:text-white">Plantilla Local</h2>
-    <p class="text-gray-500 dark:text-gray-400 mt-1 text-lg">Directorio y gestión del personal asignado exclusivamente a tu sucursal.</p>
+    <p class="text-gray-500 dark:text-gray-400 mt-1 text-lg">Directorio y gestión del personal asignado exclusivamente a
+      tu sucursal.</p>
   </div>
 
   <app-card title="Gestión de Personal" subtitle="Administra tu equipo de trabajo local." [noPadding]="true">
     <!-- Sub-Pestañas de Personal -->
     <div class="border-b border-gray-200 dark:border-gray-700">
       <nav class="flex -mb-px px-4 gap-6" aria-label="Tabs">
-        <button (click)="setPersonalTab('coordinadores')" [ngClass]="{'border-indigo-500 text-indigo-600 dark:text-indigo-400': activePersonalTab === 'coordinadores', 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': activePersonalTab !== 'coordinadores'}" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors">
+        <button (click)="setPersonalTab('coordinadores')"
+          [ngClass]="{'border-indigo-500 text-indigo-600 dark:text-indigo-400': activePersonalTab === 'coordinadores', 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': activePersonalTab !== 'coordinadores'}"
+          class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors">
           Coordinadores
         </button>
-        <button (click)="setPersonalTab('verificadores')" [ngClass]="{'border-indigo-500 text-indigo-600 dark:text-indigo-400': activePersonalTab === 'verificadores', 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': activePersonalTab !== 'verificadores'}" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors">
+        <button (click)="setPersonalTab('verificadores')"
+          [ngClass]="{'border-indigo-500 text-indigo-600 dark:text-indigo-400': activePersonalTab === 'verificadores', 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': activePersonalTab !== 'verificadores'}"
+          class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors">
           Verificadores
         </button>
-        <button (click)="setPersonalTab('cajeros')" [ngClass]="{'border-indigo-500 text-indigo-600 dark:text-indigo-400': activePersonalTab === 'cajeros', 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': activePersonalTab !== 'cajeros'}" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors">
+        <button (click)="setPersonalTab('cajeros')"
+          [ngClass]="{'border-indigo-500 text-indigo-600 dark:text-indigo-400': activePersonalTab === 'cajeros', 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': activePersonalTab !== 'cajeros'}"
+          class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors">
           Cajeros
         </button>
       </nav>
     </div>
 
-    <!-- Acciones (Alta) -->
-    <div class="p-4 flex justify-end bg-gray-50 dark:bg-gray-800/50 border-b border-gray-100 dark:border-gray-700">
-      <app-button variant="primary" (onClick)="abrirModalPersonal()">
-        + Registrar {{ activePersonalTab === 'coordinadores' ? 'Coordinador' : activePersonalTab === 'verificadores' ? 'Verificador' : 'Cajero' }}
-      </app-button>
-    </div>
+    <ng-container *ngIf="showPersonalTable">
+      <ng-container
+        *ngIf="activePersonalTab === 'coordinadores' ? isCoordinadoresLoaded : activePersonalTab === 'verificadores' ? isVerificadoresLoaded : isCajerosLoaded; else loadingTpl">
+        <app-table
+          title="Gestión de Empleados"
+          [subtitle]="'Directorio de ' + activePersonalTab"
+          [dataTrigger]="activePersonalTab === 'coordinadores' ? coordinadores : activePersonalTab === 'verificadores' ? verificadores : cajeros"
+          [columns]="['ID', 'Nombre', 'Email', 'Teléfono', 'Acciones']"
+          [isEmpty]="(activePersonalTab === 'coordinadores' ? coordinadores : activePersonalTab === 'verificadores' ? verificadores : cajeros).length === 0"
+          [useServerPagination]="true"
+          [currentPage]="activePersonalTab === 'coordinadores' ? coordinadoresPage : activePersonalTab === 'verificadores' ? verificadoresPage : cajerosPage"
+          [totalItems]="activePersonalTab === 'coordinadores' ? coordinadoresTotal : activePersonalTab === 'verificadores' ? verificadoresTotal : cajerosTotal"
+          [limit]="100"
+          (pageChange)="onPageChange($event, activePersonalTab)"
+          (searchChange)="onSearch($event, activePersonalTab)"
+          (onAction)="handleTableAction($event, activePersonalTab)">
+          <app-button table-actions variant="primary" (onClick)="abrirModalPersonal()">
+            + Registrar {{ activePersonalTab === 'coordinadores' ? 'Coordinador' : activePersonalTab === 'verificadores' ? 'Verificador' : 'Cajero' }}
+          </app-button>
 
-    <!-- Contenido Coordinadores -->
-    <div *ngIf="activePersonalTab === 'coordinadores'">
-      <app-table [columns]="['ID', 'Nombre', 'Email', 'Teléfono', 'Acciones']" [isEmpty]="coordinadores.length === 0">
-        <tr *ngFor="let item of coordinadores" class="bg-white dark:bg-gray-800 border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
-          <td class="px-6 py-4 font-mono text-sm">{{ item.id.substring(0,8) }}</td>
-          <td class="px-6 py-4 font-medium text-gray-900 dark:text-white">{{ item.firstName }} {{ item.lastNamePaternal }}</td>
-          <td class="px-6 py-4 text-gray-500">{{ item.email }}</td>
-          <td class="px-6 py-4 text-gray-500">{{ item.phone || 'N/A' }}</td>
-          <td class="px-6 py-4 flex gap-2">
-            <app-button variant="text" size="sm">Editar</app-button>
-          </td>
-        </tr>
-      </app-table>
-    </div>
+          <ng-container *ngIf="activePersonalTab === 'coordinadores'">
+            <tr *ngFor="let item of coordinadores" class="bg-white border-b hover:bg-gray-50">
+              <td class="px-6 py-4 font-bold text-xs truncate max-w-[80px]" [title]="item?.id">{{ item?.id }}</td>
+              <td class="px-6 py-4">{{ item?.firstName }} {{ item?.lastNamePaternal }}</td>
+              <td class="px-6 py-4 text-gray-500">{{ item?.email }}</td>
+              <td class="px-6 py-4">{{ item?.phone || 'N/A' }}</td>
+              <td class="px-6 py-4 flex gap-2">
+                <app-table-actions [id]="item.id"></app-table-actions>
+              </td>
+            </tr>
+          </ng-container>
 
-    <!-- Contenido Verificadores -->
-    <div *ngIf="activePersonalTab === 'verificadores'">
-      <app-table [columns]="['ID', 'Nombre', 'Email', 'Teléfono', 'Coordinador ID', 'Acciones']" [isEmpty]="verificadores.length === 0">
-        <tr *ngFor="let item of verificadores" class="bg-white dark:bg-gray-800 border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
-          <td class="px-6 py-4 font-mono text-sm">{{ item.id.substring(0,8) }}</td>
-          <td class="px-6 py-4 font-medium text-gray-900 dark:text-white">{{ item.firstName }} {{ item.lastNamePaternal }}</td>
-          <td class="px-6 py-4 text-gray-500">{{ item.email }}</td>
-          <td class="px-6 py-4 text-gray-500">{{ item.phone || 'N/A' }}</td>
-          <td class="px-6 py-4 text-gray-500">N/A</td>
-          <td class="px-6 py-4 flex gap-2">
-            <app-button variant="text" size="sm">Editar</app-button>
-          </td>
-        </tr>
-      </app-table>
-    </div>
+          <ng-container *ngIf="activePersonalTab === 'verificadores'">
+            <tr *ngFor="let item of verificadores" class="bg-white border-b hover:bg-gray-50">
+              <td class="px-6 py-4 font-bold text-xs truncate max-w-[80px]" [title]="item?.id">{{ item?.id }}</td>
+              <td class="px-6 py-4">{{ item?.firstName }} {{ item?.lastNamePaternal }}</td>
+              <td class="px-6 py-4 text-gray-500">{{ item?.email }}</td>
+              <td class="px-6 py-4">{{ item?.phone || 'N/A' }}</td>
+              <td class="px-6 py-4 flex gap-2">
+                <app-table-actions [id]="item.id"></app-table-actions>
+              </td>
+            </tr>
+          </ng-container>
 
-    <!-- Contenido Cajeros -->
-    <div *ngIf="activePersonalTab === 'cajeros'">
-      <app-table [columns]="['ID', 'Nombre', 'Email', 'Teléfono', 'Acciones']" [isEmpty]="cajeros.length === 0">
-        <tr *ngFor="let item of cajeros" class="bg-white dark:bg-gray-800 border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
-          <td class="px-6 py-4 font-mono text-sm">{{ item.id.substring(0,8) }}</td>
-          <td class="px-6 py-4 font-medium text-gray-900 dark:text-white">{{ item.firstName }} {{ item.lastNamePaternal }}</td>
-          <td class="px-6 py-4 text-gray-500">{{ item.email }}</td>
-          <td class="px-6 py-4 text-gray-500">{{ item.phone || 'N/A' }}</td>
-          <td class="px-6 py-4 flex gap-2">
-            <app-button variant="text" size="sm">Editar</app-button>
-          </td>
-        </tr>
-      </app-table>
-    </div>
+          <ng-container *ngIf="activePersonalTab === 'cajeros'">
+            <tr *ngFor="let item of cajeros" class="bg-white border-b hover:bg-gray-50">
+              <td class="px-6 py-4 font-bold text-xs truncate max-w-[80px]" [title]="item?.id">{{ item?.id }}</td>
+              <td class="px-6 py-4">{{ item?.firstName }} {{ item?.lastNamePaternal }}</td>
+              <td class="px-6 py-4 text-gray-500">{{ item?.email }}</td>
+              <td class="px-6 py-4">{{ item?.phone || 'N/A' }}</td>
+              <td class="px-6 py-4 flex gap-2">
+                <app-table-actions [id]="item.id"></app-table-actions>
+              </td>
+            </tr>
+          </ng-container>
+        </app-table>
+      </ng-container>
+    </ng-container>
+
+    <ng-template #loadingTpl>
+      <div class="p-8 text-center text-gray-500">
+        Cargando {{ activePersonalTab }}...
+      </div>
+    </ng-template>
   </app-card>
 
 </div>
 
 <!-- Modal Personal -->
-<app-modal [isOpen]="isPersonalModalOpen" title="Registrar Personal" maxWidth="md" (onClose)="cerrarModalPersonal()">
+<app-modal [isOpen]="isPersonalModalOpen"
+  [title]="(isEditingMode ? 'Editar ' : 'Registrar ') + (activePersonalTab === 'coordinadores' ? 'Coordinador' : activePersonalTab === 'verificadores' ? 'Verificador' : 'Cajero')"
+  maxWidth="md" (onClose)="cerrarModalPersonal()">
   <div class="space-y-4">
-    
-    <div *ngIf="errorMessage" class="p-3 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400 font-medium">
+
+    <div *ngIf="errorMessage"
+      class="p-3 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400 font-medium">
       {{ errorMessage }}
     </div>
 
-    <app-input label="Nombre(s) *" type="text" [(ngModel)]="nuevoPersonal.firstName"></app-input>
-    <div class="grid grid-cols-2 gap-4">
-      <app-input label="Apellido Paterno *" type="text" [(ngModel)]="nuevoPersonal.lastNamePaternal"></app-input>
-      <app-input label="Apellido Materno *" type="text" [(ngModel)]="nuevoPersonal.lastNameMaternal"></app-input>
-    </div>
-    <app-input label="Correo Electrónico *" type="email" placeholder="usuario@yacatec.test" [(ngModel)]="nuevoPersonal.email"></app-input>
-    <app-input label="Teléfono (10 dígitos) *" type="text" placeholder="Ej: 8712345678" [(ngModel)]="nuevoPersonal.phone"></app-input>
+    <form [formGroup]="personalForm" (ngSubmit)="guardarPersonal()">
+      <div class="mb-4">
+        <app-input label="Nombre(s)" type="text" placeholder="Juan" formControlName="firstName"></app-input>
+        <span *ngIf="personalForm.get('firstName')?.invalid && personalForm.get('firstName')?.touched" class="text-xs text-red-600 mt-1">El nombre es requerido y mínimo 2 caracteres.</span>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <app-input label="Apellido Paterno" type="text" placeholder="Pérez" formControlName="lastNamePaternal"></app-input>
+          <span *ngIf="personalForm.get('lastNamePaternal')?.invalid && personalForm.get('lastNamePaternal')?.touched" class="text-xs text-red-600 mt-1">Obligatorio (min. 2).</span>
+        </div>
+        <div>
+          <app-input label="Apellido Materno" type="text" placeholder="López" formControlName="lastNameMaternal"></app-input>
+          <span *ngIf="personalForm.get('lastNameMaternal')?.invalid && personalForm.get('lastNameMaternal')?.touched" class="text-xs text-red-600 mt-1">Obligatorio (min. 2).</span>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-4 mt-4">
+        <div>
+          <app-input label="Correo Electrónico" type="email" placeholder="juan@yacatec.test" formControlName="email"></app-input>
+          <span *ngIf="personalForm.get('email')?.invalid && personalForm.get('email')?.touched" class="text-xs text-red-600 mt-1">Ingrese un correo válido.</span>
+        </div>
+        <div>
+          <app-input label="Teléfono" type="text" placeholder="8712345678" formControlName="phone"></app-input>
+          <span *ngIf="personalForm.get('phone')?.invalid && personalForm.get('phone')?.touched" class="text-xs text-red-600 mt-1">Debe contener 10 dígitos.</span>
+        </div>
+      </div>
 
-    <div class="mt-6 flex justify-end gap-2 pt-4 border-t border-gray-100">
-      <app-button variant="text" (onClick)="cerrarModalPersonal()" [disabled]="isSaving">Cancelar</app-button>
-      <app-button variant="primary" (onClick)="guardarPersonal()" [disabled]="!isFormValid || isSaving">
-        {{ isSaving ? 'Guardando...' : 'Crear ' + (activePersonalTab === 'coordinadores' ? 'Coordinador' : activePersonalTab === 'verificadores' ? 'Verificador' : 'Cajero') }}
-      </app-button>
-    </div>
+      <div class="mt-6 flex justify-end gap-2 pt-4 border-t border-gray-100 dark:border-gray-700">
+        <app-button variant="text" type="button" (onClick)="cerrarModalPersonal()" [disabled]="isSaving">Cancelar</app-button>
+        <app-button variant="primary" type="submit" [disabled]="personalForm.invalid || isSaving">
+          {{ isSaving ? 'Guardando...' : (isEditingMode ? 'Guardar Cambios' : 'Registrar') }}
+        </app-button>
+      </div>
+    </form>
   </div>
 </app-modal>

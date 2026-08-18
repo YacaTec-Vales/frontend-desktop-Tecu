@@ -4,7 +4,16 @@ export interface Branch {
   branchType: 'MATRIZ' | 'SUCURSAL';
   esMatriz: boolean;
   address: string | null;
-  managerUserId: string | null;
+  managerUserId?: string | null;
+  manager?: {
+    id: string;
+    firstName: string;
+    lastNamePaternal: string;
+    email: string;
+  } | null;
+  cutoffDay: number;
+  paymentDay: number;
+  earlyPaymentDays: number;
   isActive: boolean;
   createdAt?: string;
   updatedAt?: string;
@@ -15,7 +24,10 @@ export interface CreateBranchDto {
   branchType: 'MATRIZ' | 'SUCURSAL';
   esMatriz?: boolean;
   address?: string;
-  managerUserId?: string;
+  managerUserId?: string | null;
+  cutoffDay?: number;
+  paymentDay?: number;
+  earlyPaymentDays?: number;
 }
 
 export interface UpdateBranchDto {
@@ -23,5 +35,8 @@ export interface UpdateBranchDto {
   branchType?: 'MATRIZ' | 'SUCURSAL';
   esMatriz?: boolean;
   address?: string;
-  managerUserId?: string;
+  managerUserId?: string | null;
+  cutoffDay?: number;
+  paymentDay?: number;
+  earlyPaymentDays?: number;
 }
