@@ -43,9 +43,9 @@ export class PanelCorporativoComponent implements OnInit {
   cargarSucursales() {
     this.isLoadingBranches = true;
     this.branchService.getBranches().subscribe({
-      next: (branches) => {
-        this.sucursales = branches;
-        this.branchOptions = branches.map(b => ({ value: b.id, label: b.name }));
+      next: (res) => {
+        this.sucursales = res.data;
+        this.branchOptions = res.data.map(b => ({ value: b.id, label: b.name }));
         if (this.branchOptions.length > 0) {
           this.selectedBranchId = this.branchOptions[0].value;
         }
