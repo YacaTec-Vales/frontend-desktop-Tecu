@@ -37,8 +37,13 @@
           [dataTrigger]="activePersonalTab === 'coordinadores' ? coordinadores : activePersonalTab === 'verificadores' ? verificadores : cajeros"
           [columns]="['ID', 'Nombre', 'Email', 'Teléfono', 'Acciones']"
           [isEmpty]="(activePersonalTab === 'coordinadores' ? coordinadores : activePersonalTab === 'verificadores' ? verificadores : cajeros).length === 0"
+          [useServerPagination]="true"
+          [currentPage]="activePersonalTab === 'coordinadores' ? coordinadoresPage : activePersonalTab === 'verificadores' ? verificadoresPage : cajerosPage"
+          [totalItems]="activePersonalTab === 'coordinadores' ? coordinadoresTotal : activePersonalTab === 'verificadores' ? verificadoresTotal : cajerosTotal"
+          [limit]="100"
+          (pageChange)="onPageChange($event, activePersonalTab)"
+          (searchChange)="onSearch($event, activePersonalTab)"
           (onAction)="handleTableAction($event, activePersonalTab)">
-
           <app-button table-actions variant="primary" (onClick)="abrirModalPersonal()">
             + Registrar {{ activePersonalTab === 'coordinadores' ? 'Coordinador' : activePersonalTab === 'verificadores' ? 'Verificador' : 'Cajero' }}
           </app-button>
@@ -102,26 +107,38 @@
       {{ errorMessage }}
     </div>
 
-    <div class="mb-4">
-      <app-input label="Nombre(s)" type="text" placeholder="Juan" [(ngModel)]="nuevoPersonal.firstName"></app-input>
-    </div>
-    <div class="grid grid-cols-2 gap-4">
-      <app-input label="Apellido Paterno" type="text" placeholder="Pérez"
-        [(ngModel)]="nuevoPersonal.lastNamePaternal"></app-input>
-      <app-input label="Apellido Materno" type="text" placeholder="López"
-        [(ngModel)]="nuevoPersonal.lastNameMaternal"></app-input>
-    </div>
-    <div class="grid grid-cols-2 gap-4">
-      <app-input label="Correo Electrónico" type="email" placeholder="juan@yacatec.test"
-        [(ngModel)]="nuevoPersonal.email"></app-input>
-      <app-input label="Teléfono" type="text" placeholder="8712345678" [(ngModel)]="nuevoPersonal.phone"></app-input>
-    </div>
+    <form [formGroup]="personalForm" (ngSubmit)="guardarPersonal()">
+      <div class="mb-4">
+        <app-input label="Nombre(s)" type="text" placeholder="Juan" formControlName="firstName"></app-input>
+        <span *ngIf="personalForm.get('firstName')?.invalid && personalForm.get('firstName')?.touched" class="text-xs text-red-600 mt-1">El nombre es requerido y mínimo 2 caracteres.</span>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <app-input label="Apellido Paterno" type="text" placeholder="Pérez" formControlName="lastNamePaternal"></app-input>
+          <span *ngIf="personalForm.get('lastNamePaternal')?.invalid && personalForm.get('lastNamePaternal')?.touched" class="text-xs text-red-600 mt-1">Obligatorio (min. 2).</span>
+        </div>
+        <div>
+          <app-input label="Apellido Materno" type="text" placeholder="López" formControlName="lastNameMaternal"></app-input>
+          <span *ngIf="personalForm.get('lastNameMaternal')?.invalid && personalForm.get('lastNameMaternal')?.touched" class="text-xs text-red-600 mt-1">Obligatorio (min. 2).</span>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-4 mt-4">
+        <div>
+          <app-input label="Correo Electrónico" type="email" placeholder="juan@yacatec.test" formControlName="email"></app-input>
+          <span *ngIf="personalForm.get('email')?.invalid && personalForm.get('email')?.touched" class="text-xs text-red-600 mt-1">Ingrese un correo válido.</span>
+        </div>
+        <div>
+          <app-input label="Teléfono" type="text" placeholder="8712345678" formControlName="phone"></app-input>
+          <span *ngIf="personalForm.get('phone')?.invalid && personalForm.get('phone')?.touched" class="text-xs text-red-600 mt-1">Debe contener 10 dígitos.</span>
+        </div>
+      </div>
 
-    <div class="mt-6 flex justify-end gap-2 pt-4 border-t border-gray-100 dark:border-gray-700">
-      <app-button variant="text" (onClick)="cerrarModalPersonal()" [disabled]="isSaving">Cancelar</app-button>
-      <app-button variant="primary" (onClick)="guardarPersonal()" [disabled]="!isFormValid || isSaving">
-        {{ isSaving ? 'Guardando...' : (isEditingMode ? 'Guardar Cambios' : 'Registrar') }}
-      </app-button>
-    </div>
+      <div class="mt-6 flex justify-end gap-2 pt-4 border-t border-gray-100 dark:border-gray-700">
+        <app-button variant="text" type="button" (onClick)="cerrarModalPersonal()" [disabled]="isSaving">Cancelar</app-button>
+        <app-button variant="primary" type="submit" [disabled]="personalForm.invalid || isSaving">
+          {{ isSaving ? 'Guardando...' : (isEditingMode ? 'Guardar Cambios' : 'Registrar') }}
+        </app-button>
+      </div>
+    </form>
   </div>
 </app-modal>

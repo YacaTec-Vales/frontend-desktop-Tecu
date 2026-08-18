@@ -115,10 +115,17 @@ export class TableComponent implements AfterViewInit, OnDestroy, OnChanges {
   @Input() isEmpty: boolean = false;
   @Input() emptyMessage: string = 'No hay datos disponibles.';
 
-  // Usar esto para avisarle a la tabla que los datos cambiaron asíncronamente
   @Input() dataTrigger: any;
 
+  // ==== SERVER SIDE PAGINATION ====
+  @Input() useServerPagination = false;
+  @Input() currentPage = 1;
+  @Input() totalItems = 0;
+  @Input() limit = 100;
+  
   @Output() onAction = new EventEmitter<{ action: string, id: string }>();
+  @Output() pageChange = new EventEmitter<number>();
+  @Output() searchChange = new EventEmitter<string>();
 
   @ViewChild('tableEl') tableEl!: ElementRef<HTMLTableElement>;
 
@@ -191,9 +198,10 @@ export class TableComponent implements AfterViewInit, OnDestroy, OnChanges {
     if (!this.tableEl || !this.tableEl.nativeElement || this.dtInstance) return;
 
     this.dtInstance = new DataTable(this.tableEl.nativeElement, {
-      searchable: true,
+      searchable: !this.useServerPagination, // Si es server, quitamos el buscador interno
       sortable: true,
-      perPage: 10,
+      paging: !this.useServerPagination, // Desactivar paginador nativo si usamos el nuestro
+      perPage: this.useServerPagination ? this.limit : 10,
       perPageSelect: [5, 10, 25, 50, 100],
       labels: {
         placeholder: "Buscar...",
@@ -246,9 +254,53 @@ export class TableComponent implements AfterViewInit, OnDestroy, OnChanges {
   // ==== FUNCIONES INTERNAS (UI DE TABLA) ====
 
   onSearchInput(event: any) {
-    if (this.dtInstance) {
+    if (this.useServerPagination) {
+      this.searchChange.emit(event.target.value);
+    } else if (this.dtInstance) {
       this.dtInstance.search(event.target.value);
     }
+  }
+
+  // Métodos del Paginador Custom
+  get totalPages(): number {
+    return Math.ceil(this.totalItems / this.limit);
+  }
+
+  get canGoPrevious(): boolean {
+    return this.currentPage > 1;
+  }
+
+  get canGoNext(): boolean {
+    return this.currentPage < this.totalPages;
+  }
+
+  previousPage() {
+    if (this.canGoPrevious) {
+      this.pageChange.emit(this.currentPage - 1);
+    }
+  }
+
+  nextPage() {
+    if (this.canGoNext) {
+      this.pageChange.emit(this.currentPage + 1);
+    }
+  }
+
+  goToPage(page: number) {
+    if (page >= 1 && page <= this.totalPages && page !== this.currentPage) {
+      this.pageChange.emit(page);
+    }
+  }
+  
+  get visiblePages(): number[] {
+    const total = this.totalPages;
+    if (total <= 5) {
+      return Array.from({length: total}, (_, i) => i + 1);
+    }
+    const current = this.currentPage;
+    if (current <= 3) return [1, 2, 3, 4, 5];
+    if (current >= total - 2) return [total - 4, total - 3, total - 2, total - 1, total];
+    return [current - 2, current - 1, current, current + 1, current + 2];
   }
 
   exportarDatos(format: 'csv' | 'pdf') {
