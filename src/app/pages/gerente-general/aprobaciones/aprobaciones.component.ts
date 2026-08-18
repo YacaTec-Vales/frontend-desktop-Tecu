@@ -82,8 +82,8 @@ export class AprobacionesComponent implements OnInit {
 
   loadBranches() {
     this.branchService.getBranches().subscribe({
-      next: (branches) => {
-        branches.forEach(b => {
+      next: (response) => {
+        response.data.forEach((b: Branch) => {
           this.branchesMap[b.id] = b.name;
         });
         this.loadDictamenes();
