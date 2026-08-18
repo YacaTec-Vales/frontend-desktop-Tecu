@@ -6,6 +6,7 @@ import { environment } from '../../../environments/environment';
 export interface CreditRaiseRequest {
   id: string;
   distributorId: string;
+  branchId?: string;
   requestedAmountCents: number;
   status: string;
   createdAt: string;
