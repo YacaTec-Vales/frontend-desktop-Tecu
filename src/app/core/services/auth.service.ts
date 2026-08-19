@@ -19,7 +19,7 @@ export interface MfaSetupResponse {
   providedIn: 'root'
 })
 export class AuthService {
-  private apiUrl = 'http://localhost:3000/api/v1';
+  private apiUrl = 'https://apiv2.taquizaschavez.com.mx/api/v1';
 
   constructor(private http: HttpClient) {}
 
