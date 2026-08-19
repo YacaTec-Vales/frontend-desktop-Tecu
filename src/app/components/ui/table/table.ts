@@ -149,12 +149,14 @@ export class TableComponent implements AfterViewInit, OnDestroy, OnChanges {
 
   ngOnDestroy() {
     if (this.dtInstance) {
+      this.restoreDropdown();
       this.dtInstance.destroy();
     }
   }
 
   reinit() {
     if (this.dtInstance) {
+      this.restoreDropdown();
       this.dtInstance.destroy();
       this.dtInstance = null;
     }
@@ -163,6 +165,18 @@ export class TableComponent implements AfterViewInit, OnDestroy, OnChanges {
     setTimeout(() => {
       this.waitForRowsAndInit();
     }, 0);
+  }
+
+  private restoreDropdown() {
+    if (!this.tableEl || !this.tableEl.nativeElement) return;
+    const wrapper = this.tableEl.nativeElement.closest('.datatable-wrapper');
+    if (wrapper) {
+      const top = wrapper.querySelector('.datatable-top');
+      const dropdown = wrapper.querySelector('.datatable-dropdown');
+      if (top && dropdown) {
+        top.appendChild(dropdown);
+      }
+    }
   }
 
   private waitForRowsAndInit() {
