@@ -1,7 +1,9 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable, map } from 'rxjs';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Observable, map, of } from 'rxjs';
+import { delay } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
+import { PaginatedResponse } from './staff.service';
 
 export interface RelationDetails {
   id: string;
@@ -47,5 +49,17 @@ export class RelationService {
 
   payRelation(id: string, montoCentavos: number, paymentMethod: string): Observable<any> {
     return this.http.post<{ message: string }>(`${this.apiUrl}/${id}/pay`, { montoCentavos, paymentMethod });
+  }
+
+  getPendingRelations(page: number = 1, limit: number = 100, search?: string): Observable<PaginatedResponse<RelationDetails>> {
+    let params = new HttpParams()
+      .set('page', page.toString())
+      .set('limit', limit.toString());
+
+    if (search) {
+      params = params.set('search', search);
+    }
+
+    return this.http.get<PaginatedResponse<RelationDetails>>(`${this.apiUrl}/pending`, { params });
   }
 }

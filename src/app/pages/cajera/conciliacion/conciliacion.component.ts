@@ -1,93 +1,181 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CardComponent } from '../../../components/ui/card/card';
 import { ButtonComponent } from '../../../components/ui/button/button';
 import { InputComponent } from '../../../components/ui/input/input';
 import { BadgeComponent } from '../../../components/ui/badge/badge';
-import { RelationService, RelationDetails, PaymentWindow } from '../../../core/services/relation.service';
+import { ModalComponent } from '../../../components/ui/modal/modal';
+import { TableComponent } from '../../../components/ui/table/table';
+
+import { ReconciliationService, BankMovement, ReconciliationBatch } from '../../../core/services/reconciliation.service';
+import { RelationService, RelationDetails } from '../../../core/services/relation.service';
 
 @Component({
   selector: 'app-conciliacion',
   standalone: true,
-  imports: [CommonModule, FormsModule, CardComponent, ButtonComponent, InputComponent, BadgeComponent],
+  imports: [CommonModule, FormsModule, CardComponent, ButtonComponent, InputComponent, BadgeComponent, ModalComponent, TableComponent],
   templateUrl: './conciliacion.component.html'
 })
-export class ConciliacionComponent {
-  relationIdBuscado: string = '';
-  relationEncontrada: RelationDetails | null = null;
-  paymentWindow: PaymentWindow | null = null;
+export class ConciliacionComponent implements OnInit {
+  // Tabs
+  activeTab: 'automatica' | 'manual' = 'automatica';
+
+  // --- AUTOMATICA ---
+  selectedFile: File | null = null;
+  isUploading = false;
+  uploadSuccessMessage = '';
+  uploadErrorMessage = '';
+  batches: ReconciliationBatch[] = [];
+  batchesPage = 1;
+  batchesTotal = 0;
+  isBatchesLoaded = false;
+
+  // --- MANUAL ---
+  unmatchedMovements: BankMovement[] = [];
+  unmatchedPage = 1;
+  unmatchedTotal = 0;
+  isUnmatchedLoaded = false;
+
+  isManualModalOpen = false;
+  selectedMovement: BankMovement | null = null;
   
-  isLoadingBusqueda = false;
-  errorBusqueda = '';
+  // Pending Relations for Modal
+  pendingRelations: RelationDetails[] = [];
+  pendingSearch = '';
+  selectedRelationId = '';
+  justification = '';
+  isProcessingManual = false;
+  manualErrorMessage = '';
 
-  isPaying = false;
-  paymentMethod: string = 'EFECTIVO';
-  referenciaPago: string = '';
-  pagoExitoso = false;
-  
-  constructor(private relationService: RelationService) {}
+  constructor(
+    private reconciliationService: ReconciliationService,
+    private relationService: RelationService
+  ) {}
 
-  buscarRelacion() {
-    if (!this.relationIdBuscado) return;
-    
-    this.isLoadingBusqueda = true;
-    this.errorBusqueda = '';
-    this.relationEncontrada = null;
-    this.paymentWindow = null;
-    this.pagoExitoso = false;
-    this.referenciaPago = '';
+  ngOnInit() {
+    this.loadBatches();
+  }
 
-    this.relationService.getRelation(this.relationIdBuscado).subscribe({
-      next: (rel) => {
-        this.relationEncontrada = rel;
-        // Cargar ventana de pago también
-        this.relationService.getPaymentWindow(rel.id).subscribe({
-          next: (window) => {
-            this.paymentWindow = window;
-            this.isLoadingBusqueda = false;
-          },
-          error: (err) => {
-            this.isLoadingBusqueda = false;
-            // Aún si falla la ventana, mostramos la relación
-            console.error('Error al cargar payment window', err);
-          }
-        });
+  setTab(tab: 'automatica' | 'manual') {
+    this.activeTab = tab;
+    if (tab === 'automatica' && !this.isBatchesLoaded) {
+      this.loadBatches();
+    } else if (tab === 'manual' && !this.isUnmatchedLoaded) {
+      this.loadUnmatched();
+    }
+  }
+
+  // --- AUTOMATICA ---
+  onFileSelected(event: any) {
+    const file: File = event.target.files[0];
+    if (file) {
+      this.selectedFile = file;
+    }
+  }
+
+  uploadFile() {
+    if (!this.selectedFile) return;
+    this.isUploading = true;
+    this.uploadSuccessMessage = '';
+    this.uploadErrorMessage = '';
+
+    this.reconciliationService.uploadExcel(this.selectedFile).subscribe({
+      next: (res) => {
+        this.isUploading = false;
+        this.uploadSuccessMessage = res.message || 'Archivo procesado exitosamente.';
+        this.selectedFile = null;
+        this.loadBatches(); // Reload batches to show the new one
+        // Reset file input in template (can be handled via viewchild if needed)
       },
       error: (err) => {
-        this.isLoadingBusqueda = false;
-        this.errorBusqueda = err.error?.message || 'No se encontró la Relación. Verifique el UUID.';
+        this.isUploading = false;
+        this.uploadErrorMessage = 'Error al subir archivo: ' + (err.error?.message || err.message);
       }
     });
   }
 
-  aplicarPago() {
-    if (!this.relationEncontrada) return;
+  loadBatches() {
+    this.reconciliationService.getBatches(this.batchesPage, 10).subscribe(res => {
+      this.batches = res.data;
+      this.batchesTotal = res.meta.itemCount;
+      this.isBatchesLoaded = true;
+    });
+  }
 
-    // El saldo a cobrar por defecto es el remainingCents
-    const montoACobrarCents = this.relationEncontrada.remainingCents;
+  onBatchesPageChange(page: number) {
+    this.batchesPage = page;
+    this.loadBatches();
+  }
 
-    this.isPaying = true;
-    
-    // Concatenar referencia al método de pago si es EFECTIVO y hay referencia (opcional)
-    let finalPaymentMethod = this.paymentMethod;
-    if (this.referenciaPago) {
-      finalPaymentMethod += ` - ${this.referenciaPago}`;
+  // --- MANUAL ---
+  loadUnmatched() {
+    this.reconciliationService.getUnmatchedMovements(this.unmatchedPage, 10).subscribe(res => {
+      this.unmatchedMovements = res.data;
+      this.unmatchedTotal = res.meta.itemCount;
+      this.isUnmatchedLoaded = true;
+    });
+  }
+
+  onUnmatchedPageChange(page: number) {
+    this.unmatchedPage = page;
+    this.loadUnmatched();
+  }
+
+  handleTableAction(event: any) {
+    if (event.action === 'edit') {
+      const mov = this.unmatchedMovements.find(m => m.id === event.id);
+      if (mov) {
+        this.abrirModalManual(mov);
+      }
     }
+  }
 
-    this.relationService.payRelation(this.relationEncontrada.id, montoACobrarCents, finalPaymentMethod).subscribe({
+  abrirModalManual(movement: BankMovement) {
+    this.selectedMovement = movement;
+    this.selectedRelationId = '';
+    this.justification = '';
+    this.manualErrorMessage = '';
+    this.pendingSearch = '';
+    this.isManualModalOpen = true;
+    this.loadPendingRelations();
+  }
+
+  cerrarModalManual() {
+    this.isManualModalOpen = false;
+    this.selectedMovement = null;
+  }
+
+  loadPendingRelations() {
+    this.relationService.getPendingRelations(1, 50, this.pendingSearch).subscribe(res => {
+      this.pendingRelations = res.data;
+    });
+  }
+
+  onPendingSearchChange(term: string) {
+    this.pendingSearch = term;
+    this.loadPendingRelations();
+  }
+
+  confirmManualReconciliation() {
+    if (!this.selectedMovement || !this.selectedRelationId) return;
+
+    this.isProcessingManual = true;
+    this.manualErrorMessage = '';
+
+    this.reconciliationService.requestManualReconciliation(this.selectedMovement.id, this.selectedRelationId, this.justification).subscribe({
       next: () => {
-        this.isPaying = false;
-        this.pagoExitoso = true;
-        if (this.relationEncontrada) {
-          // Si el pago se procesó y enviamos todo el restante, se liquida
-          this.relationEncontrada.reconciliationStatus = 'LIQUIDADO';
-        }
+        this.isProcessingManual = false;
+        this.cerrarModalManual();
+        // Option B flow implies we just send the request, so we don't necessarily remove it from unmatched yet until approved.
+        // But we can reload just in case or show a success alert.
+        this.loadUnmatched(); 
       },
       error: (err) => {
-        this.isPaying = false;
-        alert('Error al procesar el pago: ' + (err.error?.message || err.message));
+        this.isProcessingManual = false;
+        this.manualErrorMessage = err.error?.message || err.message || 'Error al solicitar la conciliación manual.';
       }
     });
   }
 }
+
