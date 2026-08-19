@@ -28,70 +28,61 @@
       </nav>
     </div>
 
-    <ng-container *ngIf="showPersonalTable">
-      <ng-container
-        *ngIf="activePersonalTab === 'coordinadores' ? isCoordinadoresLoaded : activePersonalTab === 'verificadores' ? isVerificadoresLoaded : isCajerosLoaded; else loadingTpl">
-        <app-table
-          title="Gestión de Empleados"
-          [subtitle]="'Directorio de ' + activePersonalTab"
-          [dataTrigger]="activePersonalTab === 'coordinadores' ? coordinadores : activePersonalTab === 'verificadores' ? verificadores : cajeros"
-          [columns]="['ID', 'Nombre', 'Email', 'Teléfono', 'Acciones']"
-          [isEmpty]="(activePersonalTab === 'coordinadores' ? coordinadores : activePersonalTab === 'verificadores' ? verificadores : cajeros).length === 0"
-          [useServerPagination]="true"
-          [currentPage]="activePersonalTab === 'coordinadores' ? coordinadoresPage : activePersonalTab === 'verificadores' ? verificadoresPage : cajerosPage"
-          [totalItems]="activePersonalTab === 'coordinadores' ? coordinadoresTotal : activePersonalTab === 'verificadores' ? verificadoresTotal : cajerosTotal"
-          [limit]="100"
-          (pageChange)="onPageChange($event, activePersonalTab)"
-          (searchChange)="onSearch($event, activePersonalTab)"
-          (onAction)="handleTableAction($event, activePersonalTab)">
-          <app-button table-actions variant="primary" (onClick)="abrirModalPersonal()">
-            + Registrar {{ activePersonalTab === 'coordinadores' ? 'Coordinador' : activePersonalTab === 'verificadores' ? 'Verificador' : 'Cajero' }}
-          </app-button>
+      <app-table
+        title="Gestión de Empleados"
+        [subtitle]="'Directorio de ' + activePersonalTab"
+        [dataTrigger]="activePersonalTab === 'coordinadores' ? coordinadores : activePersonalTab === 'verificadores' ? verificadores : cajeros"
+        [columns]="['ID', 'Nombre', 'Email', 'Teléfono', 'Acciones']"
+        [isEmpty]="(activePersonalTab === 'coordinadores' ? coordinadores : activePersonalTab === 'verificadores' ? verificadores : cajeros).length === 0"
+        [useServerPagination]="true"
+        [currentPage]="activePersonalTab === 'coordinadores' ? coordinadoresPage : activePersonalTab === 'verificadores' ? verificadoresPage : cajerosPage"
+        [totalItems]="activePersonalTab === 'coordinadores' ? coordinadoresTotal : activePersonalTab === 'verificadores' ? verificadoresTotal : cajerosTotal"
+        [limit]="activePersonalTab === 'coordinadores' ? coordinadoresLimit : activePersonalTab === 'verificadores' ? verificadoresLimit : cajerosLimit"
+        [isLoading]="activePersonalTab === 'coordinadores' ? isCoordinadoresLoading : activePersonalTab === 'verificadores' ? isVerificadoresLoading : isCajerosLoading"
+        (pageChange)="onPageChange($event, activePersonalTab)"
+        (searchChange)="onSearch($event, activePersonalTab)"
+        (limitChange)="onLimitChange($event, activePersonalTab)"
+        (onAction)="handleTableAction($event, activePersonalTab)">
+        <app-button table-actions variant="primary" (onClick)="abrirModalPersonal()">
+          + Registrar {{ activePersonalTab === 'coordinadores' ? 'Coordinador' : activePersonalTab === 'verificadores' ? 'Verificador' : 'Cajero' }}
+        </app-button>
 
-          <ng-container *ngIf="activePersonalTab === 'coordinadores'">
-            <tr *ngFor="let item of coordinadores" class="bg-white border-b hover:bg-gray-50">
-              <td class="px-6 py-4 font-bold text-xs truncate max-w-[80px]" [title]="item?.id">{{ item?.id }}</td>
-              <td class="px-6 py-4">{{ item?.firstName }} {{ item?.lastNamePaternal }}</td>
-              <td class="px-6 py-4 text-gray-500">{{ item?.email }}</td>
-              <td class="px-6 py-4">{{ item?.phone || 'N/A' }}</td>
-              <td class="px-6 py-4 flex gap-2">
-                <app-table-actions [id]="item.id"></app-table-actions>
-              </td>
-            </tr>
-          </ng-container>
+        <ng-container *ngIf="activePersonalTab === 'coordinadores'">
+          <tr *ngFor="let item of coordinadores" class="bg-white border-b hover:bg-gray-50">
+            <td class="px-6 py-4 font-bold text-xs truncate max-w-[80px]" [title]="item?.id">{{ item?.id }}</td>
+            <td class="px-6 py-4">{{ item?.firstName }} {{ item?.lastNamePaternal }}</td>
+            <td class="px-6 py-4 text-gray-500">{{ item?.email }}</td>
+            <td class="px-6 py-4">{{ item?.phone || 'N/A' }}</td>
+            <td class="px-6 py-4 flex gap-2">
+              <app-table-actions [id]="item.id"></app-table-actions>
+            </td>
+          </tr>
+        </ng-container>
 
-          <ng-container *ngIf="activePersonalTab === 'verificadores'">
-            <tr *ngFor="let item of verificadores" class="bg-white border-b hover:bg-gray-50">
-              <td class="px-6 py-4 font-bold text-xs truncate max-w-[80px]" [title]="item?.id">{{ item?.id }}</td>
-              <td class="px-6 py-4">{{ item?.firstName }} {{ item?.lastNamePaternal }}</td>
-              <td class="px-6 py-4 text-gray-500">{{ item?.email }}</td>
-              <td class="px-6 py-4">{{ item?.phone || 'N/A' }}</td>
-              <td class="px-6 py-4 flex gap-2">
-                <app-table-actions [id]="item.id"></app-table-actions>
-              </td>
-            </tr>
-          </ng-container>
+        <ng-container *ngIf="activePersonalTab === 'verificadores'">
+          <tr *ngFor="let item of verificadores" class="bg-white border-b hover:bg-gray-50">
+            <td class="px-6 py-4 font-bold text-xs truncate max-w-[80px]" [title]="item?.id">{{ item?.id }}</td>
+            <td class="px-6 py-4">{{ item?.firstName }} {{ item?.lastNamePaternal }}</td>
+            <td class="px-6 py-4 text-gray-500">{{ item?.email }}</td>
+            <td class="px-6 py-4">{{ item?.phone || 'N/A' }}</td>
+            <td class="px-6 py-4 flex gap-2">
+              <app-table-actions [id]="item.id"></app-table-actions>
+            </td>
+          </tr>
+        </ng-container>
 
-          <ng-container *ngIf="activePersonalTab === 'cajeros'">
-            <tr *ngFor="let item of cajeros" class="bg-white border-b hover:bg-gray-50">
-              <td class="px-6 py-4 font-bold text-xs truncate max-w-[80px]" [title]="item?.id">{{ item?.id }}</td>
-              <td class="px-6 py-4">{{ item?.firstName }} {{ item?.lastNamePaternal }}</td>
-              <td class="px-6 py-4 text-gray-500">{{ item?.email }}</td>
-              <td class="px-6 py-4">{{ item?.phone || 'N/A' }}</td>
-              <td class="px-6 py-4 flex gap-2">
-                <app-table-actions [id]="item.id"></app-table-actions>
-              </td>
-            </tr>
-          </ng-container>
-        </app-table>
-      </ng-container>
-    </ng-container>
-
-    <ng-template #loadingTpl>
-      <div class="p-8 text-center text-gray-500">
-        Cargando {{ activePersonalTab }}...
-      </div>
-    </ng-template>
+        <ng-container *ngIf="activePersonalTab === 'cajeros'">
+          <tr *ngFor="let item of cajeros" class="bg-white border-b hover:bg-gray-50">
+            <td class="px-6 py-4 font-bold text-xs truncate max-w-[80px]" [title]="item?.id">{{ item?.id }}</td>
+            <td class="px-6 py-4">{{ item?.firstName }} {{ item?.lastNamePaternal }}</td>
+            <td class="px-6 py-4 text-gray-500">{{ item?.email }}</td>
+            <td class="px-6 py-4">{{ item?.phone || 'N/A' }}</td>
+            <td class="px-6 py-4 flex gap-2">
+              <app-table-actions [id]="item.id"></app-table-actions>
+            </td>
+          </tr>
+        </ng-container>
+      </app-table>
   </app-card>
 
 </div>

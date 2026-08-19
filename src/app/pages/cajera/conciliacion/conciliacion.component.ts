@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CardComponent } from '../../../components/ui/card/card';
@@ -29,13 +29,17 @@ export class ConciliacionComponent implements OnInit {
   batches: ReconciliationBatch[] = [];
   batchesPage = 1;
   batchesTotal = 0;
+  batchesLimit = 10;
   isBatchesLoaded = false;
+  isBatchesLoading = false;
 
   // --- MANUAL ---
   unmatchedMovements: BankMovement[] = [];
   unmatchedPage = 1;
   unmatchedTotal = 0;
+  unmatchedLimit = 10;
   isUnmatchedLoaded = false;
+  isUnmatchedLoading = false;
 
   isManualModalOpen = false;
   selectedMovement: BankMovement | null = null;
@@ -50,7 +54,8 @@ export class ConciliacionComponent implements OnInit {
 
   constructor(
     private reconciliationService: ReconciliationService,
-    private relationService: RelationService
+    private relationService: RelationService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit() {
@@ -96,10 +101,19 @@ export class ConciliacionComponent implements OnInit {
   }
 
   loadBatches() {
-    this.reconciliationService.getBatches(this.batchesPage, 10).subscribe(res => {
-      this.batches = res.data;
-      this.batchesTotal = res.meta.itemCount;
-      this.isBatchesLoaded = true;
+    this.isBatchesLoading = true;
+    this.reconciliationService.getBatches(this.batchesPage, this.batchesLimit).subscribe({
+      next: (res) => {
+        this.batches = res.data;
+        this.batchesTotal = res.meta.itemCount;
+        this.isBatchesLoaded = true;
+        this.isBatchesLoading = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.isBatchesLoading = false;
+        this.cdr.detectChanges();
+      }
     });
   }
 
@@ -108,17 +122,38 @@ export class ConciliacionComponent implements OnInit {
     this.loadBatches();
   }
 
+  onBatchesLimitChange(limit: number) {
+    this.batchesLimit = limit;
+    this.batchesPage = 1;
+    this.loadBatches();
+  }
+
   // --- MANUAL ---
   loadUnmatched() {
-    this.reconciliationService.getUnmatchedMovements(this.unmatchedPage, 10).subscribe(res => {
-      this.unmatchedMovements = res.data;
-      this.unmatchedTotal = res.meta.itemCount;
-      this.isUnmatchedLoaded = true;
+    this.isUnmatchedLoading = true;
+    this.reconciliationService.getUnmatchedMovements(this.unmatchedPage, this.unmatchedLimit).subscribe({
+      next: (res) => {
+        this.unmatchedMovements = res.data;
+        this.unmatchedTotal = res.meta.itemCount;
+        this.isUnmatchedLoaded = true;
+        this.isUnmatchedLoading = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.isUnmatchedLoading = false;
+        this.cdr.detectChanges();
+      }
     });
   }
 
   onUnmatchedPageChange(page: number) {
     this.unmatchedPage = page;
+    this.loadUnmatched();
+  }
+
+  onUnmatchedLimitChange(limit: number) {
+    this.unmatchedLimit = limit;
+    this.unmatchedPage = 1;
     this.loadUnmatched();
   }
 

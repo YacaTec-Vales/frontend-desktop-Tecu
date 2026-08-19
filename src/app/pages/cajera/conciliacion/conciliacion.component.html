@@ -45,8 +45,10 @@
     <app-card title="Historial de Lotes Procesados" [noPadding]="true">
       <app-table title="Lotes de Conciliación" [dataTrigger]="batches"
         [columns]="['Archivo', 'Movimientos Totales', 'Cruzados', 'Saldo Huérfano', 'Estado', 'Fecha']"
-        [useServerPagination]="true" [currentPage]="batchesPage" [totalItems]="batchesTotal" [limit]="10"
-        (pageChange)="onBatchesPageChange($event)">
+        [useServerPagination]="true" [currentPage]="batchesPage" [totalItems]="batchesTotal" [limit]="batchesLimit"
+        [isLoading]="isBatchesLoading"
+        (pageChange)="onBatchesPageChange($event)"
+        (limitChange)="onBatchesLimitChange($event)">
         
         <tr *ngFor="let b of batches" class="bg-white border-b hover:bg-gray-50">
           <td class="px-6 py-4 font-bold">{{ b.originalFileName }}</td>
@@ -67,8 +69,11 @@
     <app-card title="Movimientos Huérfanos" subtitle="Movimientos bancarios que no pudieron ser cruzados automáticamente con ninguna relación pendiente." [noPadding]="true">
       <app-table title="Movimientos Sin Relacionar" [dataTrigger]="unmatchedMovements"
         [columns]="['Referencia Banco', 'Monto', 'Fecha de Pago', 'Acciones']"
-        [useServerPagination]="true" [currentPage]="unmatchedPage" [totalItems]="unmatchedTotal" [limit]="10"
-        (pageChange)="onUnmatchedPageChange($event)" (onAction)="handleTableAction($event)">
+        [useServerPagination]="true" [currentPage]="unmatchedPage" [totalItems]="unmatchedTotal" [limit]="unmatchedLimit"
+        [isLoading]="isUnmatchedLoading"
+        (pageChange)="onUnmatchedPageChange($event)"
+        (limitChange)="onUnmatchedLimitChange($event)"
+        (onAction)="handleTableAction($event)">
         
         <tr *ngFor="let m of unmatchedMovements" class="bg-white border-b hover:bg-gray-50">
           <td class="px-6 py-4 font-bold text-red-600">{{ m.reference || 'SIN REFERENCIA' }}</td>

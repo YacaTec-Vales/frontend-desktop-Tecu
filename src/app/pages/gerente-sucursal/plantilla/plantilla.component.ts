@@ -35,26 +35,29 @@ export class PlantillaComponent implements OnInit {
   cajeros: Cajero[] = [];
 
   isCoordinadoresLoaded = false;
+  isCoordinadoresLoading = false;
   isVerificadoresLoaded = false;
+  isVerificadoresLoading = false;
   isCajerosLoaded = false;
+  isCajerosLoading = false;
 
   // Pagination & Search States
   coordinadoresPage = 1;
   coordinadoresTotal = 0;
   coordinadoresSearch = '';
+  coordinadoresLimit = 10;
 
   verificadoresPage = 1;
   verificadoresTotal = 0;
   verificadoresSearch = '';
+  verificadoresLimit = 10;
 
   cajerosPage = 1;
   cajerosTotal = 0;
   cajerosSearch = '';
+  cajerosLimit = 10;
 
   personalForm: FormGroup;
-
-  showPersonalTable = true;
-  private personalTableTimeout: any;
 
   constructor(
     private staffService: StaffService, 
@@ -78,55 +81,58 @@ export class PlantillaComponent implements OnInit {
   loadActiveTab(forceRefresh: boolean = false) {
     if (this.activePersonalTab === 'coordinadores') {
       if (this.isCoordinadoresLoaded && !forceRefresh) return;
-      this.isCoordinadoresLoaded = false;
-      this.staffService.getCoordinadores(this.coordinadoresPage, 100, this.coordinadoresSearch).subscribe({
+      this.isCoordinadoresLoading = true;
+      this.staffService.getCoordinadores(this.coordinadoresPage, this.coordinadoresLimit, this.coordinadoresSearch).subscribe({
         next: (res) => {
           this.coordinadores = res.data;
           this.coordinadoresTotal = res.meta.itemCount;
           this.isCoordinadoresLoaded = true;
+          this.isCoordinadoresLoading = false;
           this.cdr.detectChanges();
-          this.refreshPersonalTable();
         },
         error: (err) => {
           console.error('Error cargando coordinadores', err);
           this.coordinadores = [];
           this.isCoordinadoresLoaded = true;
+          this.isCoordinadoresLoading = false;
           this.cdr.detectChanges();
         }
       });
     } else if (this.activePersonalTab === 'verificadores') {
       if (this.isVerificadoresLoaded && !forceRefresh) return;
-      this.isVerificadoresLoaded = false;
-      this.staffService.getVerificadores(this.verificadoresPage, 100, this.verificadoresSearch).subscribe({
+      this.isVerificadoresLoading = true;
+      this.staffService.getVerificadores(this.verificadoresPage, this.verificadoresLimit, this.verificadoresSearch).subscribe({
         next: (res) => {
           this.verificadores = res.data;
           this.verificadoresTotal = res.meta.itemCount;
           this.isVerificadoresLoaded = true;
+          this.isVerificadoresLoading = false;
           this.cdr.detectChanges();
-          this.refreshPersonalTable();
         },
         error: (err) => {
           console.error('Error cargando verificadores', err);
           this.verificadores = [];
           this.isVerificadoresLoaded = true;
+          this.isVerificadoresLoading = false;
           this.cdr.detectChanges();
         }
       });
     } else if (this.activePersonalTab === 'cajeros') {
       if (this.isCajerosLoaded && !forceRefresh) return;
-      this.isCajerosLoaded = false;
-      this.staffService.getCajeros(this.cajerosPage, 100, this.cajerosSearch).subscribe({
+      this.isCajerosLoading = true;
+      this.staffService.getCajeros(this.cajerosPage, this.cajerosLimit, this.cajerosSearch).subscribe({
         next: (res) => {
           this.cajeros = res.data;
           this.cajerosTotal = res.meta.itemCount;
           this.isCajerosLoaded = true;
+          this.isCajerosLoading = false;
           this.cdr.detectChanges();
-          this.refreshPersonalTable();
         },
         error: (err) => {
           console.error('Error cargando cajeros', err);
           this.cajeros = [];
           this.isCajerosLoaded = true;
+          this.isCajerosLoading = false;
           this.cdr.detectChanges();
         }
       });
@@ -154,14 +160,11 @@ export class PlantillaComponent implements OnInit {
     this.loadActiveTab(true);
   }
 
-  refreshPersonalTable() {
-    this.showPersonalTable = false;
-    this.cdr.detectChanges();
-    if (this.personalTableTimeout) clearTimeout(this.personalTableTimeout);
-    this.personalTableTimeout = setTimeout(() => {
-      this.showPersonalTable = true;
-      this.cdr.detectChanges();
-    }, 10);
+  onLimitChange(limit: number, type: string) {
+    if (type === 'coordinadores') { this.coordinadoresLimit = limit; this.coordinadoresPage = 1; }
+    else if (type === 'verificadores') { this.verificadoresLimit = limit; this.verificadoresPage = 1; }
+    else if (type === 'cajeros') { this.cajerosLimit = limit; this.cajerosPage = 1; }
+    this.loadActiveTab(true);
   }
 
   abrirModalPersonal() { 

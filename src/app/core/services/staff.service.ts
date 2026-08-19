@@ -53,10 +53,21 @@ export class StaffService {
   getGerentes(page: number = 1, limit: number = 100, search?: string): Observable<PaginatedResponse<Gerente>> {
     let params = this.buildParams(page, limit, search).set('roleCode', 'GERENTE_SUCURSAL');
     return this.http.get<any>(`${this.baseUrl}/users`, { params }).pipe(
-      map(res => ({
-        data: res?.data?.data || [],
-        meta: res?.data?.meta || { page: 1, limit: 100, itemCount: (res?.data?.data || []).length, pageCount: 1, hasPreviousPage: false, hasNextPage: false }
-      }))
+      map(res => {
+        const dataArr = res?.data?.data || res?.data || [];
+        const rawMeta = res?.data?.meta || res?.meta;
+        const itemCount = rawMeta?.itemCount ?? rawMeta?.total ?? dataArr.length;
+        return {
+          data: dataArr,
+          meta: { 
+            ...rawMeta,
+            page: rawMeta?.page || page,
+            limit: rawMeta?.limit || limit,
+            itemCount: itemCount,
+            pageCount: rawMeta?.pageCount || Math.ceil(itemCount / limit) || 1
+          }
+        };
+      })
     );
   }
 
@@ -79,10 +90,21 @@ export class StaffService {
   // Coordinadores
   getCoordinadores(page: number = 1, limit: number = 100, search?: string): Observable<PaginatedResponse<Coordinador>> {
     return this.http.get<any>(`${this.baseUrl}/coordinadores`, { params: this.buildParams(page, limit, search) }).pipe(
-      map(res => ({
-        data: res?.data?.data || res?.data || [],
-        meta: res?.data?.meta || { page: 1, limit: 100, itemCount: (res?.data?.data || res?.data || []).length, pageCount: 1, hasPreviousPage: false, hasNextPage: false }
-      }))
+      map(res => {
+        const dataArr = res?.data?.data || res?.data || [];
+        const rawMeta = res?.data?.meta || res?.meta;
+        const itemCount = rawMeta?.itemCount ?? rawMeta?.total ?? dataArr.length;
+        return {
+          data: dataArr,
+          meta: { 
+            ...rawMeta,
+            page: rawMeta?.page || page,
+            limit: rawMeta?.limit || limit,
+            itemCount: itemCount,
+            pageCount: rawMeta?.pageCount || Math.ceil(itemCount / limit) || 1
+          }
+        };
+      })
     );
   }
 
@@ -105,10 +127,21 @@ export class StaffService {
   // Verificadores
   getVerificadores(page: number = 1, limit: number = 100, search?: string): Observable<PaginatedResponse<Verificador>> {
     return this.http.get<any>(`${this.baseUrl}/verificadores`, { params: this.buildParams(page, limit, search) }).pipe(
-      map(res => ({
-        data: res?.data?.data || res?.data || [],
-        meta: res?.data?.meta || { page: 1, limit: 100, itemCount: (res?.data?.data || res?.data || []).length, pageCount: 1, hasPreviousPage: false, hasNextPage: false }
-      }))
+      map(res => {
+        const dataArr = res?.data?.data || res?.data || [];
+        const rawMeta = res?.data?.meta || res?.meta;
+        const itemCount = rawMeta?.itemCount ?? rawMeta?.total ?? dataArr.length;
+        return {
+          data: dataArr,
+          meta: { 
+            ...rawMeta,
+            page: rawMeta?.page || page,
+            limit: rawMeta?.limit || limit,
+            itemCount: itemCount,
+            pageCount: rawMeta?.pageCount || Math.ceil(itemCount / limit) || 1
+          }
+        };
+      })
     );
   }
 
@@ -131,10 +164,21 @@ export class StaffService {
   // Cajeros
   getCajeros(page: number = 1, limit: number = 100, search?: string): Observable<PaginatedResponse<Cajero>> {
     return this.http.get<any>(`${this.baseUrl}/cajeros`, { params: this.buildParams(page, limit, search) }).pipe(
-      map(res => ({
-        data: res?.data?.data || res?.data || [],
-        meta: res?.data?.meta || { page: 1, limit: 100, itemCount: (res?.data?.data || res?.data || []).length, pageCount: 1, hasPreviousPage: false, hasNextPage: false }
-      }))
+      map(res => {
+        const dataArr = res?.data?.data || res?.data || [];
+        const rawMeta = res?.data?.meta || res?.meta;
+        const itemCount = rawMeta?.itemCount ?? rawMeta?.total ?? dataArr.length;
+        return {
+          data: dataArr,
+          meta: { 
+            ...rawMeta,
+            page: rawMeta?.page || page,
+            limit: rawMeta?.limit || limit,
+            itemCount: itemCount,
+            pageCount: rawMeta?.pageCount || Math.ceil(itemCount / limit) || 1
+          }
+        };
+      })
     );
   }
 
