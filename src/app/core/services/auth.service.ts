@@ -113,10 +113,29 @@ export class AuthService {
     this.isAuthenticated.set(false);
   }
 
+  /**
+   * Decodifica el token JWT y verifica si ya ha expirado localmente.
+   */
+  isTokenExpired(): boolean {
+    const token = this.getToken();
+    if (!token) return true;
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      if (!payload || !payload.exp) return false;
+      const exp = payload.exp * 1000; // Segundos a milisegundos
+      return Date.now() >= exp;
+    } catch (e) {
+      return true; // Formato inválido
+    }
+  }
+
   private checkInitialStatus(): void {
     if (this.getToken()) {
-      this.isAuthenticated.set(true);
-      // Opcional: Podrías disparar getMe() automáticamente aquí si quieres hidratar currentUser al recargar la página.
+      if (this.isTokenExpired()) {
+        this.clearSession();
+      } else {
+        this.isAuthenticated.set(true);
+      }
     }
   }
 }

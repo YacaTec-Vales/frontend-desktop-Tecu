@@ -15,6 +15,7 @@ export interface Verificador extends BaseStaff {}
 export interface Cajero extends BaseStaff {}
 
 export interface CreateStaffDto {
+  username?: string;
   firstName: string;
   lastNamePaternal: string;
   lastNameMaternal: string;

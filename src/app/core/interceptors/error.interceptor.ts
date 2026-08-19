@@ -16,16 +16,35 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(req).pipe(
     catchError((error: HttpErrorResponse) => {
-      // Si la sesión expira o el usuario no está autorizado
-      if (error.status === 401) {
-        // Evitamos ciclos infinitos si la propia petición de login da 401
-        if (!req.url.includes('/auth/login')) {
+      let userFriendlyMessage = 'Ocurrió un error inesperado. Por favor, intente de nuevo.';
+
+      if (error.status === 400 || error.status === 422) {
+        userFriendlyMessage = 'Algún dato se mandó mal. Por favor, verifique la información.';
+      } else if (error.status === 401) {
+        if (req.url.includes('/auth/login')) {
+          userFriendlyMessage = 'Credenciales incorrectas. Verifique su usuario y contraseña.';
+        } else {
+          userFriendlyMessage = 'Su sesión ha expirado o no es válida. Por favor, inicie sesión nuevamente.';
           authService.forceLogout();
         }
+      } else if (error.status === 403) {
+        userFriendlyMessage = 'No tiene permisos para realizar esta acción.';
+      } else if (error.status === 404) {
+        userFriendlyMessage = 'El recurso solicitado no fue encontrado.';
+      } else if (error.status >= 500) {
+        userFriendlyMessage = 'Error, estamos revisando el error.';
       }
 
-      // Reenviar el error para que el componente que hizo la llamada lo maneje si quiere
-      return throwError(() => error);
+      // Mutamos el objeto de error para que los componentes reciban el mensaje amigable
+      const modifiedError = new HttpErrorResponse({
+        error: { message: userFriendlyMessage },
+        headers: error.headers,
+        status: error.status,
+        statusText: error.statusText,
+        url: error.url || undefined
+      });
+
+      return throwError(() => modifiedError);
     })
   );
 };

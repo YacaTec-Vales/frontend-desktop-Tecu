@@ -27,18 +27,20 @@
       <div class="p-4 bg-gray-50 border border-gray-200 rounded-lg mb-6">
         <div class="flex justify-between items-center mb-4">
           <div>
-            <p class="text-xs text-gray-500 uppercase tracking-wider font-bold mb-1">Monto a Pagar</p>
-            <p class="text-3xl font-black text-brand">{{ relationEncontrada.totalToPayCents / 100 | currency:'MXN' }}</p>
+            <p class="text-xs text-gray-500 uppercase tracking-wider font-bold mb-1">Saldo Pendiente a Pagar</p>
+            <p class="text-3xl font-black text-brand">{{ relationEncontrada.remainingCents / 100 | currency:'MXN' }}</p>
           </div>
           <div class="text-right">
-            <app-badge [text]="relationEncontrada.paymentStatus" [variant]="relationEncontrada.paymentStatus === 'PAID' ? 'success' : 'warning'"></app-badge>
+            <app-badge [text]="relationEncontrada.reconciliationStatus" 
+                       [variant]="relationEncontrada.reconciliationStatus === 'LIQUIDADO' ? 'success' : 
+                                  relationEncontrada.reconciliationStatus === 'PARCIAL' ? 'warning' : 'default'"></app-badge>
           </div>
         </div>
 
         <div class="grid grid-cols-2 gap-4 border-t border-gray-200 pt-4 mt-4">
           <div>
-            <p class="text-xs text-gray-500 uppercase tracking-wider font-bold mb-1">Puntos a otorgar</p>
-            <p class="text-lg font-bold text-gray-900">+{{ relationEncontrada.pointsAwarded }} Pts</p>
+            <p class="text-xs text-gray-500 uppercase tracking-wider font-bold mb-1">Puntos Base (Al Corte)</p>
+            <p class="text-lg font-bold text-gray-900">+{{ relationEncontrada.pointsAtCut }} Pts</p>
           </div>
         </div>
       </div>
@@ -64,22 +66,35 @@
       </div>
 
       <!-- Registro de Pago -->
-      <div class="border-t border-gray-200 pt-6" *ngIf="relationEncontrada.paymentStatus !== 'PAID' && paymentWindow?.status !== 'CLOSED'">
-        <h4 class="font-bold text-gray-900 mb-4">Registro de Pago en Efectivo</h4>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
+      <div class="border-t border-gray-200 pt-6" *ngIf="relationEncontrada.reconciliationStatus !== 'LIQUIDADO' && paymentWindow?.status !== 'CLOSED'">
+        <h4 class="font-bold text-gray-900 mb-4">Registro de Conciliación Manual / Pago</h4>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+          
+          <div>
+            <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Método de Pago</label>
+            <select [(ngModel)]="paymentMethod"
+              class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand focus:border-brand block w-full p-2.5">
+              <option value="EFECTIVO">Efectivo (Ventanilla)</option>
+              <option value="TRANSFERENCIA">Transferencia SPEI</option>
+              <option value="DEPOSITO_OXXO">Depósito OXXO</option>
+              <option value="DEPOSITO_BANCO">Depósito en Sucursal Bancaria</option>
+            </select>
+          </div>
+
           <app-input label="Referencia o Recibo (Opcional)" placeholder="Ej: Ticket-8821" [(ngModel)]="referenciaPago"></app-input>
+          
           <app-button variant="primary" [fullWidth]="true" (onClick)="aplicarPago()" [disabled]="isPaying">
-            {{ isPaying ? 'Procesando...' : 'Cobrar e Imprimir Ticket' }}
+            {{ isPaying ? 'Procesando...' : 'Registrar Pago / Conciliar' }}
           </app-button>
         </div>
       </div>
 
-      <div *ngIf="relationEncontrada.paymentStatus === 'PAID'" class="mt-4 p-4 text-center rounded bg-gray-100 text-gray-600 font-bold">
-        Esta relación ya ha sido pagada.
+      <div *ngIf="relationEncontrada.reconciliationStatus === 'LIQUIDADO'" class="mt-4 p-4 text-center rounded bg-gray-100 text-gray-600 font-bold">
+        Esta relación ya ha sido liquidada.
       </div>
       
-      <div *ngIf="paymentWindow?.status === 'CLOSED' && relationEncontrada.paymentStatus !== 'PAID'" class="mt-4 p-4 text-center rounded bg-red-100 text-red-800 font-bold">
-        La ventana de pago está CERRADA. La cuenta se ha congelado o enviado a cobranza.
+      <div *ngIf="paymentWindow?.status === 'CLOSED' && relationEncontrada.reconciliationStatus !== 'LIQUIDADO'" class="mt-4 p-4 text-center rounded bg-red-100 text-red-800 font-bold">
+        La ventana de pago está CERRADA. La cuenta se ha congelado o enviado a cobranza externa.
       </div>
 
     </app-card>
@@ -90,8 +105,8 @@
     <div class="w-16 h-16 bg-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4">
       <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
     </div>
-    <h3 class="text-2xl font-black text-emerald-900 mb-2">Cobro Exitoso</h3>
-    <p class="text-emerald-700">Se cobró el monto de {{ (relationEncontrada?.totalToPayCents || 0) / 100 | currency:'MXN' }} correctamente.</p>
+    <h3 class="text-2xl font-black text-emerald-900 mb-2">Pago Registrado Exitosamente</h3>
+    <p class="text-emerald-700">Se aplicó el pago al saldo de la relación correctamente.</p>
     <div class="mt-6 flex justify-center gap-4">
       <app-button variant="outline" (onClick)="relationIdBuscado = ''; buscarRelacion()">Cobrar otra Relación</app-button>
     </div>

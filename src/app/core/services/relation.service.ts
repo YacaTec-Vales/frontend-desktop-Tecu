@@ -4,13 +4,20 @@ import { Observable, map } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
 export interface RelationDetails {
-  relationId: string;
+  id: string;
+  referencePayment: string;
   distributorId: string;
-  distributorNumber: string;
-  distributorName?: string; // Asumiendo que el backend envía el nombre, o se busca aparte.
+  cutDate: string;
+  paymentDeadlineDate: string;
   totalToPayCents: number;
-  pointsAwarded: number;
-  paymentStatus: string; // 'PENDING', 'PAID', 'LATE', etc.
+  totalPaidCents: number;
+  totalCommissionCents: number;
+  totalPaymentCents: number;
+  totalPenaltiesCents: number;
+  remainingCents: number;
+  reconciliationStatus: 'PENDIENTE' | 'PARCIAL' | 'LIQUIDADO' | 'SALDO_FAVOR_SUCURSAL';
+  pointsAtCut: number;
+  createdAt: string;
 }
 
 export interface PaymentWindow {
@@ -38,7 +45,7 @@ export class RelationService {
       .pipe(map(res => res.data));
   }
 
-  payRelation(id: string, amountCents: number, reference: string): Observable<any> {
-    return this.http.post<{ message: string }>(`${this.apiUrl}/${id}/pay`, { amountCents, reference });
+  payRelation(id: string, montoCentavos: number, paymentMethod: string): Observable<any> {
+    return this.http.post<{ message: string }>(`${this.apiUrl}/${id}/pay`, { montoCentavos, paymentMethod });
   }
 }
