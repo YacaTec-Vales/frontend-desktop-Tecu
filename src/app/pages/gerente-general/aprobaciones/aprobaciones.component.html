@@ -21,8 +21,10 @@
   <div class="animate-fade-in mt-6">
     <app-card [noPadding]="true">
       <div *ngIf="!isDataLoaded" class="p-8 text-center text-gray-500">Cargando solicitudes...</div>
-      <app-table *ngIf="isDataLoaded && renderTable" [dataTrigger]="filteredList" [columns]="['Folio', 'Tipo', 'Sucursal', 'Solicitante', 'Detalle', 'Estado', 'Fecha', 'Acción']" [isEmpty]="filteredList.length === 0" emptyMessage="No hay solicitudes pendientes con este filtro.">
-        <tr *ngFor="let item of filteredList; trackBy: trackById" class="bg-white border-b hover:bg-gray-50">
+      <app-table *ngIf="isDataLoaded" [dataTrigger]="filteredList" [columns]="['Folio', 'Tipo', 'Sucursal', 'Solicitante', 'Detalle', 'Estado', 'Fecha', 'Acción']" [isEmpty]="filteredList.length === 0" emptyMessage="No hay solicitudes pendientes con este filtro."
+        [useServerPagination]="true" [currentPage]="page" [totalItems]="totalFilteredItems" [limit]="limit"
+        (pageChange)="onPageChange($event)" (searchChange)="onSearch($event)" (limitChange)="onLimitChange($event)">
+        <tr *ngFor="let item of paginatedList; trackBy: trackById" class="bg-white border-b hover:bg-gray-50">
           <td class="px-6 py-4 font-bold text-xs truncate max-w-[100px]" [title]="item.id">{{ item.id }}</td>
           <td class="px-6 py-4">
             <span class="px-2 py-1 text-xs font-semibold rounded-full border" [ngClass]="item.type === 'ALTA' ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-green-50 text-green-700 border-green-200'">

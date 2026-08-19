@@ -1,4 +1,4 @@
-import { Component, Input, forwardRef } from '@angular/core';
+import { Component, Input, forwardRef, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR, FormsModule } from '@angular/forms';
 
@@ -38,9 +38,12 @@ export class InputComponent implements ControlValueAccessor {
   onChange: any = () => {};
   onTouch: any = () => {};
 
+  constructor(private cdr: ChangeDetectorRef) {}
+
   writeValue(value: any): void {
     if (this.type !== 'file') {
-      this.value = value;
+      this.value = value !== undefined && value !== null ? value : '';
+      this.cdr.markForCheck();
     }
   }
 

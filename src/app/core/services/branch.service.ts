@@ -23,10 +23,21 @@ export class BranchService {
 
   getBranches(page: number = 1, limit: number = 100, search?: string): Observable<import('./staff.service').PaginatedResponse<Branch>> {
     return this.http.get<any>(this.apiUrl, { params: this.buildParams(page, limit, search) }).pipe(
-      map(res => ({
-        data: res?.data?.data || res?.data || [],
-        meta: res?.data?.meta || res?.meta || { page: 1, limit: 100, itemCount: (res?.data?.data || res?.data || []).length, pageCount: 1, hasPreviousPage: false, hasNextPage: false }
-      }))
+      map(res => {
+        const dataArr = res?.data?.data || res?.data || [];
+        const rawMeta = res?.data?.meta || res?.meta;
+        const itemCount = rawMeta?.itemCount ?? rawMeta?.total ?? dataArr.length;
+        return {
+          data: dataArr,
+          meta: { 
+            ...rawMeta,
+            page: rawMeta?.page || page,
+            limit: rawMeta?.limit || limit,
+            itemCount: itemCount,
+            pageCount: rawMeta?.pageCount || Math.ceil(itemCount / limit) || 1
+          }
+        };
+      })
     );
   }
 

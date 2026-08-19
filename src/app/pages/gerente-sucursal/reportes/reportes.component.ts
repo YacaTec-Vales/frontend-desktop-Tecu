@@ -26,6 +26,51 @@ export class ReportesComponent {
   ];
 
   datosFiltrados = [...this.relaciones];
+  
+  // Paginación local
+  page = 1;
+  limit = 10;
+  totalItems = 0;
+  searchQuery = '';
+  
+  get paginatedList() {
+    let list = this.datosFiltrados;
+    if (this.searchQuery) {
+      const q = this.searchQuery.toLowerCase();
+      list = list.filter(item => 
+        item.folio.toLowerCase().includes(q) || 
+        item.distribuidora.toLowerCase().includes(q)
+      );
+    }
+    const start = (this.page - 1) * this.limit;
+    return list.slice(start, start + this.limit);
+  }
+
+  get totalFilteredItems() {
+    let list = this.datosFiltrados;
+    if (this.searchQuery) {
+      const q = this.searchQuery.toLowerCase();
+      list = list.filter(item => 
+        item.folio.toLowerCase().includes(q) || 
+        item.distribuidora.toLowerCase().includes(q)
+      );
+    }
+    return list.length;
+  }
+
+  onPageChange(page: number) {
+    this.page = page;
+  }
+
+  onSearch(term: string) {
+    this.searchQuery = term;
+    this.page = 1;
+  }
+
+  onLimitChange(limit: number) {
+    this.limit = limit;
+    this.page = 1;
+  }
 
   aplicarFiltros() {
     this.datosFiltrados = [...this.relaciones];
@@ -35,5 +80,6 @@ export class ReportesComponent {
     this.filtroFecha = '';
     this.filtroDistribuidora = '';
     this.datosFiltrados = [...this.relaciones];
+    this.page = 1;
   }
 }

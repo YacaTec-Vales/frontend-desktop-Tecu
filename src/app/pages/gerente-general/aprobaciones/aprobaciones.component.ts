@@ -45,6 +45,12 @@ export class AprobacionesComponent implements OnInit {
   unifiedList: UnifiedRequest[] = [];
   filteredList: UnifiedRequest[] = [];
   
+  // Paginación local
+  page = 1;
+  limit = 10;
+  totalItems = 0;
+  searchQuery = '';
+  
   loadedCount = 0;
   isDataLoaded = false;
   renderTable = true;
@@ -61,6 +67,47 @@ export class AprobacionesComponent implements OnInit {
   
   trackById(index: number, item: UnifiedRequest): string {
     return item.id;
+  }
+
+  get paginatedList() {
+    let list = this.filteredList;
+    if (this.searchQuery) {
+      const q = this.searchQuery.toLowerCase();
+      list = list.filter(item => 
+        item.name.toLowerCase().includes(q) || 
+        item.description.toLowerCase().includes(q) ||
+        (item.branchName && item.branchName.toLowerCase().includes(q))
+      );
+    }
+    const start = (this.page - 1) * this.limit;
+    return list.slice(start, start + this.limit);
+  }
+
+  get totalFilteredItems() {
+    let list = this.filteredList;
+    if (this.searchQuery) {
+      const q = this.searchQuery.toLowerCase();
+      list = list.filter(item => 
+        item.name.toLowerCase().includes(q) || 
+        item.description.toLowerCase().includes(q) ||
+        (item.branchName && item.branchName.toLowerCase().includes(q))
+      );
+    }
+    return list.length;
+  }
+
+  onPageChange(page: number) {
+    this.page = page;
+  }
+
+  onSearch(term: string) {
+    this.searchQuery = term;
+    this.page = 1;
+  }
+
+  onLimitChange(limit: number) {
+    this.limit = limit;
+    this.page = 1;
   }
 
   // Rejection Mode
@@ -201,13 +248,10 @@ export class AprobacionesComponent implements OnInit {
     } else if (this.filterType === 'AUMENTOS') {
       this.filteredList = this.unifiedList.filter(req => req.type === 'AUMENTO');
     }
+    this.page = 1; // reset page when filter changes
 
-    this.renderTable = false;
+    this.isLoading = false; 
     this.cdr.detectChanges();
-    setTimeout(() => {
-      this.renderTable = true;
-      this.cdr.detectChanges();
-    }, 10);
   }
 
   abrirModal(item: UnifiedRequest) {
