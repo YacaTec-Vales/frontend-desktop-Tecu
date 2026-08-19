@@ -9,10 +9,24 @@ import { BadgeComponent } from '../../../components/ui/badge/badge';
 
 import { SolicitudService, Solicitud } from '../../../core/services/solicitud.service';
 import { CreditRaiseService, CreditRaiseRequest } from '../../../core/services/credit-raise.service';
+import { DistribuidorService } from '../../../core/services/distribuidor.service';
 import { AlertService } from '../../../core/services/alert.service';
+import { forkJoin, of } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
 
-type AprobacionTab = 'dictamenes' | 'incrementos';
+export interface UnifiedRequest {
+  id: string;
+  type: 'ALTA' | 'AUMENTO';
+  description: string;
+  name: string;
+  verdict?: string;
+  amount?: number;
+  status: string;
+  createdAt: Date;
+  originalData: any;
+}
 
+type FilterType = 'TODAS' | 'ALTAS' | 'AUMENTOS';
 @Component({
   selector: 'app-aprobaciones-local',
   standalone: true,
@@ -20,16 +34,20 @@ type AprobacionTab = 'dictamenes' | 'incrementos';
   templateUrl: './aprobaciones.component.html'
 })
 export class AprobacionesComponent implements OnInit {
-  activeTab: AprobacionTab = 'dictamenes';
+  filterType: FilterType = 'TODAS';
   
   dictamenes: Solicitud[] = [];
   incrementos: CreditRaiseRequest[] = [];
   
-  isDictamenesLoaded = false;
-  isIncrementosLoaded = false;
+  unifiedList: UnifiedRequest[] = [];
+  filteredList: UnifiedRequest[] = [];
+  
+  loadedCount = 0;
+  isDataLoaded = false;
+  renderTable = true;
 
   isModalOpen = false;
-  selectedItem: any = null;
+  selectedItem: UnifiedRequest | null = null;
   isLoading = false;
   
   // Form Variables
@@ -43,6 +61,7 @@ export class AprobacionesComponent implements OnInit {
   constructor(
     private solicitudService: SolicitudService,
     private creditRaiseService: CreditRaiseService,
+    private distribuidorService: DistribuidorService,
     private alertService: AlertService,
     private cdr: ChangeDetectorRef
   ) {}
@@ -52,21 +71,19 @@ export class AprobacionesComponent implements OnInit {
     this.loadIncrementos();
   }
 
-  setTab(tab: AprobacionTab) {
-    this.activeTab = tab;
+  setFilter(type: FilterType) {
+    this.filterType = type;
+    this.applyFilter();
   }
 
   loadDictamenes() {
     this.solicitudService.getSolicitudes().subscribe({
       next: (data) => {
-        // Filtrar solo las dictaminadas pendientes de autorización
         this.dictamenes = data.filter(d => d.status === 'DICTAMINADA');
-        this.isDictamenesLoaded = true;
-        this.cdr.detectChanges();
+        this.checkIfAllLoaded();
       },
       error: () => {
-        this.isDictamenesLoaded = true;
-        this.cdr.detectChanges();
+        this.checkIfAllLoaded();
       }
     });
   }
@@ -74,24 +91,104 @@ export class AprobacionesComponent implements OnInit {
   loadIncrementos() {
     this.creditRaiseService.getPendingRequests().subscribe({
       next: (data) => {
-        this.incrementos = data;
-        this.isIncrementosLoaded = true;
-        this.cdr.detectChanges();
+        this.incrementos = data.filter(i => i.status === 'PENDING');
+        this.checkIfAllLoaded();
       },
       error: () => {
-        this.isIncrementosLoaded = true;
-        this.cdr.detectChanges();
+        this.checkIfAllLoaded();
       }
     });
   }
 
-  abrirModal(item: any) {
+  checkIfAllLoaded() {
+    this.loadedCount++;
+    if (this.loadedCount >= 2) {
+      this.buildUnifiedList();
+    }
+  }
+
+  buildUnifiedList() {
+    this.unifiedList = [];
+    
+    this.dictamenes.forEach(d => {
+      this.unifiedList.push({
+        id: d.id,
+        type: 'ALTA',
+        description: 'Alta de Distribuidora',
+        name: `${d.generalData?.nombre || ''} ${d.generalData?.apellido_paterno || ''}`.trim() || 'Sin Nombre',
+        verdict: d.verdict,
+        status: d.status,
+        createdAt: new Date(d.createdAt),
+        originalData: d
+      });
+    });
+
+    const fetchObservables = this.incrementos.map(i => {
+      return this.distribuidorService.getDistribuidorById(i.distributorId).pipe(
+        catchError(() => of(null)), // If error, return null so we don't break forkJoin
+        map((distInfo: any) => {
+          let name = i.distributorId;
+          if (distInfo && distInfo.generalData) {
+            name = `${distInfo.generalData.nombre || ''} ${distInfo.generalData.apellido_paterno || ''} ${distInfo.generalData.apellido_materno || ''}`.trim() || name;
+          } else if (distInfo && distInfo.user) {
+            name = `${distInfo.user.name || ''} ${distInfo.user.lastName || ''} ${distInfo.user.secondLastName || ''}`.trim() || name;
+          }
+          
+          return {
+            id: i.id,
+            type: 'AUMENTO' as const,
+            description: 'Aumento de Crédito',
+            name: name,
+            amount: i.requestedAmountCents,
+            status: i.status,
+            createdAt: new Date(i.createdAt),
+            originalData: i
+          };
+        })
+      );
+    });
+
+    if (fetchObservables.length > 0) {
+      forkJoin(fetchObservables).subscribe((incrementosConNombre: any) => {
+        this.unifiedList.push(...(incrementosConNombre as UnifiedRequest[]));
+        this.unifiedList.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+        this.applyFilter();
+        this.isLoading = false;
+        this.isDataLoaded = true;
+        this.cdr.detectChanges();
+      });
+    } else {
+      this.unifiedList.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+      this.applyFilter();
+      this.isDataLoaded = true;
+      this.cdr.detectChanges();
+    }
+  }
+
+  applyFilter() {
+    if (this.filterType === 'TODAS') {
+      this.filteredList = [...this.unifiedList];
+    } else if (this.filterType === 'ALTAS') {
+      this.filteredList = this.unifiedList.filter(req => req.type === 'ALTA');
+    } else if (this.filterType === 'AUMENTOS') {
+      this.filteredList = this.unifiedList.filter(req => req.type === 'AUMENTO');
+    }
+
+    this.renderTable = false;
+    this.cdr.detectChanges();
+    setTimeout(() => {
+      this.renderTable = true;
+      this.cdr.detectChanges();
+    }, 10);
+  }
+
+  abrirModal(item: UnifiedRequest) {
     this.selectedItem = item;
     this.isModalOpen = true;
     this.notasGerencia = '';
     
-    if (this.activeTab === 'incrementos') {
-      this.montoAprobacion = item.requestedAmountCents / 100;
+    if (this.selectedItem.type === 'AUMENTO') {
+      this.montoAprobacion = this.selectedItem.originalData.requestedAmountCents / 100;
     } else {
       this.montoAprobacion = null;
     }
@@ -109,19 +206,19 @@ export class AprobacionesComponent implements OnInit {
   aprobar() {
     if (!this.selectedItem) return;
     
-    if (this.activeTab === 'dictamenes' && (!this.montoAprobacion || this.montoAprobacion <= 0)) {
+    if (this.selectedItem.type === 'ALTA' && (!this.montoAprobacion || this.montoAprobacion <= 0)) {
       this.alertService.warning('Debes asignar un límite de crédito válido mayor a 0.');
       return;
     }
 
-    if (this.activeTab === 'incrementos' && (!this.montoAprobacion || this.montoAprobacion <= 0)) {
+    if (this.selectedItem.type === 'AUMENTO' && (!this.montoAprobacion || this.montoAprobacion <= 0)) {
       this.alertService.warning('El monto a aprobar debe ser mayor a 0.');
       return;
     }
 
     this.isLoading = true;
 
-    if (this.activeTab === 'dictamenes') {
+    if (this.selectedItem.type === 'ALTA') {
       const payload = {
         limite_credito_centavos: (this.montoAprobacion || 0) * 100,
         comentarios_decision: this.notasGerencia
@@ -131,14 +228,7 @@ export class AprobacionesComponent implements OnInit {
         next: () => {
           this.isLoading = false;
           this.alertService.success('Dictamen aprobado exitosamente.');
-          this.isDictamenesLoaded = false;
-          this.dictamenes = this.dictamenes.filter(d => d.id !== this.selectedItem.id);
-          this.cerrarModal();
-          this.cdr.detectChanges();
-          setTimeout(() => {
-            this.isDictamenesLoaded = true;
-            this.cdr.detectChanges();
-          }, 10);
+          this.removeItemFromLists(this.selectedItem!.id);
         },
         error: (err) => {
           this.isLoading = false;
@@ -146,7 +236,7 @@ export class AprobacionesComponent implements OnInit {
           this.cdr.detectChanges();
         }
       });
-    } else if (this.activeTab === 'incrementos') {
+    } else if (this.selectedItem.type === 'AUMENTO') {
       const payload = {
         montoCentavos: (this.montoAprobacion || 0) * 100,
         notas: this.notasGerencia
@@ -156,14 +246,7 @@ export class AprobacionesComponent implements OnInit {
         next: () => {
           this.isLoading = false;
           this.alertService.success('Aumento aprobado exitosamente.');
-          this.isIncrementosLoaded = false;
-          this.incrementos = this.incrementos.filter(i => i.id !== this.selectedItem.id);
-          this.cerrarModal();
-          this.cdr.detectChanges();
-          setTimeout(() => {
-            this.isIncrementosLoaded = true;
-            this.cdr.detectChanges();
-          }, 10);
+          this.removeItemFromLists(this.selectedItem!.id);
         },
         error: (err) => {
           this.isLoading = false;
@@ -172,6 +255,13 @@ export class AprobacionesComponent implements OnInit {
         }
       });
     }
+  }
+
+  private removeItemFromLists(id: string) {
+    this.unifiedList = this.unifiedList.filter(i => i.id !== id);
+    this.applyFilter();
+    this.cerrarModal();
+    this.cdr.detectChanges();
   }
 
   iniciarRechazo() {
@@ -193,19 +283,12 @@ export class AprobacionesComponent implements OnInit {
 
     this.isLoading = true;
 
-    if (this.activeTab === 'dictamenes') {
+    if (this.selectedItem.type === 'ALTA') {
       this.solicitudService.rechazarSolicitud(this.selectedItem.id, { razon: this.motivoRechazo }).subscribe({
         next: () => {
           this.isLoading = false;
           this.alertService.success('Dictamen rechazado.');
-          this.isDictamenesLoaded = false;
-          this.dictamenes = this.dictamenes.filter(d => d.id !== this.selectedItem.id);
-          this.cerrarModal();
-          this.cdr.detectChanges();
-          setTimeout(() => {
-            this.isDictamenesLoaded = true;
-            this.cdr.detectChanges();
-          }, 10);
+          this.removeItemFromLists(this.selectedItem!.id);
         },
         error: (err) => {
           this.isLoading = false;
@@ -213,19 +296,12 @@ export class AprobacionesComponent implements OnInit {
           this.cdr.detectChanges();
         }
       });
-    } else if (this.activeTab === 'incrementos') {
+    } else if (this.selectedItem.type === 'AUMENTO') {
       this.creditRaiseService.rejectRequest(this.selectedItem.id, { notas: this.motivoRechazo }).subscribe({
         next: () => {
           this.isLoading = false;
           this.alertService.success('Aumento rechazado.');
-          this.isIncrementosLoaded = false;
-          this.incrementos = this.incrementos.filter(i => i.id !== this.selectedItem.id);
-          this.cerrarModal();
-          this.cdr.detectChanges();
-          setTimeout(() => {
-            this.isIncrementosLoaded = true;
-            this.cdr.detectChanges();
-          }, 10);
+          this.removeItemFromLists(this.selectedItem!.id);
         },
         error: (err) => {
           this.isLoading = false;
@@ -236,3 +312,4 @@ export class AprobacionesComponent implements OnInit {
     }
   }
 }
+

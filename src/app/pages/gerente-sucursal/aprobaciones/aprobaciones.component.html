@@ -5,49 +5,43 @@
     <p class="text-gray-500 dark:text-gray-400 mt-1 text-lg">Bandeja centralizada para dar visto bueno a dictámenes e incrementos de crédito.</p>
   </div>
 
-  <!-- Tabs Navigation -->
-  <div class="border-b border-gray-200 dark:border-gray-700">
-    <nav class="-mb-px flex space-x-8" aria-label="Tabs">
-      <a (click)="setTab('dictamenes')" [class]="activeTab === 'dictamenes' ? 'border-brand text-brand' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm cursor-pointer transition-colors">
-        Dictámenes de Alta ({{ dictamenes.length }})
-      </a>
-      <a (click)="setTab('incrementos')" [class]="activeTab === 'incrementos' ? 'border-brand text-brand' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm cursor-pointer transition-colors">
-        Aumentos de Crédito ({{ incrementos.length }})
-      </a>
-    </nav>
+  <!-- Filters -->
+  <div class="flex justify-between items-center bg-gray-50 dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+    <div class="flex items-center space-x-4">
+      <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Mostrar:</label>
+      <select [ngModel]="filterType" (ngModelChange)="setFilter($event)" class="rounded-md border-gray-300 shadow-sm focus:border-brand focus:ring-brand sm:text-sm p-2 border bg-white">
+        <option value="TODAS">Todas las solicitudes ({{ unifiedList.length }})</option>
+        <option value="ALTAS">Altas de Distribuidora</option>
+        <option value="AUMENTOS">Aumentos de Crédito</option>
+      </select>
+    </div>
   </div>
 
-  <!-- Tab Content: DICTAMENES -->
-  <div *ngIf="activeTab === 'dictamenes'" class="animate-fade-in">
+  <!-- Unified Table -->
+  <div class="animate-fade-in mt-6">
     <app-card [noPadding]="true">
-      <div *ngIf="!isDictamenesLoaded" class="p-8 text-center text-gray-500">Cargando dictámenes...</div>
-      <app-table *ngIf="isDictamenesLoaded" [dataTrigger]="dictamenes" [columns]="['Folio Solicitud', 'Distribuidor ID', 'Fecha', 'Estado', 'Acción']" [isEmpty]="dictamenes.length === 0" emptyMessage="No hay dictámenes pendientes de revisión.">
-        <tr *ngFor="let d of dictamenes" class="bg-white border-b hover:bg-gray-50">
-          <td class="px-6 py-4 font-bold">{{ d.id }}</td>
-          <td class="px-6 py-4">{{ d.distributorId }}</td>
-          <td class="px-6 py-4 text-gray-500">{{ d.createdAt | date }}</td>
-          <td class="px-6 py-4"><app-badge [text]="d.status" variant="warning"></app-badge></td>
+      <div *ngIf="!isDataLoaded" class="p-8 text-center text-gray-500">Cargando solicitudes...</div>
+      <app-table *ngIf="isDataLoaded && renderTable" [dataTrigger]="filteredList" [columns]="['Folio', 'Tipo', 'Solicitante', 'Detalle', 'Estado', 'Fecha', 'Acción']" [isEmpty]="filteredList.length === 0" emptyMessage="No hay solicitudes pendientes con este filtro.">
+        <tr *ngFor="let item of filteredList" class="bg-white border-b hover:bg-gray-50">
+          <td class="px-6 py-4 font-bold text-xs truncate max-w-[100px]" [title]="item.id">{{ item.id }}</td>
           <td class="px-6 py-4">
-            <app-button variant="primary" size="sm" (onClick)="abrirModal(d)">Revisar</app-button>
+            <span class="px-2 py-1 text-xs font-semibold rounded-full border" [ngClass]="item.type === 'ALTA' ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-green-50 text-green-700 border-green-200'">
+              {{ item.description }}
+            </span>
           </td>
-        </tr>
-      </app-table>
-    </app-card>
-  </div>
-
-  <!-- Tab Content: INCREMENTOS -->
-  <div *ngIf="activeTab === 'incrementos'" class="animate-fade-in">
-    <app-card [noPadding]="true">
-      <div *ngIf="!isIncrementosLoaded" class="p-8 text-center text-gray-500">Cargando incrementos...</div>
-      <app-table *ngIf="isIncrementosLoaded" [dataTrigger]="incrementos" [columns]="['Folio', 'Distribuidor ID', 'Monto Solicitado', 'Fecha', 'Estado', 'Acción']" [isEmpty]="incrementos.length === 0" emptyMessage="No hay incrementos pendientes de revisión.">
-        <tr *ngFor="let i of incrementos" class="bg-white border-b hover:bg-gray-50">
-          <td class="px-6 py-4 font-bold">{{ i.id }}</td>
-          <td class="px-6 py-4">{{ i.distributorId }}</td>
-          <td class="px-6 py-4 font-bold text-green-600">{{ i.requestedAmountCents / 100 | currency:'MXN' }}</td>
-          <td class="px-6 py-4 text-gray-500">{{ i.createdAt | date }}</td>
-          <td class="px-6 py-4"><app-badge [text]="i.status" variant="warning"></app-badge></td>
+          <td class="px-6 py-4 font-semibold text-gray-900">{{ item.name }}</td>
           <td class="px-6 py-4">
-            <app-button variant="primary" size="sm" (onClick)="abrirModal(i)">Revisar</app-button>
+            <ng-container *ngIf="item.type === 'ALTA'">
+              <app-badge [text]="item.verdict || ''" [variant]="item.verdict === 'CUMPLE' ? 'success' : 'error'"></app-badge>
+            </ng-container>
+            <ng-container *ngIf="item.type === 'AUMENTO'">
+              <span class="font-bold text-green-600">{{ (item.amount || 0) / 100 | currency:'MXN' }}</span>
+            </ng-container>
+          </td>
+          <td class="px-6 py-4"><app-badge [text]="item.status" variant="warning"></app-badge></td>
+          <td class="px-6 py-4 text-gray-500 text-xs">{{ item.createdAt | date:'short' }}</td>
+          <td class="px-6 py-4">
+            <app-button variant="primary" size="sm" (onClick)="abrirModal(item)">Revisar</app-button>
           </td>
         </tr>
       </app-table>
@@ -67,24 +61,28 @@
           <p class="text-gray-500 dark:text-gray-400">Folio de Trámite</p>
           <p class="font-bold text-gray-900 dark:text-white text-xs break-all">{{ selectedItem.id }}</p>
         </div>
-        <div *ngIf="activeTab === 'dictamenes'">
+        <div *ngIf="selectedItem.type === 'ALTA'">
           <p class="text-gray-500 dark:text-gray-400">Sucursal (Branch ID)</p>
-          <p class="font-bold text-gray-900 dark:text-white text-xs break-all">{{ selectedItem.branchId || 'N/A' }}</p>
+          <p class="font-bold text-gray-900 dark:text-white text-xs break-all">{{ selectedItem.originalData.branchId || 'N/A' }}</p>
         </div>
-        <div *ngIf="selectedItem.distributorId">
+        <div *ngIf="selectedItem.originalData.distributorId">
           <p class="text-gray-500 dark:text-gray-400">Distribuidor ID</p>
-          <p class="font-bold text-gray-900 dark:text-white text-xs break-all">{{ selectedItem.distributorId }}</p>
+          <p class="font-bold text-gray-900 dark:text-white text-xs break-all">{{ selectedItem.originalData.distributorId }}</p>
         </div>
       </div>
     </div>
 
     <!-- ===== VISTA DE DICTÁMENES (ALTA) ===== -->
-    <div *ngIf="activeTab === 'dictamenes'" class="space-y-6">
+    <div *ngIf="selectedItem.type === 'ALTA'" class="space-y-6">
       
+      <!-- Resolución del Verificador -->
       <div class="p-4 border-l-4 border-brand bg-brand-50 rounded-lg">
-        <p class="text-sm font-semibold text-brand-strong mb-2">Dictamen de Alta</p>
-        <p class="text-sm text-gray-700">La solicitud ha sido verificada en campo y está lista para su autorización final por la gerencia.</p>
-        <p class="text-xs text-gray-500 mt-2">Al aprobar, se creará el perfil oficial de Distribuidora.</p>
+        <div class="flex justify-between items-start mb-2">
+          <p class="text-sm font-semibold text-brand-strong">Resolución de Verificación</p>
+          <app-badge [text]="selectedItem.originalData.verdict" [variant]="selectedItem.originalData.verdict === 'CUMPLE' ? 'success' : 'error'"></app-badge>
+        </div>
+        <p class="text-sm text-gray-700"><strong>Comentarios:</strong> {{ selectedItem.originalData.verifierComments || 'Sin comentarios' }}</p>
+        <p class="text-xs text-gray-500 mt-2">Revisado el {{ selectedItem.originalData.verifiedAt | date:'medium' }}</p>
       </div>
 
       <!-- Datos Generales del Perfil -->
@@ -93,27 +91,27 @@
         <div class="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
           <div>
             <p class="text-gray-500">Nombre Completo</p>
-            <p class="font-medium text-gray-900">{{ selectedItem.generalData?.nombre }} {{ selectedItem.generalData?.apellido_paterno }} {{ selectedItem.generalData?.apellido_materno }}</p>
+            <p class="font-medium text-gray-900">{{ selectedItem.originalData.generalData?.nombre }} {{ selectedItem.originalData.generalData?.apellido_paterno }} {{ selectedItem.originalData.generalData?.apellido_materno }}</p>
           </div>
           <div>
             <p class="text-gray-500">RFC</p>
-            <p class="font-medium text-gray-900">{{ selectedItem.generalData?.rfc || 'N/A' }}</p>
+            <p class="font-medium text-gray-900">{{ selectedItem.originalData.generalData?.rfc || 'N/A' }}</p>
           </div>
           <div>
             <p class="text-gray-500">Nacimiento</p>
-            <p class="font-medium text-gray-900">{{ selectedItem.generalData?.fecha_nacimiento | date }} <br><span class="text-xs text-gray-500">{{ selectedItem.generalData?.lugar_nacimiento }}</span></p>
+            <p class="font-medium text-gray-900">{{ selectedItem.originalData.generalData?.fecha_nacimiento | date }} <br><span class="text-xs text-gray-500">{{ selectedItem.originalData.generalData?.lugar_nacimiento }}</span></p>
           </div>
           <div class="col-span-2 md:col-span-3 mt-2">
             <p class="text-gray-500">Domicilio</p>
             <p class="font-medium text-gray-900">
-              {{ selectedItem.generalData?.calle }} {{ selectedItem.generalData?.numero }}, 
-              Col. {{ selectedItem.generalData?.colonia }}, C.P. {{ selectedItem.generalData?.codigo_postal }},
-              {{ selectedItem.generalData?.ciudad }}, {{ selectedItem.generalData?.estado }}
+              {{ selectedItem.originalData.generalData?.calle }} {{ selectedItem.originalData.generalData?.numero }}, 
+              Col. {{ selectedItem.originalData.generalData?.colonia }}, C.P. {{ selectedItem.originalData.generalData?.codigo_postal }},
+              {{ selectedItem.originalData.generalData?.ciudad }}, {{ selectedItem.originalData.generalData?.estado }}
             </p>
-            <p class="text-xs text-gray-600 mt-1" *ngIf="selectedItem.additionalData?.domicilio">
-              <strong>Situación:</strong> {{ selectedItem.additionalData.domicilio.situacion }} | 
-              <strong>Recámaras:</strong> {{ selectedItem.additionalData.domicilio.num_recamaras || 'N/A' }} | 
-              <strong>M²:</strong> {{ selectedItem.additionalData.domicilio.m2_construccion || 'N/A' }}
+            <p class="text-xs text-gray-600 mt-1" *ngIf="selectedItem.originalData.additionalData?.domicilio">
+              <strong>Situación:</strong> {{ selectedItem.originalData.additionalData.domicilio.situacion }} | 
+              <strong>Recámaras:</strong> {{ selectedItem.originalData.additionalData.domicilio.num_recamaras || 'N/A' }} | 
+              <strong>M²:</strong> {{ selectedItem.originalData.additionalData.domicilio.m2_construccion || 'N/A' }}
             </p>
           </div>
         </div>
@@ -124,8 +122,8 @@
         <!-- Referencias Laborales -->
         <div class="border border-gray-200 rounded-lg p-4">
           <h4 class="text-sm font-semibold text-gray-900 mb-2">Referencias Laborales</h4>
-          <ul class="text-sm text-gray-700 divide-y" *ngIf="selectedItem.additionalData?.referencias_laborales?.length > 0; else noRefLab">
-            <li class="py-2" *ngFor="let ref of selectedItem.additionalData.referencias_laborales">
+          <ul class="text-sm text-gray-700 divide-y" *ngIf="selectedItem.originalData.additionalData?.referencias_laborales?.length > 0; else noRefLab">
+            <li class="py-2" *ngFor="let ref of selectedItem.originalData.additionalData.referencias_laborales">
               <strong>{{ ref.establecimiento }}</strong> ({{ ref.antiguedad_anios }} años) <br>
               <span class="text-xs text-gray-500">{{ ref.direccion }}</span>
             </li>
@@ -136,8 +134,8 @@
         <!-- Vehículos -->
         <div class="border border-gray-200 rounded-lg p-4">
           <h4 class="text-sm font-semibold text-gray-900 mb-2">Vehículos</h4>
-          <ul class="text-sm text-gray-700 divide-y" *ngIf="selectedItem.additionalData?.vehiculos?.length > 0; else noVeh">
-            <li class="py-2" *ngFor="let v of selectedItem.additionalData.vehiculos">
+          <ul class="text-sm text-gray-700 divide-y" *ngIf="selectedItem.originalData.additionalData?.vehiculos?.length > 0; else noVeh">
+            <li class="py-2" *ngFor="let v of selectedItem.originalData.additionalData.vehiculos">
               {{ v.marca }} {{ v.modelo }} ({{ v.anio }}) <br>
               <span class="text-xs text-gray-500">Placas: {{ v.placas }}</span>
             </li>
@@ -149,8 +147,8 @@
       <!-- Evidencia Fotográfica -->
       <div class="border border-gray-200 rounded-lg p-4">
         <h4 class="text-sm font-semibold text-gray-900 mb-3">Evidencia Fotográfica</h4>
-        <div class="flex flex-wrap gap-2" *ngIf="selectedItem.verificationPhotos?.length > 0; else noPhotos">
-          <a *ngFor="let photoUrl of selectedItem.verificationPhotos" [href]="photoUrl" target="_blank" class="block w-24 h-24 rounded-lg bg-gray-100 border border-gray-200 overflow-hidden hover:opacity-80 transition-opacity">
+        <div class="flex flex-wrap gap-2" *ngIf="selectedItem.originalData.verificationPhotos?.length > 0; else noPhotos">
+          <a *ngFor="let photoUrl of selectedItem.originalData.verificationPhotos" [href]="photoUrl" target="_blank" class="block w-24 h-24 rounded-lg bg-gray-100 border border-gray-200 overflow-hidden hover:opacity-80 transition-opacity">
             <img [src]="photoUrl" class="w-full h-full object-cover" alt="Evidencia">
           </a>
         </div>
@@ -166,9 +164,9 @@
     </div>
 
     <!-- ===== VISTA DE INCREMENTOS ===== -->
-    <div *ngIf="activeTab === 'incrementos'" class="mt-4 p-4 border-l-4 border-green-500 bg-green-50 rounded-lg">
+    <div *ngIf="selectedItem.type === 'AUMENTO'" class="mt-4 p-4 border-l-4 border-green-500 bg-green-50 rounded-lg">
       <p class="text-sm font-semibold text-green-800 mb-2">Aumento de Crédito</p>
-      <p class="text-sm text-gray-700">Aumento Solicitado: <strong class="text-lg">{{ selectedItem.requestedAmountCents / 100 | currency:'MXN' }}</strong></p>
+      <p class="text-sm text-gray-700">Aumento Solicitado: <strong class="text-lg">{{ selectedItem.originalData.requestedAmountCents / 100 | currency:'MXN' }}</strong></p>
       
       <div class="mt-4 border-t border-green-200 pt-4">
         <label class="block text-sm font-medium text-gray-700 mb-1">Monto a Aprobar (MXN) *</label>
@@ -178,7 +176,7 @@
     </div>
 
     <!-- Footer: Acciones y Comentarios de Gerencia -->
-    <div class="px-6 py-4 mt-6 bg-gray-50 dark:bg-gray-700/50 rounded-b-xl border-t border-gray-200 dark:border-gray-700 space-y-4">
+    <div class="px-6 py-4 bg-gray-50 dark:bg-gray-700/50 rounded-b-xl border-t border-gray-200 dark:border-gray-700 space-y-4">
       
       <!-- Campo para Comentarios de Gerencia (Normal Mode) -->
       <div>
@@ -207,6 +205,5 @@
         </ng-container>
       </div>
     </div>
-
   </div>
 </app-modal>
