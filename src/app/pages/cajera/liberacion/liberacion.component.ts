@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CardComponent } from '../../../components/ui/card/card';
@@ -33,10 +33,17 @@ export class LiberacionComponent {
   tokenInput: string = '';
   modoEdicionActivo = false;
 
-  constructor(private voucherService: VoucherService) {}
+  constructor(
+    private voucherService: VoucherService,
+    private cdr: ChangeDetectorRef
+  ) {}
 
   buscarFolio() {
-    if (!this.folioBuscado) return;
+    const folioLimpio = this.folioBuscado.trim();
+    if (!folioLimpio) {
+      this.reset();
+      return;
+    }
     
     this.isLoading = true;
     this.errorBusqueda = '';
@@ -46,14 +53,18 @@ export class LiberacionComponent {
     this.comprobanteValidado = false;
     this.autorizacionBancaria = '';
 
-    this.voucherService.findVoucher(this.folioBuscado).subscribe({
+    this.voucherService.findVoucher(folioLimpio).subscribe({
       next: (vale) => {
+        console.log('Vale encontrado procesado:', vale);
         this.isLoading = false;
         this.valeEncontrado = vale;
+        this.cdr.detectChanges();
       },
       error: (err) => {
+        console.error('Error en findVoucher:', err);
         this.isLoading = false;
-        this.errorBusqueda = err.error?.message || 'Error al buscar el folio. Verifique e intente nuevamente.';
+        this.errorBusqueda = err.error?.message || err.message || 'Error al buscar el folio. Verifique e intente nuevamente.';
+        this.cdr.detectChanges();
       }
     });
   }
@@ -69,14 +80,21 @@ export class LiberacionComponent {
   liberarPago() {
     if (this.puedeLiberar() && this.valeEncontrado) {
       this.isConfirming = true;
-      this.voucherService.confirmVoucher(this.valeEncontrado.folio).subscribe({
+      const payload = {
+        authorizationNumber: this.autorizacionBancaria,
+        dataConfirmed: true,
+        documents: []
+      };
+      this.voucherService.confirmVoucher(this.valeEncontrado.folio, payload).subscribe({
         next: () => {
           this.isConfirming = false;
           this.liberacionExitosa = true;
+          this.cdr.detectChanges();
         },
         error: (err) => {
           this.isConfirming = false;
           alert('Error al confirmar pago: ' + (err.error?.message || err.message));
+          this.cdr.detectChanges();
         }
       });
     }
@@ -102,5 +120,15 @@ export class LiberacionComponent {
 
   guardarEdicion() {
     this.modoEdicionActivo = false;
+  }
+
+  reset() {
+    this.folioBuscado = '';
+    this.valeEncontrado = null;
+    this.liberacionExitosa = false;
+    this.errorBusqueda = '';
+    this.ineValidado = false;
+    this.comprobanteValidado = false;
+    this.autorizacionBancaria = '';
   }
 }
