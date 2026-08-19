@@ -19,8 +19,8 @@
             {{ error }}
           </div>
 
-          <!-- Form -->
-          <form class="space-y-6" (submit)="onSubmit($event)">
+          <!-- Form: Login -->
+          <form *ngIf="step === 'login'" class="space-y-6" (submit)="onSubmit($event)">
               <div>
                   <label for="email" class="block mb-2 text-sm font-extrabold text-gray-900">Email</label>
                   <input type="email" name="email" id="email" [(ngModel)]="email" class="bg-gray-200 border-0 text-gray-900 text-lg rounded-xl focus:ring-4 focus:ring-brand-300 block w-full p-4 font-semibold transition-all" placeholder="admin@empresa.com" required>
@@ -33,6 +33,54 @@
               <button type="submit" class="w-full text-white font-bold rounded-xl text-xl px-5 py-4 mt-4 text-center shadow-lg hover:opacity-90 hover:-translate-y-0.5 transition-all duration-200" style="background-color: #600C0C;">
                   Panel de control
               </button>
+          </form>
+
+          <!-- Form: MFA Verify -->
+          <form *ngIf="step === 'mfa_verify'" class="space-y-6" (submit)="onMfaVerify($event)">
+              <div class="text-center mb-6">
+                <h3 class="text-2xl font-bold text-gray-900">Verificación de dos pasos</h3>
+                <p class="text-sm text-gray-600 mt-2">Ingresa el código de 6 dígitos generado por tu aplicación autenticadora.</p>
+              </div>
+              <div>
+                  <label for="mfaCodeVerify" class="block mb-2 text-sm font-extrabold text-gray-900 text-center">Código de Autenticación</label>
+                  <input type="text" name="mfaCode" id="mfaCodeVerify" [(ngModel)]="mfaCode" class="bg-gray-200 border-0 text-gray-900 text-2xl tracking-[0.5em] text-center rounded-xl focus:ring-4 focus:ring-brand-300 block w-full p-4 font-bold transition-all" placeholder="000000" maxlength="6" required>
+              </div>
+              
+              <button type="submit" class="w-full text-white font-bold rounded-xl text-xl px-5 py-4 mt-4 text-center shadow-lg hover:opacity-90 hover:-translate-y-0.5 transition-all duration-200" style="background-color: #600C0C;">
+                  Verificar Código
+              </button>
+
+              <div class="text-center mt-4">
+                <button type="button" class="text-sm text-gray-500 hover:text-brand-600 font-bold underline" (click)="goBack()">← Volver al inicio de sesión</button>
+              </div>
+          </form>
+
+          <!-- Form: MFA Setup -->
+          <form *ngIf="step === 'mfa_setup'" class="space-y-6" (submit)="onMfaSetup($event)">
+              <div class="text-center mb-4">
+                <h3 class="text-2xl font-bold text-gray-900">Configurar Autenticador</h3>
+                <p class="text-sm text-gray-600 mt-1">Escanea el código QR con Google Authenticator o Authy para asegurar tu cuenta.</p>
+              </div>
+              
+              <div class="flex justify-center p-4 bg-gray-50 border border-gray-200 rounded-xl">
+                <!-- QR Code placeholder -->
+                <div class="w-40 h-40 bg-white border-2 border-dashed border-gray-300 flex items-center justify-center rounded-lg shadow-sm">
+                  <svg class="w-20 h-20 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm14 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path></svg>
+                </div>
+              </div>
+
+              <div>
+                  <label for="mfaCodeSetup" class="block mb-2 text-sm font-extrabold text-gray-900 text-center">Ingresa el código generado</label>
+                  <input type="text" name="mfaCode" id="mfaCodeSetup" [(ngModel)]="mfaCode" class="bg-gray-200 border-0 text-gray-900 text-2xl tracking-[0.5em] text-center rounded-xl focus:ring-4 focus:ring-brand-300 block w-full p-4 font-bold transition-all" placeholder="000000" maxlength="6" required>
+              </div>
+              
+              <button type="submit" class="w-full text-white font-bold rounded-xl text-xl px-5 py-4 mt-4 text-center shadow-lg hover:opacity-90 hover:-translate-y-0.5 transition-all duration-200" style="background-color: #600C0C;">
+                  Activar MFA
+              </button>
+
+              <div class="text-center mt-4">
+                <button type="button" class="text-sm text-gray-500 hover:text-brand-600 font-bold underline" (click)="goBack()">← Usar otra cuenta</button>
+              </div>
           </form>
 
           <div class="mt-8 pt-6 border-t border-gray-200">
