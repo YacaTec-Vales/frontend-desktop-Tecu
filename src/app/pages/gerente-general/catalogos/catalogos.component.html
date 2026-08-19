@@ -218,7 +218,7 @@
 
 <!-- Modal Producto -->
 <app-modal [isOpen]="isProductoModalOpen" [title]="(isEditingMode ? 'Editar' : 'Crear Nuevo') + ' Vale'" maxWidth="lg" (onClose)="cerrarModalProducto()">
-  <div class="space-y-4">
+  <form [formGroup]="productoForm" (ngSubmit)="guardarProducto()" class="space-y-4">
     <div *ngIf="productoError"
       class="p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400" role="alert">
       <span class="font-medium">Error:</span> {{ productoError }}
@@ -228,14 +228,14 @@
 
     <div class="grid grid-cols-2 gap-4">
       <div>
-        <app-input label="Código del Vale" type="text" placeholder="Ej: 5/10" [(ngModel)]="nuevoProducto.code"
+        <app-input label="Código del Vale" type="text" placeholder="Ej: 5/10" formControlName="code"
           [maxlength]="7"></app-input>
-        <p *ngIf="nuevoProducto.code && !nuevoProducto.code.match('^\\d{1,3}/\\d{1,3}$')"
+        <p *ngIf="productoForm.get('code')?.invalid && productoForm.get('code')?.touched"
           class="mt-1 text-xs text-red-600">Formato inválido. Debe ser X/Y (ej: 5/10).</p>
       </div>
       <div>
         <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Variante</label>
-        <select [(ngModel)]="nuevoProducto.variant"
+        <select formControlName="variant"
           class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand focus:border-brand block w-full p-2.5">
           <option value="NORMAL">NORMAL</option>
           <option value="PLUS">PLUS</option>
@@ -246,41 +246,37 @@
     <div class="grid grid-cols-2 gap-4">
       <div>
         <app-input label="Costo del Vale ($ MXN)" type="number" placeholder="Ej: 500"
-          [(ngModel)]="nuevoProducto.costPesos" [maxlength]="6"></app-input>
-        <p *ngIf="nuevoProducto.costPesos !== null && nuevoProducto.costPesos <= 0" class="mt-1 text-xs text-red-600">El
-          costo debe ser mayor a 0.</p>
+          formControlName="costPesos" [maxlength]="6"></app-input>
+        <p *ngIf="productoForm.get('costPesos')?.invalid && productoForm.get('costPesos')?.touched" class="mt-1 text-xs text-red-600">El costo debe ser mayor a 0.</p>
       </div>
       <div>
         <app-input label="Total de Quincenas" type="number" placeholder="Ej: 10"
-          [(ngModel)]="nuevoProducto.totalPeriods" [maxlength]="2"></app-input>
-        <p *ngIf="nuevoProducto.totalPeriods !== null && (nuevoProducto.totalPeriods < 1 || nuevoProducto.totalPeriods > 60)"
+          formControlName="totalPeriods" [maxlength]="2"></app-input>
+        <p *ngIf="productoForm.get('totalPeriods')?.invalid && productoForm.get('totalPeriods')?.touched"
           class="mt-1 text-xs text-red-600">Debe ser entre 1 y 60.</p>
       </div>
     </div>
 
     <div class="grid grid-cols-3 gap-4">
       <div>
-        <app-input label="Comisión (%)" type="number" placeholder="0" [(ngModel)]="nuevoProducto.commissionPorc"
+        <app-input label="Comisión (%)" type="number" placeholder="0" formControlName="commissionPorc"
           [maxlength]="4"></app-input>
-        <p *ngIf="nuevoProducto.commissionPorc < 0" class="mt-1 text-xs text-red-600">Mínimo 0.</p>
       </div>
       <div>
-        <app-input label="Seguro ($ MXN)" type="number" placeholder="0" [(ngModel)]="nuevoProducto.insurancePesos"
+        <app-input label="Seguro ($ MXN)" type="number" placeholder="0" formControlName="insurancePesos"
           [maxlength]="6"></app-input>
-        <p *ngIf="nuevoProducto.insurancePesos < 0" class="mt-1 text-xs text-red-600">Mínimo 0.</p>
       </div>
       <div>
-        <app-input label="Interés/Q (%)" type="number" placeholder="5" [(ngModel)]="nuevoProducto.interestPorc"
+        <app-input label="Interés/Q (%)" type="number" placeholder="5" formControlName="interestPorc"
           [maxlength]="4"></app-input>
-        <p *ngIf="nuevoProducto.interestPorc < 0" class="mt-1 text-xs text-red-600">Mínimo 0.</p>
       </div>
     </div>
 
     <div class="mt-6 flex justify-end gap-2">
-      <app-button variant="text" (onClick)="cerrarModalProducto()">Cancelar</app-button>
-      <app-button variant="primary" (onClick)="guardarProducto()" [disabled]="!isProductoValid">{{ isEditingMode ? 'Guardar Cambios' : 'Confirmar Registro' }}</app-button>
+      <app-button variant="text" type="button" (onClick)="cerrarModalProducto()">Cancelar</app-button>
+      <app-button variant="primary" type="submit" [disabled]="productoForm.invalid">{{ isEditingMode ? 'Guardar Cambios' : 'Confirmar Registro' }}</app-button>
     </div>
-  </div>
+  </form>
 </app-modal>
 
 <!-- Modal Confirmación Unificado -->
@@ -299,32 +295,28 @@
 
 <!-- Modal Categoría -->
 <app-modal [isOpen]="isCategoriaModalOpen" [title]="(isEditingMode ? 'Editar' : 'Crear') + ' Categoría de Crédito'" (onClose)="cerrarModalCategoria()">
-  <div class="space-y-4">
-    <app-input label="Nombre de Categoría" type="text" placeholder="Ej: Diamante"
-      [(ngModel)]="nuevaCategoria.nombre"></app-input>
-    <app-input label="Porcentaje de Ganancia (%)" type="number" placeholder="Ej: 12"
-      [(ngModel)]="nuevaCategoria.ganancia"></app-input>
+  <form [formGroup]="categoriaForm" (ngSubmit)="guardarCategoria()" class="space-y-4">
+    <app-input label="Nombre de Categoría" type="text" placeholder="Ej: Diamante" formControlName="nombre"></app-input>
+    <app-input label="Porcentaje de Ganancia (%)" type="number" placeholder="Ej: 12" formControlName="ganancia"></app-input>
     <div class="mt-6 flex justify-end gap-2">
-      <app-button variant="text" (onClick)="cerrarModalCategoria()">Cancelar</app-button>
-      <app-button variant="primary" (onClick)="guardarCategoria()"
-        [disabled]="!nuevaCategoria.nombre || !nuevaCategoria.ganancia">{{ isEditingMode ? 'Guardar Cambios' : 'Registrar' }}</app-button>
+      <app-button variant="text" type="button" (onClick)="cerrarModalCategoria()">Cancelar</app-button>
+      <app-button variant="primary" type="submit" [disabled]="categoriaForm.invalid">{{ isEditingMode ? 'Guardar Cambios' : 'Registrar' }}</app-button>
     </div>
-  </div>
+  </form>
 </app-modal>
 
 <!-- Modal Sucursal -->
 <app-modal [isOpen]="isSucursalModalOpen" [title]="(isEditingMode ? 'Editar' : 'Alta de') + ' Sucursal'" (onClose)="cerrarModalSucursal()">
-  <div class="space-y-4">
+  <form [formGroup]="sucursalForm" (ngSubmit)="guardarSucursal()" class="space-y-4">
     <div *ngIf="sucursalError" class="p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400" role="alert">
       <span class="font-medium">Error:</span> {{ sucursalError }}
     </div>
 
-    <app-input label="Nombre de la Sucursal" type="text" placeholder="Ej: Sucursal Centro"
-      [(ngModel)]="nuevaSucursal.name"></app-input>
+    <app-input label="Nombre de la Sucursal" type="text" placeholder="Ej: Sucursal Centro" formControlName="name"></app-input>
       
     <div>
       <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Tipo de Sucursal</label>
-      <select [(ngModel)]="nuevaSucursal.branchType"
+      <select formControlName="branchType"
         class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand focus:border-brand block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-brand dark:focus:border-brand">
         <option value="SUCURSAL">SUCURSAL</option>
         <option value="MATRIZ">MATRIZ</option>
@@ -332,88 +324,101 @@
     </div>
 
     <div class="flex items-center gap-2">
-      <input type="checkbox" id="esMatriz" [(ngModel)]="nuevaSucursal.esMatriz"
+      <input type="checkbox" id="esMatriz" formControlName="esMatriz"
         class="w-4 h-4 text-brand bg-gray-100 border-gray-300 rounded focus:ring-brand dark:focus:ring-brand dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
       <label for="esMatriz" class="text-sm font-medium text-gray-900 dark:text-gray-300">¿Es la Matriz Principal?</label>
     </div>
 
     <div>
       <label class="block mb-2 text-sm font-extrabold text-gray-900 dark:text-white">Gerente de Sucursal</label>
-      <select [(ngModel)]="nuevaSucursal.managerUserId"
+      <select formControlName="managerUserId"
         class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand focus:border-brand block w-full p-2.5">
         <option value="" [disabled]="!isEditingMode">Seleccione un gerente (opcional)</option>
         <option *ngFor="let gerente of gerentes" [value]="gerente.id">{{ gerente.firstName }} {{ gerente.lastNamePaternal }}</option>
       </select>
     </div>
 
-      <div class="grid grid-cols-3 gap-4">
-        <div>
-          <app-input label="Fecha de Corte" type="date" 
-                     hint="Fecha de pago elegida: {{ tempPaymentDateFull }}"
-                     title="Fecha Corte"
-                     [ngModel]="tempCutoffDateFull" 
-                     (ngModelChange)="onCutoffDateChange($event)"></app-input>
-        </div>
-        <div>
-          <app-input label="Fecha de Pago" type="date" 
-                     hint="Fecha de corte elegida: {{ tempCutoffDateFull }}"
-                     title="Fecha Pago"
-                     [ngModel]="tempPaymentDateFull" 
-                     (ngModelChange)="onPaymentDateChange($event)"></app-input>
-        </div>
-        <div>
-          <app-input label="Días Anticipo" type="number" placeholder="Ej: 3" hint="Ej: 3 (Periodo de gracia)."
-                     [(ngModel)]="nuevaSucursal.earlyPaymentDays"></app-input>
-        </div>
+    <div class="grid grid-cols-3 gap-4">
+      <div>
+        <app-input label="Fecha de Corte" type="date" 
+                   hint="Fecha de pago elegida: {{ tempPaymentDateFull }}"
+                   title="Fecha Corte"
+                   [ngModel]="tempCutoffDateFull" 
+                   (ngModelChange)="onCutoffDateChange($event)"
+                   [ngModelOptions]="{standalone: true}"></app-input>
       </div>
+      <div>
+        <app-input label="Fecha de Pago" type="date" 
+                   hint="Fecha de corte elegida: {{ tempCutoffDateFull }}"
+                   title="Fecha Pago"
+                   [ngModel]="tempPaymentDateFull" 
+                   (ngModelChange)="onPaymentDateChange($event)"
+                   [ngModelOptions]="{standalone: true}"></app-input>
+      </div>
+      <div>
+        <app-input label="Días Anticipo" type="number" placeholder="Ej: 3" hint="Ej: 3 (Periodo de gracia)."
+                   formControlName="earlyPaymentDays"></app-input>
+      </div>
+    </div>
 
-    <app-input label="Dirección (Opcional)" type="text" placeholder="Ej: Av. Principal 123"
-      [(ngModel)]="nuevaSucursal.address"></app-input>
+    <app-input label="Dirección (Opcional)" type="text" placeholder="Ej: Av. Principal 123" formControlName="address"></app-input>
 
     <div class="mt-6 flex justify-end gap-2">
-      <app-button variant="text" (onClick)="cerrarModalSucursal()">Cancelar</app-button>
-      <app-button variant="primary" (onClick)="guardarSucursal()" [disabled]="!nuevaSucursal.name || !nuevaSucursal.branchType">{{ isEditingMode ? 'Guardar Cambios' : 'Registrar' }}</app-button>
+      <app-button variant="text" type="button" (onClick)="cerrarModalSucursal()">Cancelar</app-button>
+      <app-button variant="primary" type="submit" [disabled]="sucursalForm.invalid">{{ isEditingMode ? 'Guardar Cambios' : 'Registrar' }}</app-button>
     </div>
-  </div>
+  </form>
 </app-modal>
 
 <!-- Modal Personal -->
 <app-modal [isOpen]="isPersonalModalOpen" [title]="(isEditingMode ? 'Editar ' : 'Registrar ') + activePersonalTab" maxWidth="lg"
   (onClose)="cerrarModalPersonal()">
-  <div class="space-y-4">
+  <form [formGroup]="personalForm" (ngSubmit)="guardarPersonal()" class="space-y-4">
     <div *ngIf="personalError" class="p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400" role="alert">
       <span class="font-medium">Error:</span> {{ personalError }}
     </div>
 
     <div class="grid grid-cols-2 gap-4">
-      <app-input label="Nombre de Usuario (Login)" type="text" placeholder="juan_perez" [(ngModel)]="nuevoPersonal.username" [disabled]="isEditingMode"></app-input>
-      <app-input label="Nombre(s)" type="text" placeholder="Juan" [(ngModel)]="nuevoPersonal.firstName"></app-input>
+      <app-input label="Nombre de Usuario (Login)" type="text" placeholder="juan_perez" formControlName="username" [disabled]="isEditingMode"></app-input>
+      <div>
+        <app-input label="Nombre(s)" type="text" placeholder="Juan" formControlName="firstName"></app-input>
+        <p *ngIf="personalForm.get('firstName')?.invalid && personalForm.get('firstName')?.touched" class="mt-1 text-xs text-red-600">Requerido (min. 2)</p>
+      </div>
     </div>
     <div class="grid grid-cols-2 gap-4">
-      <app-input label="Apellido Paterno" type="text" placeholder="Pérez"
-        [(ngModel)]="nuevoPersonal.lastNamePaternal"></app-input>
-      <app-input label="Apellido Materno" type="text" placeholder="López"
-        [(ngModel)]="nuevoPersonal.lastNameMaternal"></app-input>
+      <div>
+        <app-input label="Apellido Paterno" type="text" placeholder="Pérez" formControlName="lastNamePaternal"></app-input>
+        <p *ngIf="personalForm.get('lastNamePaternal')?.invalid && personalForm.get('lastNamePaternal')?.touched" class="mt-1 text-xs text-red-600">Requerido (min. 2)</p>
+      </div>
+      <div>
+        <app-input label="Apellido Materno" type="text" placeholder="López" formControlName="lastNameMaternal"></app-input>
+        <p *ngIf="personalForm.get('lastNameMaternal')?.invalid && personalForm.get('lastNameMaternal')?.touched" class="mt-1 text-xs text-red-600">Requerido (min. 2)</p>
+      </div>
     </div>
     <div class="grid grid-cols-2 gap-4">
-      <app-input label="Correo Electrónico" type="email" placeholder="juan@yacatec.com"
-        [(ngModel)]="nuevoPersonal.email"></app-input>
-      <app-input label="Teléfono" type="text" placeholder="8712345678" [(ngModel)]="nuevoPersonal.phone"></app-input>
+      <div>
+        <app-input label="Correo Electrónico" type="email" placeholder="juan@yacatec.com" formControlName="email"></app-input>
+        <p *ngIf="personalForm.get('email')?.invalid && personalForm.get('email')?.touched" class="mt-1 text-xs text-red-600">Correo inválido</p>
+      </div>
+      <div>
+        <app-input label="Teléfono" type="text" placeholder="8712345678" formControlName="phone"></app-input>
+        <p *ngIf="personalForm.get('phone')?.invalid && personalForm.get('phone')?.touched" class="mt-1 text-xs text-red-600">10 dígitos requeridos</p>
+      </div>
     </div>
 
-      <div>
-        <label class="block mb-2 text-sm font-extrabold text-gray-900 dark:text-white">Sucursal Asignada</label>
-        <select [(ngModel)]="nuevoPersonal.branchId"
-          class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand focus:border-brand block w-full p-2.5">
-          <option value="" disabled selected>Seleccione una sucursal</option>
-          <option *ngFor="let branch of sucursales" [value]="branch.id">{{ branch.name }}</option>
-        </select>
-      </div>
+    <div>
+      <label class="block mb-2 text-sm font-extrabold text-gray-900 dark:text-white">Sucursal Asignada</label>
+      <select formControlName="branchId"
+        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand focus:border-brand block w-full p-2.5">
+        <option value="" disabled selected>Seleccione una sucursal</option>
+        <option *ngFor="let branch of sucursales" [value]="branch.id">{{ branch.name }}</option>
+      </select>
+    </div>
 
     <div class="mt-6 flex justify-end gap-2">
-      <app-button variant="text" (onClick)="cerrarModalPersonal()">Cancelar</app-button>
-      <app-button variant="primary" (onClick)="guardarPersonal()"
-        [disabled]="!nuevoPersonal.firstName || !nuevoPersonal.email || (!isEditingMode && !nuevoPersonal.username)">{{ isEditingMode ? 'Guardar Cambios' : 'Registrar' }}</app-button>
+      <app-button variant="text" type="button" (onClick)="cerrarModalPersonal()">Cancelar</app-button>
+      <app-button variant="primary" type="submit"
+        [disabled]="personalForm.invalid || (!isEditingMode && !personalForm.get('username')?.value)">{{ isEditingMode ? 'Guardar Cambios' : 'Registrar' }}</app-button>
     </div>
-  </div>
+  </form>
 </app-modal>

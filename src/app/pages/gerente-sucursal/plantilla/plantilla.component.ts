@@ -1,6 +1,6 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { CardComponent } from '../../../components/ui/card/card';
 import { TableComponent } from '../../../components/ui/table/table';
 import { ButtonComponent } from '../../../components/ui/button/button';
@@ -16,7 +16,7 @@ type PersonalTab = 'coordinadores' | 'verificadores' | 'cajeros';
 @Component({
   selector: 'app-plantilla',
   standalone: true,
-  imports: [CommonModule, FormsModule, CardComponent, TableComponent, ButtonComponent, ModalComponent, InputComponent, TableActionsComponent],
+  imports: [CommonModule, ReactiveFormsModule, CardComponent, TableComponent, ButtonComponent, ModalComponent, InputComponent, TableActionsComponent],
   templateUrl: './plantilla.component.html'
 })
 export class PlantillaComponent implements OnInit {
@@ -51,20 +51,25 @@ export class PlantillaComponent implements OnInit {
   cajerosTotal = 0;
   cajerosSearch = '';
 
-  // Forms Models
-  nuevoPersonal: CreateStaffDto = {
-    firstName: '',
-    lastNamePaternal: '',
-    lastNameMaternal: '',
-    email: '',
-    phone: '',
-    branchId: '' // GS no requiere enviarlo explícitamente, backend asume la sucursal del token
-  };
+  personalForm: FormGroup;
 
   showPersonalTable = true;
   private personalTableTimeout: any;
 
-  constructor(private staffService: StaffService, private cdr: ChangeDetectorRef) {}
+  constructor(
+    private staffService: StaffService, 
+    private cdr: ChangeDetectorRef,
+    private fb: FormBuilder
+  ) {
+    this.personalForm = this.fb.group({
+      firstName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
+      lastNamePaternal: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
+      lastNameMaternal: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
+      email: ['', [Validators.required, Validators.email, Validators.maxLength(255)]],
+      phone: ['', [Validators.required, Validators.pattern('^[0-9]{10}$')]],
+      branchId: ['']
+    });
+  }
 
   ngOnInit() {
     this.loadActiveTab();
@@ -164,7 +169,7 @@ export class PlantillaComponent implements OnInit {
     this.entityToEdit = null;
     this.isPersonalModalOpen = true; 
     this.errorMessage = '';
-    this.nuevoPersonal = { firstName: '', lastNamePaternal: '', lastNameMaternal: '', email: '', phone: '', branchId: '' };
+    this.personalForm.reset({ branchId: '' });
   }
 
   cerrarModalPersonal() { 
@@ -173,23 +178,12 @@ export class PlantillaComponent implements OnInit {
     this.isEditingMode = false;
     this.entityToEdit = null;
     this.errorMessage = '';
-    this.nuevoPersonal = { firstName: '', lastNamePaternal: '', lastNameMaternal: '', email: '', phone: '', branchId: '' }; 
-  }
-
-  get isFormValid(): boolean {
-    return !!(
-      this.nuevoPersonal.firstName &&
-      this.nuevoPersonal.lastNamePaternal &&
-      this.nuevoPersonal.lastNameMaternal &&
-      this.nuevoPersonal.email &&
-      this.nuevoPersonal.email.includes('@') &&
-      this.nuevoPersonal.phone &&
-      this.nuevoPersonal.phone.length >= 10
-    );
+    this.personalForm.reset({ branchId: '' }); 
   }
 
   guardarPersonal() {
-    if (!this.isFormValid) {
+    if (this.personalForm.invalid) {
+      this.personalForm.markAllAsTouched();
       this.errorMessage = 'Por favor, complete todos los campos obligatorios correctamente.';
       return;
     }
@@ -197,11 +191,10 @@ export class PlantillaComponent implements OnInit {
     this.isSaving = true;
     this.errorMessage = '';
 
-    const payload: any = { ...this.nuevoPersonal };
+    const payload = { ...this.personalForm.value };
     if (!payload.branchId || payload.branchId === '') {
       delete payload.branchId;
     }
-    delete payload.username; // Asegurarse de que nunca se envíe
 
     let saveAction: any;
     if (this.isEditingMode && this.entityToEdit) {
@@ -238,14 +231,14 @@ export class PlantillaComponent implements OnInit {
       if (p) {
         this.isEditingMode = true;
         this.entityToEdit = p;
-        this.nuevoPersonal = {
+        this.personalForm.patchValue({
           firstName: p.firstName,
           lastNamePaternal: p.lastNamePaternal,
           lastNameMaternal: p.lastNameMaternal,
           email: p.email,
           phone: p.phone || '',
           branchId: p.branchId || ''
-        };
+        });
         this.isPersonalModalOpen = true;
         this.errorMessage = '';
       }
