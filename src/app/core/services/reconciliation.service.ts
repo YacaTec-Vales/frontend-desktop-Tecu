@@ -39,13 +39,13 @@ export class ReconciliationService {
   }
 
   requestManualReconciliation(bankMovementId: string, relationId: string, justification: string): Observable<{ message: string }> {
-    return this.http.post<{ message: string }>(`${environment.apiUrl}/authorizations`, {
-      authorizationType: 'CONCILIACION_MANUAL',
-      justification,
-      affectedEntity: {
-        bankMovementId,
-        relationId
-      }
+    // Endpoint definido por el backend para crear la solicitud (Pull Request)
+    // POST /api/v1/complaints/{id}/resolve
+    // {id} corresponde al bankMovementId que se desea conciliar
+    const url = `${environment.apiUrl}/complaints/${bankMovementId}/resolve`;
+    return this.http.post<{ message: string }>(url, {
+      relationId,
+      justification
     });
   }
 
