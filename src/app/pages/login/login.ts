@@ -175,3 +175,5 @@ export class Login {
     this.partialToken = '';
     this.otpauthUrl = '';
 }
+
+}
