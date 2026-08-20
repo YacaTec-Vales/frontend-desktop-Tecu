@@ -11,7 +11,6 @@ import { SolicitudService, Solicitud } from '../../../core/services/solicitud.se
 import { CreditRaiseService, CreditRaiseRequest } from '../../../core/services/credit-raise.service';
 import { DistribuidorService } from '../../../core/services/distribuidor.service';
 import { AlertService } from '../../../core/services/alert.service';
-import { DocumentService, DocumentResponse } from '../../../core/services/document.service';
 import { forkJoin, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 
@@ -56,10 +55,6 @@ export class AprobacionesComponent implements OnInit {
   isModalOpen = false;
   selectedItem: UnifiedRequest | null = null;
   isLoading = false;
-
-  // Documentos reales de la solicitud (GET /api/v1/uploads/verification/{id})
-  verificationDocs: DocumentResponse[] = [];
-  isDocsLoading = false;
   
   // Form Variables
   montoAprobacion: number | null = null;
@@ -117,7 +112,6 @@ export class AprobacionesComponent implements OnInit {
     private creditRaiseService: CreditRaiseService,
     private distribuidorService: DistribuidorService,
     private alertService: AlertService,
-    private documentService: DocumentService,
     private cdr: ChangeDetectorRef
   ) {}
 
@@ -238,26 +232,13 @@ export class AprobacionesComponent implements OnInit {
     this.selectedItem = item;
     this.isModalOpen = true;
     this.notasGerencia = '';
-    this.verificationDocs = [];
 
     if (this.selectedItem.type === 'AUMENTO') {
       this.montoAprobacion = this.selectedItem.originalData.requestedAmountCents / 100;
     } else {
       this.montoAprobacion = null;
-      // Cargar documentos reales desde API v2.5
-      // GET /api/v1/uploads/verification/{solicitationId}
-      this.isDocsLoading = true;
-      this.documentService.getDocumentsByVerification(item.id).subscribe({
-        next: (docs) => {
-          this.verificationDocs = docs;
-          this.isDocsLoading = false;
-          this.cdr.detectChanges();
-        },
-        error: () => {
-          this.isDocsLoading = false;
-          this.cdr.detectChanges();
-        }
-      });
+      // verificationPhotos ya viene en originalData como URLs firmadas
+      // No es necesaria una llamada adicional al API
     }
   }
 
@@ -268,8 +249,6 @@ export class AprobacionesComponent implements OnInit {
     this.notasGerencia = '';
     this.isRejectingMode = false;
     this.motivoRechazo = '';
-    this.verificationDocs = [];
-    this.isDocsLoading = false;
   }
 
   aprobar() {
