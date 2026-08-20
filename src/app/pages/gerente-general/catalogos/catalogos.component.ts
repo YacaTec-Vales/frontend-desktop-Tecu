@@ -12,6 +12,7 @@ import { TableActionsComponent } from '../../../components/ui/table/table-action
 import { BranchService } from '../../../core/services/branch.service';
 import { StaffService } from '../../../core/services/staff.service';
 import { ProductService, Product, CreateProductDto } from '../../../core/services/product.service';
+import { CategoryService, CreditCategory, CreateCategoryDto, UpdateCategoryDto } from '../../../core/services/category.service';
 import { Branch, CreateBranchDto, UpdateBranchDto } from '../../../core/models/branch.model';
 import { Coordinador, Verificador, Cajero, CreateStaffDto } from '../../../core/models/staff.model';
 
@@ -35,6 +36,12 @@ export class CatalogosComponent implements OnInit {
   isCategoriaModalOpen = false;
   isSucursalModalOpen = false;
   isPersonalModalOpen = false;
+
+  // Estado categorías
+  categoriaError: string | null = null;
+  isCategoriaLoading = false;
+  isCategoriaLoaded = false;
+  selectedCategoriaId: string | null = null;
 
   // Modales Unificados (Dinámicos)
   isEditingMode = false;
@@ -72,29 +79,10 @@ export class CatalogosComponent implements OnInit {
   coordinadoresPage = 1; coordinadoresTotal = 0; coordinadoresSearch = '';
   verificadoresPage = 1; verificadoresTotal = 0; verificadoresSearch = '';
   cajerosPage = 1; cajerosTotal = 0; cajerosSearch = '';
-  categoriasPage = 1; categoriasSearch = '';
-  
-  // -- Datos Dummy (Categorías) --
-  categorias = [
-    { nombre: 'Plata', ganancia: 6 },
-    { nombre: 'Oro', ganancia: 10 },
-  ];
+  categoriasPage = 1; categoriasSearch = ''; categoriasTotal = 0;
 
-  get paginatedCategorias() {
-    let filtradas = this.categorias;
-    if (this.categoriasSearch) {
-      const q = this.categoriasSearch.toLowerCase();
-      filtradas = filtradas.filter(c => c.nombre.toLowerCase().includes(q));
-    }
-    const start = (this.categoriasPage - 1) * this.categoriasLimit;
-    return filtradas.slice(start, start + this.categoriasLimit);
-  }
-
-  get totalCategorias() {
-    if (!this.categoriasSearch) return this.categorias.length;
-    const q = this.categoriasSearch.toLowerCase();
-    return this.categorias.filter(c => c.nombre.toLowerCase().includes(q)).length;
-  }
+  // Datos de categorías desde la API
+  categorias: CreditCategory[] = [];
 
   // API Data
   productos: Product[] = [];
@@ -118,6 +106,7 @@ export class CatalogosComponent implements OnInit {
     private branchService: BranchService,
     private staffService: StaffService,
     private productService: ProductService,
+    private categoryService: CategoryService,
     private cdr: ChangeDetectorRef,
     private fb: FormBuilder
   ) {
@@ -153,8 +142,8 @@ export class CatalogosComponent implements OnInit {
     });
 
     this.categoriaForm = this.fb.group({
-      nombre: ['', Validators.required],
-      ganancia: [null, [Validators.required, Validators.min(0)]]
+      nombre: ['', [Validators.required, Validators.minLength(2)]],
+      ganancia: [null, [Validators.required, Validators.min(0), Validators.max(100)]]
     });
   }
 
@@ -174,11 +163,32 @@ export class CatalogosComponent implements OnInit {
         this.isProductsLoading = false;
         this.cdr.detectChanges();
       });
+    } else if (this.activeTab === 'categorias') {
+      this.loadCategorias(forceRefresh);
     } else if (this.activeTab === 'sucursales') {
       this.loadSucursales(forceRefresh);
     } else if (this.activeTab === 'personal') {
       this.loadActivePersonalTab(forceRefresh);
     }
+  }
+
+  loadCategorias(force = false) {
+    if (this.isCategoriaLoaded && !force) return;
+    this.isCategoriaLoading = true;
+    this.categoryService.getCategories(this.categoriasPage, this.categoriasLimit, this.categoriasSearch).subscribe({
+      next: (res) => {
+        this.categorias = res.data;
+        this.categoriasTotal = res.meta.itemCount;
+        this.isCategoriaLoaded = true;
+        this.isCategoriaLoading = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        // Fallback: si el endpoint no existe todavia, se mantienen datos locales
+        this.isCategoriaLoading = false;
+        this.cdr.detectChanges();
+      }
+    });
   }
 
   loadSucursales(force = false) {
@@ -311,19 +321,19 @@ export class CatalogosComponent implements OnInit {
   onPageChange(page: number, type: string) {
     if (type === 'productos') { this.productosPage = page; }
     else if (type === 'sucursales') { this.sucursalesPage = page; }
-    else if (type === 'categorias') { this.categoriasPage = page; return; }
+    else if (type === 'categorias') { this.categoriasPage = page; this.loadCategorias(true); return; }
     this.loadActiveTab(true);
   }
   onSearch(term: string, type: string) {
     if (type === 'productos') { this.productosSearch = term; this.productosPage = 1; }
     else if (type === 'sucursales') { this.sucursalesSearch = term; this.sucursalesPage = 1; }
-    else if (type === 'categorias') { this.categoriasSearch = term; this.categoriasPage = 1; return; }
+    else if (type === 'categorias') { this.categoriasSearch = term; this.categoriasPage = 1; this.loadCategorias(true); return; }
     this.loadActiveTab(true);
   }
   onLimitChange(limit: number, type: string) {
     if (type === 'productos') { this.productosLimit = limit; this.productosPage = 1; }
     else if (type === 'sucursales') { this.sucursalesLimit = limit; this.sucursalesPage = 1; }
-    else if (type === 'categorias') { this.categoriasLimit = limit; this.categoriasPage = 1; return; }
+    else if (type === 'categorias') { this.categoriasLimit = limit; this.categoriasPage = 1; this.loadCategorias(true); return; }
     this.loadActiveTab(true);
   }
 
@@ -428,16 +438,17 @@ export class CatalogosComponent implements OnInit {
     if (!this.entityToDeactivate) return;
     const { type, id } = this.entityToDeactivate;
 
-    // Aquí iría la lógica HTTP según el tipo
-    console.log(`Desactivando ${type} con ID: ${id}`);
-    
-    // Simulación
+    if (type === 'categoria') {
+      this.eliminarCategoria(id);
+      return;
+    }
+
     if (type === 'producto') {
       const p = this.productos.find(x => x.code === id);
       if (p) p.isActive = false;
     } else if (type === 'sucursal') {
       this.branchService.deleteBranch(id).subscribe(() => {
-        this.loadActiveTab(true); // Reload after delete
+        this.loadActiveTab(true);
       });
     } else if (['gerente', 'coordinador', 'verificador', 'cajero'].includes(type)) {
       let deleteAction;
@@ -456,22 +467,86 @@ export class CatalogosComponent implements OnInit {
   }
 
   // Categorias
-  abrirModalCategoria(cat?: any) { 
+  abrirModalCategoria(cat?: CreditCategory) {
+    this.categoriaError = null;
+    this.selectedCategoriaId = null;
     if (cat) {
       this.isEditingMode = true;
-      this.categoriaForm.patchValue(cat);
+      this.selectedCategoriaId = cat.id;
+      // Convertimos bps => porcentaje para mostrarlo en el campo del formulario
+      this.categoriaForm.patchValue({
+        nombre: cat.nombre,
+        ganancia: cat.gananciaBps / 100
+      });
     } else {
       this.isEditingMode = false;
       this.categoriaForm.reset();
     }
-    this.isCategoriaModalOpen = true; 
+    this.isCategoriaModalOpen = true;
   }
-  cerrarModalCategoria() { this.isCategoriaModalOpen = false; this.isEditingMode = false; this.categoriaForm.reset(); }
+
+  cerrarModalCategoria() {
+    this.isCategoriaModalOpen = false;
+    this.isEditingMode = false;
+    this.categoriaError = null;
+    this.selectedCategoriaId = null;
+    this.categoriaForm.reset();
+  }
+
   guardarCategoria() {
-    if (this.categoriaForm.valid) {
-      this.categorias.push({ ...this.categoriaForm.value } as any);
-      this.cerrarModalCategoria();
+    this.categoriaError = null;
+    if (!this.categoriaForm.valid) return;
+
+    const formValue = this.categoriaForm.value;
+    // El usuario ingresa porcentaje (Ej: 6.5%), lo convertimos a bps (650)
+    const gananciaBps = Math.round(formValue.ganancia * 100);
+
+    if (this.isEditingMode && this.selectedCategoriaId) {
+      // EDITAR — PATCH /api/v1/categories/:id
+      const dto: UpdateCategoryDto = {
+        nombre: formValue.nombre,
+        gananciaBps
+      };
+      this.categoryService.updateCategory(this.selectedCategoriaId, dto).subscribe({
+        next: () => {
+          this.isCategoriaLoaded = false;
+          this.loadCategorias(true);
+          this.cerrarModalCategoria();
+        },
+        error: (err) => {
+          this.categoriaError = err.error?.message || 'Error al actualizar la categoría.';
+          this.cdr.detectChanges();
+        }
+      });
+    } else {
+      // CREAR — POST /api/v1/categories
+      const dto: CreateCategoryDto = { nombre: formValue.nombre, gananciaBps };
+      this.categoryService.createCategory(dto).subscribe({
+        next: () => {
+          this.isCategoriaLoaded = false;
+          this.loadCategorias(true);
+          this.cerrarModalCategoria();
+        },
+        error: (err) => {
+          this.categoriaError = err.error?.message || 'Error al crear la categoría.';
+          this.cdr.detectChanges();
+        }
+      });
     }
+  }
+
+  eliminarCategoria(id: string) {
+    this.categoryService.deleteCategory(id).subscribe({
+      next: () => {
+        this.isCategoriaLoaded = false;
+        this.loadCategorias(true);
+        this.isConfirmModalOpen = false;
+        this.entityToDeactivate = null;
+      },
+      error: (err) => {
+        console.error('Error al eliminar categoría:', err);
+      }
+    });
   }
 
   tempCutoffDateFull: string = '';
@@ -656,7 +731,8 @@ export class CatalogosComponent implements OnInit {
         const p = this.productos.find(x => x.code === event.id);
         if (p) this.abrirEditProducto(p);
       } else if (type === 'categoria') {
-        const c = this.categorias.find(x => x.nombre === event.id);
+        // Buscamos por id en lugar de nombre
+        const c = this.categorias.find(x => x.id === event.id);
         if (c) this.abrirModalCategoria(c);
       } else if (type === 'sucursal') {
         const s = this.sucursales.find(x => x.id === event.id);
@@ -671,7 +747,13 @@ export class CatalogosComponent implements OnInit {
         if (emp) this.abrirModalPersonal(emp);
       }
     } else if (event.action === 'deactivate') {
-      this.abrirConfirmacion(type, event.id);
+      if (type === 'categoria') {
+        // Para categorias usamos eliminarCategoria directamente
+        this.entityToDeactivate = { type, id: event.id };
+        this.isConfirmModalOpen = true;
+      } else {
+        this.abrirConfirmacion(type, event.id);
+      }
     }
   }
 }
