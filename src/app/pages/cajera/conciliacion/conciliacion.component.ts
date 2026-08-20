@@ -10,6 +10,7 @@ import { TableComponent } from '../../../components/ui/table/table';
 
 import { ReconciliationService, BankMovement, ReconciliationBatch } from '../../../core/services/reconciliation.service';
 import { RelationService, RelationDetails } from '../../../core/services/relation.service';
+import { DocumentService, DocumentResponse } from '../../../core/services/document.service';
 
 @Component({
   selector: 'app-conciliacion',
@@ -33,6 +34,14 @@ export class ConciliacionComponent implements OnInit {
   isBatchesLoaded = false;
   isBatchesLoading = false;
 
+  // --- DOCUMENTOS ADJUNTOS (POST /api/v1/uploads) ---
+  selectedDocFile: File | null = null;
+  isDocUploading = false;
+  docUploadSuccess = '';
+  docUploadError = '';
+  recentDocs: DocumentResponse[] = [];
+  isRecentDocsLoading = false;
+
   // --- MANUAL ---
   unmatchedMovements: BankMovement[] = [];
   unmatchedPage = 1;
@@ -55,11 +64,13 @@ export class ConciliacionComponent implements OnInit {
   constructor(
     private reconciliationService: ReconciliationService,
     private relationService: RelationService,
+    private documentService: DocumentService,
     private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit() {
     this.loadBatches();
+    this.loadRecentDocs();
   }
 
   setTab(tab: 'automatica' | 'manual') {
@@ -90,12 +101,56 @@ export class ConciliacionComponent implements OnInit {
         this.isUploading = false;
         this.uploadSuccessMessage = res.message || 'Archivo procesado exitosamente.';
         this.selectedFile = null;
-        this.loadBatches(); // Reload batches to show the new one
-        // Reset file input in template (can be handled via viewchild if needed)
+        this.loadBatches();
       },
       error: (err) => {
         this.isUploading = false;
         this.uploadErrorMessage = 'Error al subir archivo: ' + (err.error?.message || err.message);
+      }
+    });
+  }
+
+  // --- DOCUMENTOS ADJUNTOS ---
+  onDocFileSelected(event: any) {
+    const file: File = event.target.files[0];
+    if (file) this.selectedDocFile = file;
+  }
+
+  uploadDocFile() {
+    if (!this.selectedDocFile) return;
+    this.isDocUploading = true;
+    this.docUploadSuccess = '';
+    this.docUploadError = '';
+
+    // POST /api/v1/uploads con documentType = conciliacion_evidence
+    this.documentService.uploadFile(this.selectedDocFile, 'conciliacion_evidence').subscribe({
+      next: () => {
+        this.isDocUploading = false;
+        this.docUploadSuccess = 'Documento subido correctamente.';
+        this.selectedDocFile = null;
+        this.loadRecentDocs();
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.isDocUploading = false;
+        this.docUploadError = err.error?.message || 'Error al subir el documento.';
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  loadRecentDocs() {
+    this.isRecentDocsLoading = true;
+    // GET /api/v1/uploads/type/conciliacion_evidence
+    this.documentService.getDocumentsByType('conciliacion_evidence').subscribe({
+      next: (docs) => {
+        this.recentDocs = docs;
+        this.isRecentDocsLoading = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.isRecentDocsLoading = false;
+        this.cdr.detectChanges();
       }
     });
   }
