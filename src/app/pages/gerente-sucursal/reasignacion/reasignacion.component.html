@@ -170,7 +170,7 @@
           <tr *ngFor="let rel of cutResult.relations" class="hover:bg-gray-50 transition-colors">
             <td class="px-6 py-3 font-semibold text-gray-900">{{ rel.distributorNumber }}</td>
             <td class="px-6 py-3 text-center">
-              <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2 py-0.5 rounded-full">{{ rel.voucherCount }}</span>
+              <app-badge [text]="rel.voucherCount.toString()" variant="info"></app-badge>
             </td>
             <td class="px-6 py-3 text-right font-bold text-brand">{{ rel.totalToPayCents / 100 | currency:'MXN' }}</td>
             <td class="px-6 py-3 text-center font-medium text-yellow-700">{{ rel.pointsAwarded }}</td>
@@ -190,7 +190,8 @@
         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
         </svg>
-        Advertencias ({{ cutResult.warnings.length }})
+        Advertencias
+        <app-badge [text]="cutResult.warnings!.length.toString()" variant="warning"></app-badge>
       </p>
       <ul class="list-disc list-inside space-y-1">
         <li *ngFor="let w of cutResult.warnings" class="text-xs text-amber-700">{{ w }}</li>
