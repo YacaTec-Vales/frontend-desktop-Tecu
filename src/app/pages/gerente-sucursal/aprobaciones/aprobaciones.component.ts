@@ -232,11 +232,13 @@ export class AprobacionesComponent implements OnInit {
     this.selectedItem = item;
     this.isModalOpen = true;
     this.notasGerencia = '';
-    
+
     if (this.selectedItem.type === 'AUMENTO') {
       this.montoAprobacion = this.selectedItem.originalData.requestedAmountCents / 100;
     } else {
       this.montoAprobacion = null;
+      // verificationPhotos ya viene en originalData como URLs firmadas
+      // No es necesaria una llamada adicional al API
     }
   }
 

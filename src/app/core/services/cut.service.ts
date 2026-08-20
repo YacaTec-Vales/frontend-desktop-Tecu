@@ -8,6 +8,15 @@ export interface RunCutDto {
   cutDate: string; // YYYY-MM-DD
 }
 
+export interface CutRelationSummary {
+  relationId: string;
+  distributorId: string;
+  distributorNumber: string;
+  voucherCount: number;
+  totalToPayCents: number;
+  pointsAwarded: number;
+}
+
 export interface CutResult {
   branchId: string;
   cutDate: string;
@@ -19,6 +28,7 @@ export interface CutResult {
   totalCommissionCents: number;
   totalPenaltiesCents: number;
   totalPointsAwarded: number;
+  relations: CutRelationSummary[];
   warnings: string[];
 }
 

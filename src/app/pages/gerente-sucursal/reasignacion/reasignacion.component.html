@@ -1,68 +1,237 @@
-<div class="max-w-6xl mx-auto space-y-6 pb-12">
-  <div class="mb-8">
-    <h1 class="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight">Reasignación de Cartera</h1>
-    <p class="text-gray-500 dark:text-gray-400 mt-2 text-lg">Transfiera distribuidoras entre coordinadores fácilmente.</p>
+<div class="max-w-4xl mx-auto space-y-6">
+
+  <div>
+    <h2 class="text-3xl font-bold text-gray-900 dark:text-white">Corte de Quincena</h2>
+    <p class="text-gray-500 dark:text-gray-400 mt-1 text-lg">
+      Ejecuta el corte de quincena para tu sucursal. Se generarán las relaciones de pago para cada distribuidor con vales en el periodo.
+    </p>
   </div>
 
-  <div *ngIf="successMessage" class="p-4 mb-4 text-sm text-green-800 rounded-lg bg-green-50 dark:bg-gray-800 dark:text-green-400 font-medium" role="alert">
-    {{ successMessage }}
-  </div>
-  
-  <div *ngIf="errorMessage" class="p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400 font-medium" role="alert">
-    {{ errorMessage }}
+  <!-- Estado: Sin branchId (error de configuracion) -->
+  <div *ngIf="!branchId" class="p-6 bg-red-50 border border-red-200 rounded-xl text-center">
+    <p class="text-red-700 font-semibold">Tu usuario no tiene una sucursal asignada. Contacta al administrador.</p>
   </div>
 
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-    
-    <!-- Origen -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 dark:bg-gray-800 dark:border-gray-700 flex flex-col h-[500px]">
-      <h2 class="text-xl font-bold mb-4">Coordinador Origen</h2>
-      <select [(ngModel)]="coordOrigenId" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand focus:border-brand block w-full p-2.5 mb-4">
-        <option value="" disabled selected>Seleccione un Coordinador</option>
-        <option *ngFor="let c of coordinadores" [value]="c.id">{{ c.firstName }} {{ c.lastNamePaternal }}</option>
-      </select>
-      
-      <div class="flex-1 overflow-y-auto border border-gray-200 rounded-lg bg-gray-50 p-2 space-y-2">
-        <div *ngIf="!coordOrigenId" class="text-center text-gray-500 py-12">
-          Seleccione un coordinador para ver su cartera simulada.
+  <!-- Formulario principal -->
+  <ng-container *ngIf="branchId && !cutResult">
+
+    <!-- Card de ejecucion -->
+    <app-card title="Ejecutar Corte Manual" subtitle="Selecciona la fecha de corte (día 15 o último día del mes). El sistema generará las relaciones de cobro y aplicará puntos, comisiones y cargos por morosidad.">
+
+      <!-- Alerta de error -->
+      <div *ngIf="errorMessage"
+        class="mb-6 flex items-start gap-3 p-4 rounded-lg bg-red-50 border border-red-200 text-red-800 text-sm animate-fade-in">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0 mt-0.5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+        </svg>
+        <span>{{ errorMessage }}</span>
+      </div>
+
+      <!-- Aviso informativo -->
+      <div class="mb-6 flex items-start gap-3 p-4 rounded-lg bg-amber-50 border border-amber-200">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0 mt-0.5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+        </svg>
+        <div class="text-sm text-amber-800">
+          <p class="font-semibold mb-1">Esta acción es irreversible</p>
+          <p>Al ejecutar el corte se crearán relaciones de pago en el sistema. Solo debes ejecutarlo una vez por quincena. Verifica que la fecha sea correcta antes de continuar.</p>
         </div>
-        
-        <ng-container *ngIf="coordOrigenId">
-          <div *ngFor="let dist of distribuidorasOrigenMock; let i = index" class="bg-white p-3 rounded shadow-sm border cursor-pointer flex items-center justify-between" [ngClass]="dist.selected ? 'border-brand' : 'border-gray-200'" (click)="dist.selected = !dist.selected">
-            <div>
-              <p class="font-bold">{{ dist.name }} ({{ dist.id }})</p>
-              <p class="text-xs text-gray-500">Cartera simulada: {{ dist.cartera | currency:'MXN' }}</p>
-            </div>
-            <input type="checkbox" [(ngModel)]="dist.selected" (click)="$event.stopPropagation()" class="w-4 h-4 text-brand bg-gray-100 border-gray-300 rounded focus:ring-brand focus:ring-2">
+      </div>
+
+      <!-- Campo de fecha de corte -->
+      <div class="max-w-xs">
+        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+          Fecha de Corte <span class="text-red-500">*</span>
+        </label>
+        <input
+          type="date"
+          [(ngModel)]="cutDate"
+          [disabled]="isRunning"
+          class="w-full rounded-lg border border-gray-300 shadow-sm focus:border-brand focus:ring-brand sm:text-sm p-2.5 disabled:opacity-50 disabled:bg-gray-100"
+        >
+        <p class="mt-1.5 text-xs text-gray-500">
+          Usa el día <strong>15</strong> para primera quincena o el <strong>último día del mes</strong> para segunda quincena.
+        </p>
+      </div>
+
+      <div class="mt-6 flex items-center gap-4">
+        <app-button
+          variant="primary"
+          (onClick)="abrirConfirmacion()"
+          [disabled]="!cutDate || isRunning">
+          <span *ngIf="!isRunning">⚡ Ejecutar Corte de Quincena</span>
+          <span *ngIf="isRunning" class="flex items-center gap-2">
+            <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+            </svg>
+            Ejecutando corte...
+          </span>
+        </app-button>
+        <p *ngIf="isRunning" class="text-sm text-gray-500 italic">Este proceso puede tardar unos segundos...</p>
+      </div>
+    </app-card>
+
+    <!-- Card informativa sobre que hace el corte -->
+    <app-card title="¿Qué genera el corte?">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+        <div class="flex items-start gap-3 p-3 bg-blue-50 rounded-lg">
+          <span class="text-2xl">📋</span>
+          <div>
+            <p class="font-semibold text-blue-900">Relaciones de Pago</p>
+            <p class="text-blue-700 mt-0.5">Una relación por distribuidor con todos sus vales del periodo.</p>
           </div>
-          
-          <div *ngIf="distribuidorasOrigenMock.length === 0" class="text-center text-gray-500 py-12 font-medium">
-            No quedan distribuidoras para este coordinador.
+        </div>
+        <div class="flex items-start gap-3 p-3 bg-green-50 rounded-lg">
+          <span class="text-2xl">⭐</span>
+          <div>
+            <p class="font-semibold text-green-900">Puntos y Comisiones</p>
+            <p class="text-green-700 mt-0.5">Se calculan y asignan los puntos según categoría del distribuidor.</p>
           </div>
-        </ng-container>
+        </div>
+        <div class="flex items-start gap-3 p-3 bg-red-50 rounded-lg">
+          <span class="text-2xl">⚠️</span>
+          <div>
+            <p class="font-semibold text-red-900">Cargos por Morosidad</p>
+            <p class="text-red-700 mt-0.5">Se aplican penalizaciones a distribuidores con pagos vencidos.</p>
+          </div>
+        </div>
+      </div>
+    </app-card>
+
+  </ng-container>
+
+  <!-- Pantalla de Resultado Exitoso -->
+  <ng-container *ngIf="cutResult">
+
+    <!-- Header de exito -->
+    <div class="p-6 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center gap-4 animate-fade-in">
+      <div class="w-14 h-14 bg-emerald-500 rounded-full flex items-center justify-center flex-shrink-0">
+        <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+        </svg>
+      </div>
+      <div>
+        <h3 class="text-xl font-black text-emerald-900">Corte ejecutado exitosamente</h3>
+        <p class="text-emerald-700 text-sm mt-0.5">
+          Fecha de corte: <strong>{{ cutResult.cutDate }}</strong> ·
+          Fecha límite de pago: <strong>{{ cutResult.paymentDeadlineDate }}</strong>
+        </p>
       </div>
     </div>
 
-    <!-- Destino -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 dark:bg-gray-800 dark:border-gray-700 flex flex-col h-[500px]">
-      <h2 class="text-xl font-bold mb-4">Coordinador Destino</h2>
-      <select [(ngModel)]="coordDestinoId" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand focus:border-brand block w-full p-2.5 mb-4">
-        <option value="" disabled selected>Seleccione un Coordinador</option>
-        <option *ngFor="let c of coordinadores" [value]="c.id">{{ c.firstName }} {{ c.lastNamePaternal }}</option>
-      </select>
-      
-      <div class="flex-1 overflow-y-auto border border-dashed border-gray-300 rounded-lg bg-gray-50 flex items-center justify-center relative">
-        <div class="absolute inset-0 flex items-center justify-center p-4">
-            <div class="text-center">
-                <svg class="mx-auto w-10 h-10 text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg>
-                <p class="text-gray-500 mb-4">Seleccione distribuidoras del origen y transfiera al destino.</p>
-                <button type="button" class="px-5 py-2.5 text-sm font-bold text-white rounded-lg shadow-sm hover:opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" style="background-color: #600C0C;" [disabled]="!canTransfer" (click)="transferir()">
-                  {{ isTransferring ? 'Transfiriendo...' : (selectedCount > 0 ? 'Transferir ' + selectedCount + ' Selección' : 'Transferir') }}
-                </button>
-            </div>
-        </div>
+    <!-- Métricas resumen -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div class="bg-white border border-gray-200 rounded-xl p-4 text-center shadow-sm">
+        <p class="text-3xl font-black text-brand">{{ cutResult.distributorsAffected }}</p>
+        <p class="text-xs text-gray-500 mt-1 uppercase tracking-wide">Distribuidores</p>
+      </div>
+      <div class="bg-white border border-gray-200 rounded-xl p-4 text-center shadow-sm">
+        <p class="text-3xl font-black text-gray-900">{{ cutResult.relationsCreated }}</p>
+        <p class="text-xs text-gray-500 mt-1 uppercase tracking-wide">Relaciones Creadas</p>
+      </div>
+      <div class="bg-white border border-gray-200 rounded-xl p-4 text-center shadow-sm">
+        <p class="text-2xl font-black text-emerald-600">{{ cutResult.totalToPayCents / 100 | currency:'MXN' }}</p>
+        <p class="text-xs text-gray-500 mt-1 uppercase tracking-wide">Total a Pagar</p>
+      </div>
+      <div class="bg-white border border-gray-200 rounded-xl p-4 text-center shadow-sm">
+        <p class="text-3xl font-black text-yellow-600">{{ cutResult.totalPointsAwarded }}</p>
+        <p class="text-xs text-gray-500 mt-1 uppercase tracking-wide">Puntos Otorgados</p>
       </div>
     </div>
 
-  </div>
+    <!-- Métricas secundarias -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="bg-white border border-gray-200 rounded-xl p-4 flex justify-between items-center shadow-sm">
+        <span class="text-sm text-gray-600 font-medium">Comisiones generadas</span>
+        <span class="font-bold text-gray-900">{{ cutResult.totalCommissionCents / 100 | currency:'MXN' }}</span>
+      </div>
+      <div class="bg-white border border-gray-200 rounded-xl p-4 flex justify-between items-center shadow-sm">
+        <span class="text-sm text-gray-600 font-medium">Cargos por morosidad</span>
+        <span class="font-bold text-red-600">{{ cutResult.totalPenaltiesCents / 100 | currency:'MXN' }}</span>
+      </div>
+    </div>
+
+    <!-- Tabla de relaciones por distribuidor -->
+    <app-card title="Detalle por Distribuidor" [noPadding]="true">
+      <table class="w-full text-sm text-left text-gray-700">
+        <thead class="text-xs text-gray-500 uppercase bg-gray-50 border-b">
+          <tr>
+            <th class="px-6 py-3">Distribuidor</th>
+            <th class="px-6 py-3 text-center">Vales</th>
+            <th class="px-6 py-3 text-right">Total a Pagar</th>
+            <th class="px-6 py-3 text-center">Puntos</th>
+            <th class="px-6 py-3 text-xs">Relación ID</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100">
+          <tr *ngFor="let rel of cutResult.relations" class="hover:bg-gray-50 transition-colors">
+            <td class="px-6 py-3 font-semibold text-gray-900">{{ rel.distributorNumber }}</td>
+            <td class="px-6 py-3 text-center">
+              <app-badge [text]="rel.voucherCount.toString()" variant="info"></app-badge>
+            </td>
+            <td class="px-6 py-3 text-right font-bold text-brand">{{ rel.totalToPayCents / 100 | currency:'MXN' }}</td>
+            <td class="px-6 py-3 text-center font-medium text-yellow-700">{{ rel.pointsAwarded }}</td>
+            <td class="px-6 py-3 text-xs text-gray-400 font-mono truncate max-w-[120px]" [title]="rel.relationId">{{ rel.relationId }}</td>
+          </tr>
+        </tbody>
+      </table>
+      <div *ngIf="cutResult.relations.length === 0" class="p-8 text-center text-gray-500 italic">
+        No hay relaciones en este resultado.
+      </div>
+    </app-card>
+
+    <!-- Advertencias (warnings no fatales) -->
+    <div *ngIf="cutResult.warnings?.length > 0"
+      class="p-4 bg-amber-50 border border-amber-200 rounded-xl animate-fade-in">
+      <p class="text-sm font-semibold text-amber-800 mb-2 flex items-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+        </svg>
+        Advertencias
+        <app-badge [text]="cutResult.warnings!.length.toString()" variant="warning"></app-badge>
+      </p>
+      <ul class="list-disc list-inside space-y-1">
+        <li *ngFor="let w of cutResult.warnings" class="text-xs text-amber-700">{{ w }}</li>
+      </ul>
+    </div>
+
+    <!-- Accion volver -->
+    <div class="flex justify-end">
+      <app-button variant="secondary" (onClick)="reiniciar()">Ejecutar Otro Corte</app-button>
+    </div>
+
+  </ng-container>
+
 </div>
+
+<!-- Modal de confirmacion -->
+<app-modal [isOpen]="isConfirmModalOpen" title="Confirmar Ejecución de Corte" maxWidth="sm" (onClose)="cancelarConfirmacion()">
+  <div class="space-y-4">
+    <div class="flex items-center gap-3 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-amber-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+          d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+      </svg>
+      <p class="text-sm text-amber-800">
+        <strong>¿Estás seguro?</strong> Esta acción generará las relaciones de pago de la quincena y no puede revertirse.
+      </p>
+    </div>
+    <div class="bg-gray-50 rounded-lg p-3 text-sm space-y-1">
+      <div class="flex justify-between">
+        <span class="text-gray-500">Sucursal:</span>
+        <span class="font-mono text-xs text-gray-700 truncate max-w-[160px]" [title]="branchId!">{{ branchId }}</span>
+      </div>
+      <div class="flex justify-between">
+        <span class="text-gray-500">Fecha de corte:</span>
+        <span class="font-bold text-gray-900">{{ cutDate }}</span>
+      </div>
+    </div>
+    <div class="flex justify-end gap-3 pt-2">
+      <app-button variant="secondary" (onClick)="cancelarConfirmacion()">Cancelar</app-button>
+      <app-button variant="primary" (onClick)="ejecutarCorte()">Sí, ejecutar corte</app-button>
+    </div>
+  </div>
+</app-modal>
