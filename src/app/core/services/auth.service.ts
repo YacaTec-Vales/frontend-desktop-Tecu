@@ -30,30 +30,64 @@ export class AuthService {
    * Procesa el inicio de sesión.
    * Sanitiza las credenciales antes de enviarlas al backend.
    */
-  login(credentials: LoginDto): Observable<TokenResponseDto> {
+  login(credentials: LoginDto): Observable<any> {
     const sanitizedData = sanitizePayload(credentials);
     
-    return this.http.post<{ message: string, data: TokenResponseDto }>(`${this.baseUrl}/login`, sanitizedData).pipe(
+    return this.http.post<any>(`${this.baseUrl}/login`, sanitizedData, {
+      headers: {
+        'X-Origin': 'vpn',
+        'X-Client-App': 'Tecu'
+      }
+    }).pipe(
       tap(response => {
-        const tokens = response.data;
-        // Almacenar token en sessionStorage según los requerimientos
-        this.setTokens(tokens);
-        // La nueva API devuelve el usuario directamente en el TokenResponseDto
-        this.currentUser.set(tokens.user);
-        this.isAuthenticated.set(true);
+        // We only set tokens fully if not requiring MFA
+        if (!response.data.mfaRequired && response.data.user?.mfaEnabled !== false) {
+          const tokens = response.data;
+          this.setTokens(tokens);
+          this.currentUser.set(tokens.user);
+          this.isAuthenticated.set(true);
 
-        // Medida de seguridad: Destruir sesiones activas en otros navegadores/pestañas
-        this.http.post(`${this.baseUrl}/sessions/revoke-others`, {}).subscribe({
-          next: () => console.log('Sesiones previas revocadas exitosamente.'),
-          error: (err) => console.warn('No se pudieron revocar otras sesiones', err)
-        });
+          this.http.post(`${this.baseUrl}/sessions/revoke-others`, {}).subscribe({
+            next: () => console.log('Sesiones previas revocadas exitosamente.'),
+            error: (err) => console.warn('No se pudieron revocar otras sesiones', err)
+          });
+        }
       }),
-      map(response => response.data),
+      map(response => response),
       catchError(error => {
-        // Aquí podrías agregar lógica para mostrar toasts/alertas de error
         return throwError(() => error);
       })
     );
+  }
+
+  setupMfa(token: string): Observable<any> {
+    return this.http.post<any>(`${environment.apiUrl}/mfa/setup`, {}, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'X-Origin': 'vpn',
+        'X-Client-App': 'Tecu'
+      }
+    });
+  }
+
+  verifyMfaSetup(token: string, code: string): Observable<any> {
+    return this.http.post(`${environment.apiUrl}/mfa/verify-setup`, { code }, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'X-Origin': 'vpn',
+        'X-Client-App': 'Tecu'
+      }
+    });
+  }
+
+  verifyMfa(token: string, code: string): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/mfa-verify`, { code }, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'X-Origin': 'vpn',
+        'X-Client-App': 'Tecu'
+      }
+    });
   }
 
   /**
