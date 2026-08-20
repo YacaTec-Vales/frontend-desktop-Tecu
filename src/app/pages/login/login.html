@@ -18,6 +18,10 @@
           <div *ngIf="error" class="p-3 text-sm text-red-800 bg-red-50 rounded-lg font-bold" role="alert">
             {{ error }}
           </div>
+          
+          <div *ngIf="success" class="p-3 text-sm text-emerald-800 bg-emerald-50 rounded-lg font-bold" role="alert">
+            {{ success }}
+          </div>
 
           <!-- Form: Login -->
           <form *ngIf="step === 'login'" class="space-y-6" (submit)="onSubmit($event)">

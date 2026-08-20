@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectorRef } from '@angular/core';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
@@ -19,6 +19,7 @@ export class Login {
   email: string = '';
   password: string = '';
   error: string = '';
+  success: string = '';
 
   step: 'login' | 'mfa_verify' | 'mfa_setup' = 'login';
   mfaCode: string = '';
@@ -30,36 +31,45 @@ export class Login {
 
   constructor(
     private router: Router,
-    private authService: AuthService
+    private authService: AuthService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   onSubmit(event: Event) {
     event.preventDefault();
     this.error = '';
+    this.success = '';
     
-    this.authService.login({ email: this.email, password: this.password }).subscribe({
-      next: (res) => {
-        // Success without MFA?
-        // Note: Check the API spec if mfaPending is inside 'user' or if it throws 401 for MFA
-        // The spec for /api/v1/auth/login says it returns partial token with mfaPending if MFA enabled.
-        // We will assume if user.mfaEnabled is true but not verified, it needs MFA.
-        // Wait, if mfa is NOT enabled, we should configure it.
-        this.partialToken = res.accessToken;
+    this.authService.login({ usernameOrEmail: this.email, password: this.password }).subscribe({
+      next: (res: any) => {
+        const loginData = res.data;
         
-        if (res.user?.mfaEnabled) {
-          // Has MFA enabled, needs verification
+        if (loginData.mfaRequired) {
+          // User has MFA enabled and needs to verify
+          this.success = 'Credenciales correctas. Por favor ingresa tu código TOTP.';
+          this.partialToken = loginData.mfaToken;
           this.step = 'mfa_verify';
-        } else {
-          // Doesn't have MFA enabled, needs setup
+          this.cdr.detectChanges();
+        } else if (loginData.user?.mfaEnabled === false) {
+          // User doesn't have MFA enabled, needs setup
+          this.success = 'Credenciales correctas. Configura tu Autenticador.';
+          this.partialToken = loginData.accessToken;
           this.authService.setupMfa(this.partialToken).subscribe({
-            next: (setupRes) => {
-              this.otpauthUrl = setupRes.otpauthUrl;
+            next: (setupRes: any) => {
+              this.otpauthUrl = setupRes.data?.otpauthUrl || setupRes.otpauthUrl;
               this.step = 'mfa_setup';
+              this.cdr.detectChanges();
             },
             error: (err) => {
               this.error = 'Error generando código de configuración MFA.';
+              this.cdr.detectChanges();
             }
           });
+        } else {
+          // Fully logged in, no MFA steps pending
+          this.success = 'Inicio de sesión exitoso.';
+          sessionStorage.setItem('token', loginData.accessToken);
+          this.navigateToRole(loginData.user.role);
         }
       },
       error: (err: HttpErrorResponse) => {
@@ -67,8 +77,10 @@ export class Login {
         if (err.status === 401 && err.error?.code === 'AUTH.MFA_REQUIRED') {
             this.step = 'mfa_verify';
             this.partialToken = err.error.data?.accessToken || '';
+            this.cdr.detectChanges();
         } else {
             this.error = err.error?.message || 'Error al iniciar sesión.';
+            this.cdr.detectChanges();
         }
       }
     });
@@ -77,14 +89,20 @@ export class Login {
   onMfaVerify(event: Event) {
     event.preventDefault();
     this.error = '';
+    this.success = '';
     
     if (this.mfaCode.length === 6) {
       this.authService.verifyMfa(this.partialToken, this.mfaCode).subscribe({
-        next: (res) => {
-          this.navigateToRole(res.user.role);
+        next: (res: any) => {
+          this.success = 'TOTP correcto. Iniciando sesión...';
+          const token = res.data?.accessToken || res.accessToken;
+          const userData = res.data?.user || res.user;
+          sessionStorage.setItem('token', token);
+          this.navigateToRole(userData.role);
         },
         error: (err) => {
           this.error = 'Código de verificación inválido.';
+          this.cdr.detectChanges();
         }
       });
     } else {
@@ -95,18 +113,20 @@ export class Login {
   onMfaSetup(event: Event) {
     event.preventDefault();
     this.error = '';
-
+    this.success = '';
+    
     if (this.mfaCode.length === 6) {
       this.authService.verifyMfaSetup(this.partialToken, this.mfaCode).subscribe({
-        next: () => {
-          // If setup is verified, the token is now fully authorized (or we need to exchange it)
-          // Let's assume we proceed to dashboard
-          // To get the user's role, we might need to decode the token, or assume it based on email for now
-          // Actually, let's just use the email we know
+        next: (res: any) => {
+          this.success = 'MFA configurado correctamente. Iniciando sesión...';
+          // On setup, the backend might return the final token, or we might just use the partial token
+          const token = res.data?.accessToken || res.accessToken || this.partialToken;
+          sessionStorage.setItem('token', token);
           this.navigateToRoleByEmail();
         },
         error: (err) => {
           this.error = 'El código es inválido. Intenta de nuevo.';
+          this.cdr.detectChanges();
         }
       });
     } else {
@@ -130,6 +150,7 @@ export class Login {
     this.step = 'login';
     this.mfaCode = '';
     this.error = '';
+    this.success = '';
     this.partialToken = '';
     this.otpauthUrl = '';
   }

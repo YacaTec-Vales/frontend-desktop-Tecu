@@ -19,6 +19,7 @@ export class LayoutComponent {
   }
 
   logout() {
+    sessionStorage.removeItem('token');
     this.router.navigate(['/login']);
   }
 }

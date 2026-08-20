@@ -23,14 +23,21 @@ export class AuthService {
 
   constructor(private http: HttpClient) {}
 
-  login(data: any): Observable<LoginResponse> {
-    return this.http.post<LoginResponse>(`${this.apiUrl}/auth/login`, data);
+  login(data: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/auth/login`, data, {
+      headers: {
+        'X-Origin': 'vpn',
+        'X-Client-App': 'Tecu'
+      }
+    });
   }
 
-  setupMfa(token: string): Observable<MfaSetupResponse> {
-    return this.http.post<MfaSetupResponse>(`${this.apiUrl}/mfa/setup`, {}, {
+  setupMfa(token: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/mfa/setup`, {}, {
       headers: {
-        Authorization: `Bearer ${token}`
+        Authorization: `Bearer ${token}`,
+        'X-Origin': 'vpn',
+        'X-Client-App': 'Tecu'
       }
     });
   }
@@ -38,15 +45,19 @@ export class AuthService {
   verifyMfaSetup(token: string, code: string): Observable<any> {
     return this.http.post(`${this.apiUrl}/mfa/verify-setup`, { code }, {
       headers: {
-        Authorization: `Bearer ${token}`
+        Authorization: `Bearer ${token}`,
+        'X-Origin': 'vpn',
+        'X-Client-App': 'Tecu'
       }
     });
   }
 
-  verifyMfa(token: string, code: string): Observable<LoginResponse> {
-    return this.http.post<LoginResponse>(`${this.apiUrl}/auth/mfa-verify`, { code }, {
+  verifyMfa(token: string, code: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/auth/mfa-verify`, { code }, {
       headers: {
-        Authorization: `Bearer ${token}`
+        Authorization: `Bearer ${token}`,
+        'X-Origin': 'vpn',
+        'X-Client-App': 'Tecu'
       }
     });
   }
