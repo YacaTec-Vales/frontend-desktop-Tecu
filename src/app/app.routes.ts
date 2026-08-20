@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { authGuard } from './core/guards/auth.guard';
 
 // Login
 import { Login } from './pages/login/login';
@@ -28,6 +29,7 @@ export const routes: Routes = [
   {
     path: 'cajera',
     component: CajeraLayout,
+    canActivate: [authGuard],
     children: [
       { path: '', redirectTo: 'liberacion', pathMatch: 'full' },
       { path: 'liberacion', component: LiberacionComponent },
@@ -37,6 +39,7 @@ export const routes: Routes = [
   {
     path: 'gerente-sucursal',
     component: GerenteSucursalLayout,
+    canActivate: [authGuard],
     children: [
       { path: '', redirectTo: 'plantilla', pathMatch: 'full' },
       { path: 'plantilla', component: PlantillaComponent },
@@ -48,6 +51,7 @@ export const routes: Routes = [
   {
     path: 'gerente-general',
     component: GerenteGeneralLayout,
+    canActivate: [authGuard],
     children: [
       { path: '', redirectTo: 'catalogos', pathMatch: 'full' },
       { path: 'catalogos', component: CatalogosComponent },

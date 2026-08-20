@@ -1,10 +1,11 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CardComponent } from '../../../components/ui/card/card';
 import { InputComponent } from '../../../components/ui/input/input';
 import { ButtonComponent } from '../../../components/ui/button/button';
 import { ModalComponent } from '../../../components/ui/modal/modal';
+import { VoucherService, VoucherDetails } from '../../../core/services/voucher.service';
 
 @Component({
   selector: 'app-liberacion',
@@ -14,8 +15,10 @@ import { ModalComponent } from '../../../components/ui/modal/modal';
 })
 export class LiberacionComponent {
   folioBuscado: string = '';
-  valeEncontrado: any = null;
+  valeEncontrado: VoucherDetails | null = null;
   errorBusqueda: string = '';
+  isLoading: boolean = false;
+  isConfirming: boolean = false;
 
   // Controles de cotejo
   ineValidado: boolean = false;
@@ -30,7 +33,19 @@ export class LiberacionComponent {
   tokenInput: string = '';
   modoEdicionActivo = false;
 
+  constructor(
+    private voucherService: VoucherService,
+    private cdr: ChangeDetectorRef
+  ) {}
+
   buscarFolio() {
+    const folioLimpio = this.folioBuscado.trim();
+    if (!folioLimpio) {
+      this.reset();
+      return;
+    }
+    
+    this.isLoading = true;
     this.errorBusqueda = '';
     this.valeEncontrado = null;
     this.liberacionExitosa = false;
@@ -38,13 +53,20 @@ export class LiberacionComponent {
     this.comprobanteValidado = false;
     this.autorizacionBancaria = '';
 
-    if (this.folioBuscado === 'PRE-123') {
-      this.valeEncontrado = { tipo: 'Pre-Vale', cliente: 'Carlos Sánchez', monto: '$2,500.00', folio: 'PRE-123' };
-    } else if (this.folioBuscado === 'DIG-456') {
-      this.valeEncontrado = { tipo: 'Vale Digital', cliente: 'Ana Rodríguez', monto: '$4,000.00', folio: 'DIG-456' };
-    } else {
-      this.errorBusqueda = 'Folio no encontrado. Pruebe con PRE-123 o DIG-456.';
-    }
+    this.voucherService.findVoucher(folioLimpio).subscribe({
+      next: (vale) => {
+        console.log('Vale encontrado procesado:', vale);
+        this.isLoading = false;
+        this.valeEncontrado = vale;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Error en findVoucher:', err);
+        this.isLoading = false;
+        this.errorBusqueda = err.error?.message || err.message || 'Error al buscar el folio. Verifique e intente nuevamente.';
+        this.cdr.detectChanges();
+      }
+    });
   }
 
   puedeLiberar(): boolean {
@@ -56,8 +78,25 @@ export class LiberacionComponent {
   }
 
   liberarPago() {
-    if (this.puedeLiberar()) {
-      this.liberacionExitosa = true;
+    if (this.puedeLiberar() && this.valeEncontrado) {
+      this.isConfirming = true;
+      const payload = {
+        authorizationNumber: this.autorizacionBancaria,
+        dataConfirmed: true,
+        documents: []
+      };
+      this.voucherService.confirmVoucher(this.valeEncontrado.folio, payload).subscribe({
+        next: () => {
+          this.isConfirming = false;
+          this.liberacionExitosa = true;
+          this.cdr.detectChanges();
+        },
+        error: (err) => {
+          this.isConfirming = false;
+          alert('Error al confirmar pago: ' + (err.error?.message || err.message));
+          this.cdr.detectChanges();
+        }
+      });
     }
   }
 
@@ -81,5 +120,15 @@ export class LiberacionComponent {
 
   guardarEdicion() {
     this.modoEdicionActivo = false;
+  }
+
+  reset() {
+    this.folioBuscado = '';
+    this.valeEncontrado = null;
+    this.liberacionExitosa = false;
+    this.errorBusqueda = '';
+    this.ineValidado = false;
+    this.comprobanteValidado = false;
+    this.autorizacionBancaria = '';
   }
 }

@@ -54,4 +54,3 @@ jobs:
       - name: Build
         working-directory: frontend-desktop-tecu
         run: npm run build
-        continue-on-error: true

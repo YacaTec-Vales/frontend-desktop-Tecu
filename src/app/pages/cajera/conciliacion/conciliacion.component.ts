@@ -1,79 +1,216 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CardComponent } from '../../../components/ui/card/card';
-import { TableComponent } from '../../../components/ui/table/table';
 import { ButtonComponent } from '../../../components/ui/button/button';
-import { ModalComponent } from '../../../components/ui/modal/modal';
 import { InputComponent } from '../../../components/ui/input/input';
+import { BadgeComponent } from '../../../components/ui/badge/badge';
+import { ModalComponent } from '../../../components/ui/modal/modal';
+import { TableComponent } from '../../../components/ui/table/table';
+
+import { ReconciliationService, BankMovement, ReconciliationBatch } from '../../../core/services/reconciliation.service';
+import { RelationService, RelationDetails } from '../../../core/services/relation.service';
 
 @Component({
   selector: 'app-conciliacion',
   standalone: true,
-  imports: [CommonModule, FormsModule, CardComponent, TableComponent, ButtonComponent, ModalComponent, InputComponent],
+  imports: [CommonModule, FormsModule, CardComponent, ButtonComponent, InputComponent, BadgeComponent, ModalComponent, TableComponent],
   templateUrl: './conciliacion.component.html'
 })
-export class ConciliacionComponent {
-  // Pestañas
-  tabActiva: 'automatica' | 'manual' = 'automatica';
+export class ConciliacionComponent implements OnInit {
+  // Tabs
+  activeTab: 'automatica' | 'manual' = 'automatica';
 
-  // Simulación de Conciliación Automática
-  archivoSeleccionado: boolean = false;
-  conciliacionEnProceso: boolean = false;
-  resultadoConciliacion: any = null;
+  // --- AUTOMATICA ---
+  selectedFile: File | null = null;
+  isUploading = false;
+  uploadSuccessMessage = '';
+  uploadErrorMessage = '';
+  batches: ReconciliationBatch[] = [];
+  batchesPage = 1;
+  batchesTotal = 0;
+  batchesLimit = 10;
+  isBatchesLoaded = false;
+  isBatchesLoading = false;
 
-  // Bandeja de Conciliación Manual (Pagos no identificados o con error)
-  pagosManuales = [
-    { id: 'PAG-001', monto: '$1,200.00', fecha: '2023-10-25', motivo: 'Referencia inválida (Folio no encontrado)' },
-    { id: 'PAG-002', monto: '$500.00', fecha: '2023-10-26', motivo: 'Monto menor al esperado para REL-402' }
-  ];
+  // --- MANUAL ---
+  unmatchedMovements: BankMovement[] = [];
+  unmatchedPage = 1;
+  unmatchedTotal = 0;
+  unmatchedLimit = 10;
+  isUnmatchedLoaded = false;
+  isUnmatchedLoading = false;
 
-  isModalOpen = false;
-  pagoSeleccionado: any = null;
-  folioAsignado: string = '';
-  tokenAutorizacion: string = '';
+  isManualModalOpen = false;
+  selectedMovement: BankMovement | null = null;
+  
+  // Pending Relations for Modal
+  pendingRelations: RelationDetails[] = [];
+  pendingSearch = '';
+  selectedRelationId = '';
+  justification = '';
+  isProcessingManual = false;
+  manualErrorMessage = '';
 
-  cambiarTab(tab: 'automatica' | 'manual') {
-    this.tabActiva = tab;
+  constructor(
+    private reconciliationService: ReconciliationService,
+    private relationService: RelationService,
+    private cdr: ChangeDetectorRef
+  ) {}
+
+  ngOnInit() {
+    this.loadBatches();
   }
 
-  // --- Automática ---
-  simularSubidaArchivo() {
-    this.archivoSeleccionado = true;
+  setTab(tab: 'automatica' | 'manual') {
+    this.activeTab = tab;
+    if (tab === 'automatica' && !this.isBatchesLoaded) {
+      this.loadBatches();
+    } else if (tab === 'manual' && !this.isUnmatchedLoaded) {
+      this.loadUnmatched();
+    }
   }
 
-  procesarConciliacion() {
-    this.conciliacionEnProceso = true;
-    setTimeout(() => {
-      this.conciliacionEnProceso = false;
-      this.archivoSeleccionado = false;
-      this.resultadoConciliacion = {
-        exitosos: 45,
-        fallidos: 2,
-        totalDinero: '$42,500.00'
-      };
-    }, 2000);
+  // --- AUTOMATICA ---
+  onFileSelected(event: any) {
+    const file: File = event.target.files[0];
+    if (file) {
+      this.selectedFile = file;
+    }
   }
 
-  // --- Manual ---
-  abrirModalManual(pago: any) {
-    this.pagoSeleccionado = pago;
-    this.folioAsignado = '';
-    this.tokenAutorizacion = '';
-    this.isModalOpen = true;
+  uploadFile() {
+    if (!this.selectedFile) return;
+    this.isUploading = true;
+    this.uploadSuccessMessage = '';
+    this.uploadErrorMessage = '';
+
+    this.reconciliationService.uploadExcel(this.selectedFile).subscribe({
+      next: (res) => {
+        this.isUploading = false;
+        this.uploadSuccessMessage = res.message || 'Archivo procesado exitosamente.';
+        this.selectedFile = null;
+        this.loadBatches(); // Reload batches to show the new one
+        // Reset file input in template (can be handled via viewchild if needed)
+      },
+      error: (err) => {
+        this.isUploading = false;
+        this.uploadErrorMessage = 'Error al subir archivo: ' + (err.error?.message || err.message);
+      }
+    });
+  }
+
+  loadBatches() {
+    this.isBatchesLoading = true;
+    this.reconciliationService.getBatches(this.batchesPage, this.batchesLimit).subscribe({
+      next: (res) => {
+        this.batches = res.data;
+        this.batchesTotal = res.meta.itemCount;
+        this.isBatchesLoaded = true;
+        this.isBatchesLoading = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.isBatchesLoading = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  onBatchesPageChange(page: number) {
+    this.batchesPage = page;
+    this.loadBatches();
+  }
+
+  onBatchesLimitChange(limit: number) {
+    this.batchesLimit = limit;
+    this.batchesPage = 1;
+    this.loadBatches();
+  }
+
+  // --- MANUAL ---
+  loadUnmatched() {
+    this.isUnmatchedLoading = true;
+    this.reconciliationService.getUnmatchedMovements(this.unmatchedPage, this.unmatchedLimit).subscribe({
+      next: (res) => {
+        this.unmatchedMovements = res.data;
+        this.unmatchedTotal = res.meta.itemCount;
+        this.isUnmatchedLoaded = true;
+        this.isUnmatchedLoading = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.isUnmatchedLoading = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  onUnmatchedPageChange(page: number) {
+    this.unmatchedPage = page;
+    this.loadUnmatched();
+  }
+
+  onUnmatchedLimitChange(limit: number) {
+    this.unmatchedLimit = limit;
+    this.unmatchedPage = 1;
+    this.loadUnmatched();
+  }
+
+  handleTableAction(event: any) {
+    if (event.action === 'edit') {
+      const mov = this.unmatchedMovements.find(m => m.id === event.id);
+      if (mov) {
+        this.abrirModalManual(mov);
+      }
+    }
+  }
+
+  abrirModalManual(movement: BankMovement) {
+    this.selectedMovement = movement;
+    this.selectedRelationId = '';
+    this.justification = '';
+    this.manualErrorMessage = '';
+    this.pendingSearch = '';
+    this.isManualModalOpen = true;
+    this.loadPendingRelations();
   }
 
   cerrarModalManual() {
-    this.isModalOpen = false;
-    this.pagoSeleccionado = null;
+    this.isManualModalOpen = false;
+    this.selectedMovement = null;
   }
 
-  asignarPago() {
-    if (this.tokenAutorizacion.length === 6 && this.folioAsignado) {
-      this.pagosManuales = this.pagosManuales.filter(p => p.id !== this.pagoSeleccionado.id);
-      this.cerrarModalManual();
-    } else {
-      alert('Debe ingresar el Folio y un Token de Autorización válido de 6 dígitos.');
-    }
+  loadPendingRelations() {
+    this.relationService.getPendingRelations(1, 50, this.pendingSearch).subscribe(res => {
+      this.pendingRelations = res.data;
+    });
+  }
+
+  onPendingSearchChange(term: string) {
+    this.pendingSearch = term;
+    this.loadPendingRelations();
+  }
+
+  confirmManualReconciliation() {
+    if (!this.selectedMovement || !this.selectedRelationId) return;
+
+    this.isProcessingManual = true;
+    this.manualErrorMessage = '';
+
+    this.reconciliationService.requestManualReconciliation(this.selectedMovement.id, this.selectedRelationId, this.justification).subscribe({
+      next: () => {
+        this.isProcessingManual = false;
+        this.cerrarModalManual();
+        // Option B flow implies we just send the request, so we don't necessarily remove it from unmatched yet until approved.
+        // But we can reload just in case or show a success alert.
+        this.loadUnmatched(); 
+      },
+      error: (err) => {
+        this.isProcessingManual = false;
+        this.manualErrorMessage = err.error?.message || err.message || 'Error al solicitar la conciliación manual.';
+      }
+    });
   }
 }
+

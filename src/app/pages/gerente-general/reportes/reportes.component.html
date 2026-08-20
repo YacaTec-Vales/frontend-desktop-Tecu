@@ -28,8 +28,10 @@
 
   <!-- Tabla de Resultados -->
   <app-card [noPadding]="true">
-    <app-table [columns]="['ID Dist', 'Nombre Completo', 'Sucursal', 'Calificación', 'Deuda Total', 'Expediente', 'Acciones']">
-      <tr *ngFor="let row of datosFiltrados" class="bg-white border-b hover:bg-gray-50 transition-colors">
+    <app-table [columns]="['ID Dist', 'Nombre Completo', 'Sucursal', 'Calificación', 'Deuda Total', 'Expediente', 'Acciones']"
+      [useServerPagination]="true" [currentPage]="page" [totalItems]="totalFilteredItems" [limit]="limit"
+      (pageChange)="onPageChange($event)" (searchChange)="onSearch($event)" (limitChange)="onLimitChange($event)">
+      <tr *ngFor="let row of paginatedList" class="bg-white border-b hover:bg-gray-50 transition-colors">
         <td class="px-6 py-4 font-bold text-gray-900">{{ row.id }}</td>
         <td class="px-6 py-4">{{ row.nombre }}</td>
         <td class="px-6 py-4 text-gray-500">{{ row.sucursal }}</td>

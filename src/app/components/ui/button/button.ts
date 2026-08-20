@@ -1,7 +1,7 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
-export type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'error' | 'text';
+export type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'error' | 'warning' | 'text' | 'success';
 export type ButtonSize = 'sm' | 'md' | 'lg';
 
 @Component({
@@ -39,9 +39,15 @@ export class ButtonComponent {
       case 'error':
         variantClass = 'text-white bg-red-600 hover:bg-red-700 focus-visible:ring-red-300';
         break;
+      case 'warning':
+        variantClass = 'text-gray-900 bg-yellow-400 hover:bg-yellow-500 focus-visible:ring-yellow-300';
+        break;
       case 'text':
         // No shadow or background initially, useful for subtle actions
         variantClass = 'text-gray-600 hover:text-brand hover:bg-gray-50 focus-visible:ring-gray-200 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-800 shadow-none border border-transparent';
+        break;
+      case 'success':
+        variantClass = 'text-white bg-green-600 hover:bg-green-700 focus-visible:ring-green-300';
         break;
     }
 

@@ -11,7 +11,9 @@
       <div class="flex-1">
         <app-input label="Folio de Vale" placeholder="Ej: PRE-123 o DIG-456" [(ngModel)]="folioBuscado"></app-input>
       </div>
-      <app-button variant="primary" (onClick)="buscarFolio()" [disabled]="!folioBuscado">Consultar Sistema</app-button>
+      <app-button variant="primary" (onClick)="buscarFolio()" [disabled]="!folioBuscado || isLoading">
+        {{ isLoading ? 'Buscando...' : 'Consultar Sistema' }}
+      </app-button>
     </div>
     <p *ngIf="errorBusqueda" class="text-red-500 text-sm mt-2 font-medium">{{ errorBusqueda }}</p>
   </app-card>
@@ -19,7 +21,7 @@
   <!-- Flujo Dinámico (Si se encuentra un vale y NO se ha liberado aún) -->
   <div *ngIf="valeEncontrado && !liberacionExitosa" class="space-y-6 animate-fade-in">
     
-    <app-card [title]="'Procesando ' + valeEncontrado.tipo" [subtitle]="'Monto a entregar: ' + valeEncontrado.monto">
+    <app-card [title]="'Procesando ' + valeEncontrado.tipo" [subtitle]="'Folio: ' + valeEncontrado.folio">
       
       <!-- Datos del Cliente -->
       <div class="p-4 bg-gray-50 border border-gray-200 rounded-lg mb-6">
@@ -35,8 +37,16 @@
               <app-input [(ngModel)]="valeEncontrado.cliente" placeholder="Corregir nombre"></app-input>
               <app-button variant="primary" size="sm" (onClick)="guardarEdicion()">Guardar</app-button>
             </div>
-            
           </div>
+          
+          <div class="text-right">
+            <p class="text-xs text-gray-500 uppercase tracking-wider font-bold mb-1">Monto Autorizado</p>
+            <p class="text-xl font-black text-brand">{{ valeEncontrado.montoPesos | currency:'MXN' }}</p>
+          </div>
+        </div>
+        
+        <div class="mt-4 flex justify-between items-center">
+          <p class="text-sm font-semibold">Estado actual: <span class="text-brand">{{ valeEncontrado.status }}</span></p>
           <app-button variant="text" size="sm" (onClick)="abrirDisputa()" *ngIf="!modoEdicionActivo">
             <span class="text-orange-600 font-bold">¿Error en los datos?</span>
           </app-button>
@@ -52,7 +62,7 @@
           <span class="text-gray-700 font-medium">He tenido a la vista la <strong>Identificación Oficial (INE)</strong> y coincide.</span>
         </label>
         
-        <label *ngIf="valeEncontrado.tipo === 'Pre-Vale'" class="flex items-center space-x-3 cursor-pointer">
+        <label *ngIf="valeEncontrado.requiresIdentityVerification" class="flex items-center space-x-3 cursor-pointer">
           <input type="checkbox" [(ngModel)]="comprobanteValidado" class="w-6 h-6 rounded border-gray-300 text-emerald-600 focus:ring-emerald-600">
           <span class="text-gray-700 font-medium">He tenido a la vista el <strong>Comprobante de Domicilio</strong> vigente.</span>
         </label>
@@ -63,8 +73,8 @@
         <h4 class="font-bold text-gray-900 mb-4">Registro Bancario</h4>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
           <app-input label="Núm. de Autorización (Transferencia)" placeholder="Ej: 9028301" [(ngModel)]="autorizacionBancaria"></app-input>
-          <app-button variant="primary" [fullWidth]="true" (onClick)="liberarPago()" [disabled]="!puedeLiberar()">
-            Confirmar Liberación
+          <app-button variant="primary" [fullWidth]="true" (onClick)="liberarPago()" [disabled]="!puedeLiberar() || isConfirming">
+            {{ isConfirming ? 'Confirmando...' : 'Confirmar Liberación' }}
           </app-button>
         </div>
       </div>
@@ -78,9 +88,9 @@
       <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
     </div>
     <h3 class="text-2xl font-black text-emerald-900 mb-2">Pago Liberado Exitosamente</h3>
-    <p class="text-emerald-700">El monto de {{ valeEncontrado.monto }} fue registrado bajo la autorización {{ autorizacionBancaria }}.</p>
+    <p class="text-emerald-700">El monto de {{ valeEncontrado?.montoPesos | currency:'MXN' }} fue registrado bajo la autorización {{ autorizacionBancaria }}.</p>
     <div class="mt-6">
-      <app-button variant="outline" (onClick)="buscarFolio()">Liberar Nuevo Folio</app-button>
+      <app-button variant="outline" (onClick)="reset()">Liberar Nuevo Folio</app-button>
     </div>
   </div>
 

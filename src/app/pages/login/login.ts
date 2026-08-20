@@ -1,12 +1,9 @@
-import { Component, ChangeDetectorRef } from '@angular/core';
+import { Component, inject, ChangeDetectorRef } from '@angular/core';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../core/services/auth.service';
 import { QRCodeComponent } from 'angularx-qrcode';
-import { catchError } from 'rxjs/operators';
-import { of } from 'rxjs';
-import { HttpErrorResponse } from '@angular/common/http';
 
 @Component({
   selector: 'app-login',
@@ -16,42 +13,41 @@ import { HttpErrorResponse } from '@angular/common/http';
   styleUrl: './login.css'
 })
 export class Login {
-  email: string = '';
-  password: string = '';
-  error: string = '';
-  success: string = '';
-
+  email = '';
+  password = '';
+  error = '';
+  success = '';
+  isLoading = false;
   step: 'login' | 'mfa_verify' | 'mfa_setup' = 'login';
-  mfaCode: string = '';
-  pendingRolePath: string = '';
-  
-  // Variables for MFA Real Integration
-  partialToken: string = '';
-  otpauthUrl: string = '';
+  mfaCode = '';
+  partialToken = '';
+  otpauthUrl = '';
 
-  constructor(
-    private router: Router,
-    private authService: AuthService,
-    private cdr: ChangeDetectorRef
-  ) {}
+  private router = inject(Router);
+  private authService = inject(AuthService);
+  private cdr = inject(ChangeDetectorRef);
 
   onSubmit(event: Event) {
     event.preventDefault();
     this.error = '';
-    this.success = '';
     
+    if (!this.email || !this.password) {
+      this.error = 'Por favor, ingrese sus credenciales.';
+      return;
+    }
+
+    this.isLoading = true;
     this.authService.login({ usernameOrEmail: this.email, password: this.password }).subscribe({
-      next: (res: any) => {
-        const loginData = res.data;
+      next: (response: any) => {
+        this.isLoading = false;
+        const loginData = response.data;
         
         if (loginData.mfaRequired) {
-          // User has MFA enabled and needs to verify
           this.success = 'Credenciales correctas. Por favor ingresa tu código TOTP.';
           this.partialToken = loginData.mfaToken;
           this.step = 'mfa_verify';
           this.cdr.detectChanges();
         } else if (loginData.user?.mfaEnabled === false) {
-          // User doesn't have MFA enabled, needs setup
           this.success = 'Credenciales correctas. Configura tu Autenticador.';
           this.partialToken = loginData.accessToken;
           this.authService.setupMfa(this.partialToken).subscribe({
@@ -66,22 +62,38 @@ export class Login {
             }
           });
         } else {
-          // Fully logged in, no MFA steps pending
           this.success = 'Inicio de sesión exitoso.';
-          sessionStorage.setItem('token', loginData.accessToken);
-          this.navigateToRole(loginData.user.role);
+          this.cdr.detectChanges();
+          const user = loginData.user;
+          if (user.mustChangePassword) {
+            console.warn('El usuario debe cambiar la contraseña');
+          }
+          this.navigateToRole(user.role);
         }
       },
-      error: (err: HttpErrorResponse) => {
-        // Handle 401 MFA errors if backend returns them instead of 200
+      error: (err) => {
+        this.isLoading = false;
+        
         if (err.status === 401 && err.error?.code === 'AUTH.MFA_REQUIRED') {
             this.step = 'mfa_verify';
             this.partialToken = err.error.data?.accessToken || '';
             this.cdr.detectChanges();
-        } else {
-            this.error = err.error?.message || 'Error al iniciar sesión.';
-            this.cdr.detectChanges();
+            return;
         }
+
+        if (err.error && err.error.message) {
+          this.error = err.error.message;
+        } else if (err.status === 400 || err.status === 401) {
+          this.error = 'Credenciales incorrectas. Verifique su usuario y contraseña.';
+        } else if (err.status === 403) {
+          this.error = 'Su usuario está inactivo o bloqueado.';
+        } else if (err.status === 429) {
+          this.error = 'Demasiados intentos. Por favor intente más tarde.';
+        } else {
+          this.error = 'Error de conexión con el servidor. Intente nuevamente.';
+        }
+        
+        this.cdr.detectChanges();
       }
     });
   }
@@ -92,15 +104,18 @@ export class Login {
     this.success = '';
     
     if (this.mfaCode.length === 6) {
+      this.isLoading = true;
       this.authService.verifyMfa(this.partialToken, this.mfaCode).subscribe({
         next: (res: any) => {
+          this.isLoading = false;
           this.success = 'TOTP correcto. Iniciando sesión...';
           const token = res.data?.accessToken || res.accessToken;
           const userData = res.data?.user || res.user;
-          sessionStorage.setItem('token', token);
+          sessionStorage.setItem('ACCESS_TOKEN', token);
           this.navigateToRole(userData.role);
         },
         error: (err) => {
+          this.isLoading = false;
           this.error = 'Código de verificación inválido.';
           this.cdr.detectChanges();
         }
@@ -116,34 +131,40 @@ export class Login {
     this.success = '';
     
     if (this.mfaCode.length === 6) {
+      this.isLoading = true;
       this.authService.verifyMfaSetup(this.partialToken, this.mfaCode).subscribe({
         next: (res: any) => {
+          this.isLoading = false;
           this.success = 'MFA configurado correctamente. Iniciando sesión...';
-          // On setup, the backend might return the final token, or we might just use the partial token
           const token = res.data?.accessToken || res.accessToken || this.partialToken;
-          sessionStorage.setItem('token', token);
-          this.navigateToRoleByEmail();
+          sessionStorage.setItem('ACCESS_TOKEN', token);
+          
+          // Re-fetch me to get the updated role/user
+          this.authService.getMe().subscribe(user => {
+            this.navigateToRole(user.role);
+          });
         },
         error: (err) => {
+          this.isLoading = false;
           this.error = 'El código es inválido. Intenta de nuevo.';
           this.cdr.detectChanges();
         }
       });
     } else {
-      this.error = 'El código debe tener 6 dígitos para validar el autenticador.';
+      this.error = 'El código debe tener 6 dígitos.';
     }
   }
 
   private navigateToRole(role: string) {
-    if (role === 'GERENTE_GENERAL') this.router.navigate(['/gerente-general/catalogos']);
-    else if (role === 'GERENTE_SUCURSAL') this.router.navigate(['/gerente-sucursal/plantilla']);
-    else this.router.navigate(['/cajera/liberacion']);
-  }
-
-  private navigateToRoleByEmail() {
-    if (this.email === 'test.gg@yacatec.test') this.navigateToRole('GERENTE_GENERAL');
-    else if (this.email === 'test.gs@yacatec.test') this.navigateToRole('GERENTE_SUCURSAL');
-    else this.navigateToRole('CAJERO');
+    if (role === 'CAJERO' || role === 'CAJERA') {
+      this.router.navigate(['/cajera/liberacion']);
+    } else if (role === 'GERENTE_SUCURSAL') {
+      this.router.navigate(['/gerente-sucursal/plantilla']);
+    } else if (role === 'GERENTE_GENERAL') {
+      this.router.navigate(['/gerente-general/catalogos']);
+    } else {
+      this.error = 'Rol no autorizado para acceder al sistema.';
+    }
   }
 
   goBack() {
@@ -153,5 +174,4 @@ export class Login {
     this.success = '';
     this.partialToken = '';
     this.otpauthUrl = '';
-  }
 }

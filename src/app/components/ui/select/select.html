@@ -1,0 +1,20 @@
+<div class="w-full">
+  <label *ngIf="label" class="block mb-1.5 text-sm font-semibold text-gray-900 dark:text-white">
+    {{ label }}
+  </label>
+
+  <select
+    [disabled]="disabled"
+    [value]="value"
+    (change)="onSelect($event)"
+    (blur)="onTouch()"
+    [class]="baseSelectClasses"
+  >
+    <option value="" disabled *ngIf="placeholder">{{ placeholder }}</option>
+    <option *ngFor="let option of options" [value]="option.value">
+      {{ option.label }}
+    </option>
+  </select>
+
+  <p *ngIf="hint" class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">{{ hint }}</p>
+</div>
