@@ -5,13 +5,14 @@ import { CardComponent } from '../../../components/ui/card/card';
 import { InputComponent } from '../../../components/ui/input/input';
 import { ButtonComponent } from '../../../components/ui/button/button';
 import { ModalComponent } from '../../../components/ui/modal/modal';
+import { VpnOnlyDirective } from '../../../core/directives/vpn-only.directive';
 import { VoucherService, VoucherDetails } from '../../../core/services/voucher.service';
 import { DocumentService, DocumentResponse } from '../../../core/services/document.service';
 
 @Component({
   selector: 'app-liberacion',
   standalone: true,
-  imports: [CommonModule, FormsModule, CardComponent, InputComponent, ButtonComponent, ModalComponent],
+  imports: [CommonModule, FormsModule, CardComponent, InputComponent, ButtonComponent, ModalComponent, VpnOnlyDirective],
   templateUrl: './liberacion.component.html'
 })
 export class LiberacionComponent {

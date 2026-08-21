@@ -54,6 +54,7 @@
 
           <div class="pt-4">
             <app-button
+              *vpnOnly
               variant="primary"
               [fullWidth]="true"
               (onClick)="abrirConfirmacion()"
@@ -271,7 +272,7 @@
 
     <div class="flex justify-end gap-3 pt-2">
       <app-button variant="secondary" type="button" (onClick)="cancelarConfirmacion()">Cancelar</app-button>
-      <app-button variant="primary" (onClick)="ejecutarCorteMasivo()" [disabled]="isExecuting">
+      <app-button *vpnOnly variant="primary" (onClick)="ejecutarCorteMasivo()" [disabled]="isExecuting">
         Sí, ejecutar {{ selectedCount }} corte(s)
       </app-button>
     </div>
