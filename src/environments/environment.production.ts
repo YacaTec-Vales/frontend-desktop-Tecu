@@ -5,5 +5,5 @@ export const environment = {
   // Clave pública del sitio reCAPTCHA v3. Un solo par de llaves
   // cubre los dominios tecu/calipx/poch. Si queda vacía, el
   // interceptor no adjunta x-recaptcha-token.
-  recaptchaSiteKey: ''
+  recaptchaSiteKey: '6LfrdwktAAAAADqngll9t39PaELG52BcoHv8gw8v'
 };
