@@ -8,14 +8,13 @@ import { StaffService } from '../../../core/services/staff.service';
 import { Branch } from '../../../core/models/branch.model';
 import { Coordinador } from '../../../core/models/staff.model';
 import { CardComponent } from '../../../components/ui/card/card';
-import { TableComponent } from '../../../components/ui/table/table';
 import { ModalComponent } from '../../../components/ui/modal/modal';
 import { ButtonComponent } from '../../../components/ui/button/button';
 
 @Component({
   selector: 'app-distribuidoras',
   standalone: true,
-  imports: [CommonModule, FormsModule, CardComponent, TableComponent, ModalComponent, ButtonComponent],
+  imports: [CommonModule, FormsModule, CardComponent, ModalComponent, ButtonComponent],
   templateUrl: './distribuidoras.html',
 })
 export class Distribuidoras implements OnInit {
@@ -63,7 +62,7 @@ export class Distribuidoras implements OnInit {
   loadCatalogs() {
     this.branchService.getBranches(1, 100).subscribe(res => this.branches = res.data);
     this.categoryService.getCategories(1, 100).subscribe(res => this.categories = res.data);
-    this.staffService.getStaffByRole('COORDINADOR', 1, 100).subscribe(res => this.coordinators = res.data);
+    this.staffService.getCoordinadores(1, 100).subscribe(res => this.coordinators = res.data);
   }
 
   openBranchModal(dist: any) {

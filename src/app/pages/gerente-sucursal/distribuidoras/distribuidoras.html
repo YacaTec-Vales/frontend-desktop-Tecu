@@ -85,7 +85,7 @@
       <label class="block text-sm font-medium text-gray-700">Categoría</label>
       <select [(ngModel)]="selectedCategoryId" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-brand focus:border-brand sm:text-sm rounded-md">
         <option value="">Seleccione una categoría</option>
-        <option *ngFor="let c of categories" [value]="c.id">{{ c.nombre }} ({{ c.ganancia }}%)</option>
+        <option *ngFor="let c of categories" [value]="c.id">{{ c.nombre }} ({{ c.gananciaBps / 100 }}%)</option>
       </select>
     </div>
     <div class="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
@@ -104,7 +104,7 @@
       <select [(ngModel)]="selectedCoordinatorId" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-brand focus:border-brand sm:text-sm rounded-md">
         <option value="">Seleccione un coordinador</option>
         <option *ngFor="let c of coordinators" [value]="c.id">
-          {{ c.user?.firstName }} {{ c.user?.lastNamePaternal }} (Suc: {{ c.branch?.name }})
+          {{ c.firstName }} {{ c.lastNamePaternal }} (Suc: {{ c.branchId }})
         </option>
       </select>
     </div>

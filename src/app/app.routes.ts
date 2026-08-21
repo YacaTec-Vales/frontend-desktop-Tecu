@@ -3,11 +3,6 @@ import { authGuard } from './core/guards/auth.guard';
 
 // Login
 import { Login } from './pages/login/login';
-import { Routes } from '@angular/router';
-import { authGuard } from './core/guards/auth.guard';
-
-// Login
-import { Login } from './pages/login/login';
 
 // Cajera Layout & Pages
 import { LayoutComponent as CajeraLayout } from './pages/cajera/layout/layout.component';

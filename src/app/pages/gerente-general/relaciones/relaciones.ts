@@ -11,7 +11,7 @@ import { ButtonComponent } from '../../../components/ui/button/button';
 @Component({
   selector: 'app-relaciones',
   standalone: true,
-  imports: [CommonModule, FormsModule, CardComponent, TableComponent, ButtonComponent],
+  imports: [CommonModule, FormsModule, CardComponent, ButtonComponent],
   templateUrl: './relaciones.html',
 })
 export class Relaciones implements OnInit {
