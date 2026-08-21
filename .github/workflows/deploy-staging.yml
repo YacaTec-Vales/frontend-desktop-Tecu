@@ -202,6 +202,11 @@ jobs:
               mkdir -p "$NGINX_DEST"
               find "$NGINX_DEST" -mindepth 1 -delete
               cp -a "$DEST"/. "$NGINX_DEST"/
+              # chown zombie:zombie (compatibilidad con procesos locales
+              # que esperan ese owner; nginx puede leer via 'other' perms).
+              chown -R zombie:zombie "$NGINX_DEST" 2>/dev/null || true
+              # restorecon para que el contexto SELinux sea
+              # httpd_sys_content_t y nginx pueda servir los archivos.
               if command -v restorecon >/dev/null 2>&1; then
                 restorecon -R "$NGINX_DEST" >/dev/null 2>&1 || true
               fi
