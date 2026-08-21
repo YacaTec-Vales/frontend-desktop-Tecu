@@ -33,11 +33,31 @@ export const DEFAULT_RECAPTCHA_ACTION = 'submit';
  * Los tokens son de un solo uso y expiran en ~2 minutos; no
  * almacenar ni reutilizar. Cada petición debe pedir un token
  * fresco (el interceptor HTTP lo hace automáticamente).
+ *
+ * El servicio PRE-CARGA el script de Google en cuanto se instancia
+ * (constructor), para que cuando el usuario haga el primer POST ya
+ * haya `window.grecaptcha` disponible. Sin esta precarga, el primer
+ * request puede dispararse antes de que el script termine de cargar y
+ * el backend responde 400 RECAPTCHA.MISSING.
  */
 @Service()
 export class RecaptchaService {
   private readonly siteKey = environment.recaptchaSiteKey;
   private scriptLoading?: Promise<void>;
+
+  constructor() {
+    // Pre-carga inmediata del script al instanciar el servicio.
+    // La primera vez se inyecta el <script>; despues queda cacheado
+    // por el browser via el http cache normal.
+    if (this.isEnabled) {
+      void this.ensureScript().catch((err) => {
+        console.warn(
+          '[reCAPTCHA] precarga inicial falló (se reintentará por peticion):',
+          err instanceof Error ? err.message : err,
+        );
+      });
+    }
+  }
 
   /** Indica si el captcha está activo en este entorno. */
   get isEnabled(): boolean {
