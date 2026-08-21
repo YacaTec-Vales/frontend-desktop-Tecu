@@ -1,7 +1,8 @@
-import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { Injectable, inject } from '@angular/core';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { AuthService } from './auth.service';
 
 // Entidad DocumentResponse segun API v2.5
 // GET /api/v1/uploads/{id}
@@ -47,8 +48,20 @@ export type KnownDocumentType =
 })
 export class DocumentService {
   private readonly uploadsUrl = `${environment.apiUrl}/uploads`;
+  private http = inject(HttpClient);
+  private authService = inject(AuthService);
 
-  constructor(private http: HttpClient) {}
+  private buildHeaders(): HttpHeaders {
+    let headers = new HttpHeaders({
+      'X-Origin': 'vpn',
+      'X-Client-App': 'Tecu'
+    });
+    const token = this.authService.getToken();
+    if (token) {
+      headers = headers.set('Authorization', `Bearer ${token}`);
+    }
+    return headers;
+  }
 
   // POST /api/v1/uploads
   // Sube un archivo generico al storage.
@@ -64,7 +77,9 @@ export class DocumentService {
       form.append('metadata', JSON.stringify(metadata));
     }
     return this.http
-      .post<{ message: string; data: DocumentResponse }>(this.uploadsUrl, form)
+      .post<{ message: string; data: DocumentResponse }>(this.uploadsUrl, form, {
+        headers: this.buildHeaders()
+      })
       .pipe(map(res => res.data));
   }
 
@@ -81,7 +96,8 @@ export class DocumentService {
     return this.http
       .post<{ message: string; data: DocumentResponse }>(
         `${this.uploadsUrl}/verification/${solicitationId}`,
-        form
+        form,
+        { headers: this.buildHeaders() }
       )
       .pipe(map(res => res.data));
   }
@@ -89,7 +105,9 @@ export class DocumentService {
   // GET /api/v1/uploads/{id}
   getDocumentById(id: string): Observable<DocumentResponse> {
     return this.http
-      .get<{ message: string; data: DocumentResponse }>(`${this.uploadsUrl}/${id}`)
+      .get<{ message: string; data: DocumentResponse }>(`${this.uploadsUrl}/${id}`, {
+        headers: this.buildHeaders()
+      })
       .pipe(map(res => res.data));
   }
 
@@ -98,7 +116,8 @@ export class DocumentService {
   getDocumentsByClient(clientId: string): Observable<DocumentResponse[]> {
     return this.http
       .get<{ message: string; data: DocumentResponse[] }>(
-        `${this.uploadsUrl}/client/${clientId}`
+        `${this.uploadsUrl}/client/${clientId}`,
+        { headers: this.buildHeaders() }
       )
       .pipe(map(res => res.data ?? []));
   }
@@ -108,7 +127,8 @@ export class DocumentService {
   getDocumentsByVerification(solicitationId: string): Observable<DocumentResponse[]> {
     return this.http
       .get<{ message: string; data: DocumentResponse[] }>(
-        `${this.uploadsUrl}/verification/${solicitationId}`
+        `${this.uploadsUrl}/verification/${solicitationId}`,
+        { headers: this.buildHeaders() }
       )
       .pipe(map(res => res.data ?? []));
   }
@@ -118,7 +138,8 @@ export class DocumentService {
   getDocumentsByType(documentType: KnownDocumentType): Observable<DocumentResponse[]> {
     return this.http
       .get<{ message: string; data: DocumentResponse[] }>(
-        `${this.uploadsUrl}/type/${documentType}`
+        `${this.uploadsUrl}/type/${documentType}`,
+        { headers: this.buildHeaders() }
       )
       .pipe(map(res => res.data ?? []));
   }

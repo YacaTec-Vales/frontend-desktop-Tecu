@@ -167,6 +167,7 @@ export class CatalogosComponent implements OnInit {
       this.loadCategorias(forceRefresh);
     } else if (this.activeTab === 'sucursales') {
       this.loadSucursales(forceRefresh);
+      this.loadGerentes(forceRefresh);
     } else if (this.activeTab === 'personal') {
       this.loadActivePersonalTab(forceRefresh);
     }
@@ -297,6 +298,19 @@ export class CatalogosComponent implements OnInit {
     if (!branchId) return 'N/A';
     const sucursal = this.sucursales.find(s => s.id === branchId);
     return sucursal ? sucursal.name : 'Desconocida';
+  }
+
+  get availableGerentes(): any[] {
+    const assignedGerenteIds = new Set(
+      this.sucursales
+        .map(s => s.managerUserId)
+        .filter((id): id is string => !!id)
+    );
+    const currentSelected = this.sucursalForm.get('managerUserId')?.value;
+    return this.gerentes.filter(g => {
+      const isCurrent = currentSelected && g.id === currentSelected;
+      return isCurrent || !assignedGerenteIds.has(g.id);
+    });
   }
 
   setTab(tab: Tab) {
