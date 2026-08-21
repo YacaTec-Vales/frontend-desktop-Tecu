@@ -57,7 +57,7 @@ export class ConciliacionComponent implements OnInit {
   pendingRelations: RelationDetails[] = [];
   pendingSearch = '';
   selectedRelationId = '';
-  justification = '';
+  authorizationId = '';
   isProcessingManual = false;
   manualErrorMessage = '';
 
@@ -224,7 +224,7 @@ export class ConciliacionComponent implements OnInit {
   abrirModalManual(movement: BankMovement) {
     this.selectedMovement = movement;
     this.selectedRelationId = '';
-    this.justification = '';
+    this.authorizationId = '';
     this.manualErrorMessage = '';
     this.pendingSearch = '';
     this.isManualModalOpen = true;
@@ -253,7 +253,7 @@ export class ConciliacionComponent implements OnInit {
     this.isProcessingManual = true;
     this.manualErrorMessage = '';
 
-    this.reconciliationService.requestManualReconciliation(this.selectedMovement.id, this.selectedRelationId, this.justification).subscribe({
+    this.reconciliationService.requestManualReconciliation(this.selectedMovement.id, this.selectedRelationId, this.authorizationId).subscribe({
       next: () => {
         this.isProcessingManual = false;
         this.cerrarModalManual();

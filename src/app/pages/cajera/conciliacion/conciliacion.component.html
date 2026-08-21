@@ -194,12 +194,12 @@
       </select>
     </div>
 
-    <!-- Justificación -->
-    <app-input label="Justificación de Conciliación Manual" type="text" placeholder="Ej: El folio en el estado de cuenta está ilegible..." [(ngModel)]="justification" hint="Motivo por el cual se cruzan estos registros"></app-input>
+    <!-- Autorización -->
+    <app-input label="ID de Autorización de Gerencia" type="text" placeholder="Ej: 123456" [(ngModel)]="authorizationId" hint="Código o UUID de autorización provisto por gerencia para proceder"></app-input>
 
     <div class="mt-6 flex justify-end gap-2">
       <app-button variant="text" (onClick)="cerrarModalManual()">Cancelar</app-button>
-      <app-button variant="primary" (onClick)="confirmManualReconciliation()" [disabled]="!selectedRelationId || !justification || isProcessingManual">
+      <app-button variant="primary" (onClick)="confirmManualReconciliation()" [disabled]="!selectedRelationId || !authorizationId || isProcessingManual">
         {{ isProcessingManual ? 'Procesando...' : 'Solicitar Conciliación' }}
       </app-button>
     </div>

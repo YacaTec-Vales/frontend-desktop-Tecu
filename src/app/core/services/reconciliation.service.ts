@@ -53,14 +53,12 @@ export class ReconciliationService {
     });
   }
 
-  requestManualReconciliation(bankMovementId: string, relationId: string, justification: string): Observable<{ message: string }> {
-    // Endpoint definido por el backend para crear la solicitud (Pull Request)
-    // POST /api/v1/complaints/{id}/resolve
-    // {id} corresponde al bankMovementId que se desea conciliar
-    const url = `${environment.apiUrl}/complaints/${bankMovementId}/resolve`;
+  requestManualReconciliation(bankMovementId: string, relationId: string, authorizationId: string): Observable<{ message: string }> {
+    const url = `${this.apiUrl}/manual`;
     return this.http.post<{ message: string }>(url, {
+      bankMovementId,
       relationId,
-      justification
+      authorizationId
     }, {
       headers: this.buildHeaders()
     });
