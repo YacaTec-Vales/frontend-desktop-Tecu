@@ -102,17 +102,20 @@ export class Login {
     event.preventDefault();
     this.error = '';
     this.success = '';
-    
+
     if (this.mfaCode.length === 6) {
       this.isLoading = true;
       this.authService.verifyMfa(this.partialToken, this.mfaCode).subscribe({
-        next: (res: any) => {
+        next: () => {
           this.isLoading = false;
           this.success = 'TOTP correcto. Iniciando sesión...';
-          const token = res.data?.accessToken || res.accessToken;
-          const userData = res.data?.user || res.user;
-          sessionStorage.setItem('ACCESS_TOKEN', token);
-          this.navigateToRole(userData.role);
+          const user = this.authService.currentUser();
+          if (user) {
+            this.navigateToRole(user.role);
+          } else {
+            this.error = 'No se pudo obtener la información del usuario.';
+            this.cdr.detectChanges();
+          }
         },
         error: (err) => {
           this.isLoading = false;

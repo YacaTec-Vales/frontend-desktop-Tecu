@@ -1,31 +1,52 @@
-import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { Injectable, inject } from '@angular/core';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { Distribuidor, CreateDistribuidorDto } from '../models/distribuidor.model';
+import { AuthService } from './auth.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class DistribuidorService {
   private apiUrl = `${environment.apiUrl}/distribuidores`;
+  private http = inject(HttpClient);
+  private authService = inject(AuthService);
 
-  constructor(private http: HttpClient) {}
+  private buildHeaders(): HttpHeaders {
+    let headers = new HttpHeaders({
+      'X-Origin': 'vpn',
+      'X-Client-App': 'Tecu'
+    });
+    const token = this.authService.getToken();
+    if (token) {
+      headers = headers.set('Authorization', `Bearer ${token}`);
+    }
+    return headers;
+  }
 
   createDistribuidor(data: CreateDistribuidorDto): Observable<Distribuidor> {
-    return this.http.post<Distribuidor>(this.apiUrl, data);
+    return this.http.post<Distribuidor>(this.apiUrl, data, {
+      headers: this.buildHeaders()
+    });
   }
 
   changeCategory(id: string, categoryId: string): Observable<any> {
-    return this.http.put(`${this.apiUrl}/${id}/category`, { categoryId });
+    return this.http.put(`${this.apiUrl}/${id}/category`, { categoryId }, {
+      headers: this.buildHeaders()
+    });
   }
 
   changeCoordinator(id: string, coordId: string): Observable<any> {
-    return this.http.put(`${this.apiUrl}/${id}/coord-change`, { coordId });
+    return this.http.put(`${this.apiUrl}/${id}/coord-change`, { coordId }, {
+      headers: this.buildHeaders()
+    });
   }
 
   getDistribuidorById(id: string): Observable<Distribuidor> {
-    return this.http.get<{ message: string, data: Distribuidor }>(`${this.apiUrl}/${id}`)
+    return this.http.get<{ message: string, data: Distribuidor }>(`${this.apiUrl}/${id}`, {
+      headers: this.buildHeaders()
+    })
       .pipe(map((res: any) => res.data || res));
   }
 }

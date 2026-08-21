@@ -1,7 +1,8 @@
-import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { Injectable, inject } from '@angular/core';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { AuthService } from './auth.service';
 
 export interface VoucherDetails {
   folio: string;
@@ -17,11 +18,25 @@ export interface VoucherDetails {
 })
 export class VoucherService {
   private apiUrl = `${environment.apiUrl}/cashier/vouchers`;
+  private http = inject(HttpClient);
+  private authService = inject(AuthService);
 
-  constructor(private http: HttpClient) {}
+  private buildHeaders(): HttpHeaders {
+    let headers = new HttpHeaders({
+      'X-Origin': 'vpn',
+      'X-Client-App': 'Tecu'
+    });
+    const token = this.authService.getToken();
+    if (token) {
+      headers = headers.set('Authorization', `Bearer ${token}`);
+    }
+    return headers;
+  }
 
   findVoucher(folio: string): Observable<VoucherDetails> {
-    return this.http.post<{ message: string, data: any }>(`${this.apiUrl}/find/${folio}`, {})
+    return this.http.post<{ message: string, data: any }>(`${this.apiUrl}/find/${folio}`, {}, {
+      headers: this.buildHeaders()
+    })
       .pipe(map(res => {
         const d = res.data;
         return {
@@ -36,6 +51,8 @@ export class VoucherService {
   }
 
   confirmVoucher(folio: string, payload: { authorizationNumber: string, dataConfirmed: boolean, documents?: any[] }): Observable<any> {
-    return this.http.post<{ message: string }>(`${this.apiUrl}/confirm/${folio}`, payload);
+    return this.http.post<{ message: string }>(`${this.apiUrl}/confirm/${folio}`, payload, {
+      headers: this.buildHeaders()
+    });
   }
 }

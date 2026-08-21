@@ -1,6 +1,6 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, tap, catchError, throwError, map } from 'rxjs';
+import { Observable, tap, catchError, throwError, map, shareReplay, filter } from 'rxjs';
 import { LoginDto, TokenResponseDto, AuthUserResponseDto } from '../models/auth.dto';
 import { sanitizePayload } from '../utils/sanitizer.util';
 import { environment } from '../../../environments/environment';
@@ -12,14 +12,17 @@ import { Router } from '@angular/router';
 export class AuthService {
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
-  
+
   // Utiliza la URL configurada en los archivos de environment (variables de entorno)
-  private readonly baseUrl = `${environment.apiUrl}/auth`; 
+  private readonly baseUrl = `${environment.apiUrl}/auth`;
 
 
   // Señales para manejar el estado reactivo del usuario
   public currentUser = signal<AuthUserResponseDto | null>(null);
   public isAuthenticated = signal<boolean>(false);
+
+  // Observable compartido de getMe para evitar multiples llamadas concurrentes
+  private me$?: Observable<AuthUserResponseDto>;
 
   constructor() {
     // Si la app recarga y hay token en sessionStorage, intentamos recuperar la sesión
@@ -87,20 +90,48 @@ export class AuthService {
         'X-Origin': 'vpn',
         'X-Client-App': 'Tecu'
       }
-    });
+    }).pipe(
+      tap(response => {
+        const data = response?.data ?? response;
+        const accessToken = data?.accessToken;
+        const user = data?.user;
+        if (accessToken) {
+          sessionStorage.setItem('ACCESS_TOKEN', accessToken);
+        }
+        if (user) {
+          this.currentUser.set(user);
+          this.isAuthenticated.set(true);
+        }
+      })
+    );
   }
 
   /**
    * Obtiene la información del usuario autenticado actual.
+   * Comparte la misma llamada HTTP entre multiples suscriptores para evitar
+   * peticiones duplicadas y poder esperar el resultado desde el authGuard.
    */
   getMe(): Observable<AuthUserResponseDto> {
-    return this.http.get<{ message: string, data: AuthUserResponseDto }>(`${this.baseUrl}/me`).pipe(
-      map(res => res.data),
-      tap(user => {
-        this.currentUser.set(user);
-        this.isAuthenticated.set(true);
-      })
-    );
+    if (!this.me$) {
+      this.me$ = this.http.get<{ message: string, data: AuthUserResponseDto } | AuthUserResponseDto>(`${this.baseUrl}/me`).pipe(
+        map(res => this.extractUser(res)),
+        tap(user => {
+          if (user) {
+            this.currentUser.set(user);
+            this.isAuthenticated.set(true);
+          }
+        }),
+        filter((user): user is AuthUserResponseDto => user !== null),
+        shareReplay({ bufferSize: 1, refCount: false })
+      );
+    }
+    return this.me$;
+  }
+
+  private extractUser(res: { message: string, data: AuthUserResponseDto } | AuthUserResponseDto | null | undefined): AuthUserResponseDto | null {
+    if (!res) return null;
+    if ('data' in res && res.data) return res.data;
+    return res as AuthUserResponseDto;
   }
 
   /**
@@ -145,6 +176,7 @@ export class AuthService {
     sessionStorage.removeItem('REFRESH_TOKEN');
     this.currentUser.set(null);
     this.isAuthenticated.set(false);
+    this.me$ = undefined;
   }
 
   /**
@@ -169,6 +201,7 @@ export class AuthService {
         this.clearSession();
       } else {
         this.isAuthenticated.set(true);
+        this.getMe().subscribe();
       }
     }
   }

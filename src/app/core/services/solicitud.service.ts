@@ -1,7 +1,8 @@
-import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { Injectable, inject } from '@angular/core';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { AuthService } from './auth.service';
 
 export interface Solicitud {
   id: string;
@@ -52,19 +53,37 @@ export interface Solicitud {
 })
 export class SolicitudService {
   private apiUrl = `${environment.apiUrl}/solicitudes`;
+  private http = inject(HttpClient);
+  private authService = inject(AuthService);
 
-  constructor(private http: HttpClient) {}
+  private buildHeaders(): HttpHeaders {
+    let headers = new HttpHeaders({
+      'X-Origin': 'vpn',
+      'X-Client-App': 'Tecu'
+    });
+    const token = this.authService.getToken();
+    if (token) {
+      headers = headers.set('Authorization', `Bearer ${token}`);
+    }
+    return headers;
+  }
 
   getSolicitudes(): Observable<Solicitud[]> {
-    return this.http.get<{ message: string, data: Solicitud[] }>(this.apiUrl)
+    return this.http.get<{ message: string, data: Solicitud[] }>(this.apiUrl, {
+      headers: this.buildHeaders()
+    })
       .pipe(map(res => res.data));
   }
 
   autorizarSolicitud(id: string, payload: { limite_credito_centavos: number, comentarios_decision?: string }): Observable<any> {
-    return this.http.post(`${this.apiUrl}/${id}/autorizar`, payload);
+    return this.http.post(`${this.apiUrl}/${id}/autorizar`, payload, {
+      headers: this.buildHeaders()
+    });
   }
 
   rechazarSolicitud(id: string, payload: { razon: string }): Observable<any> {
-    return this.http.post(`${this.apiUrl}/${id}/rechazar`, payload);
+    return this.http.post(`${this.apiUrl}/${id}/rechazar`, payload, {
+      headers: this.buildHeaders()
+    });
   }
 }
