@@ -1,4 +1,5 @@
 export const environment = {
-  production: true,
-  apiUrl: 'http://localhost:4200/api/v1'
+  production: false,
+  // Dev: usa el proxy de Angular (proxy.conf.json) -> utete.ddns.net:45000 (backend dev en casa)
+  apiUrl: '/api/v1'
 };
