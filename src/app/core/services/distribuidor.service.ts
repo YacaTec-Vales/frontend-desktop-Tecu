@@ -43,6 +43,20 @@ export class DistribuidorService {
     });
   }
 
+  changeBranch(id: string, branchId: string): Observable<any> {
+    return this.http.put(`${this.apiUrl}/${id}/branch-change`, { branchId }, {
+      headers: this.buildHeaders()
+    });
+  }
+
+  getDistribuidores(page: number = 1, limit: number = 100, search?: string): Observable<any> {
+    let url = `${this.apiUrl}?page=${page}&limit=${limit}`;
+    if (search) url += `&search=${search}`;
+    return this.http.get<{ message: string, data: any[], meta: any }>(url, {
+      headers: this.buildHeaders()
+    });
+  }
+
   getDistribuidorById(id: string): Observable<Distribuidor> {
     return this.http.get<{ message: string, data: Distribuidor }>(`${this.apiUrl}/${id}`, {
       headers: this.buildHeaders()
