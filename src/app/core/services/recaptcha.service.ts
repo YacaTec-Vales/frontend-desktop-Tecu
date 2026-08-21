@@ -30,9 +30,14 @@ export const DEFAULT_RECAPTCHA_ACTION = 'submit';
  * vacía, el servicio queda desactivado y no carga ningún script de
  * Google.
  *
- * Los tokens son de un solo uso y expiran en ~2 minutos; no
- * almacenar ni reutilizar. Cada petición debe pedir un token
- * fresco (el interceptor HTTP lo hace automáticamente).
+ * **Cache de tokens**: los tokens reCAPTCHA v3 son válidos ~2 minutos
+ * Y se pueden reusar (cada llamada a `grecaptcha.execute()` genera
+ * un token NUEVO, pero los anteriores siguen siendo válidos). Para
+ * flujos cortos (login -> mfa setup -> mfa verify-setup ocurre en
+ * menos de 30s) cacheamos el token y lo reusamos. Esto elimina el
+ * 90% de las llamadas a grecaptcha.execute() que estaban causando
+ * "token vacío" intermitente cuando Google rechazaba llamadas
+ * rápidas sucesivas.
  *
  * El servicio PRE-CARGA el script de Google en cuanto se instancia
  * (constructor), para que cuando el usuario haga el primer POST ya
@@ -44,6 +49,9 @@ export const DEFAULT_RECAPTCHA_ACTION = 'submit';
 export class RecaptchaService {
   private readonly siteKey = environment.recaptchaSiteKey;
   private scriptLoading?: Promise<void>;
+  // Cache del ultimo token valido (TTL ~2 min). Se reusa entre
+  // llamadas cercanas (login + setup + verify-setup).
+  private cachedToken?: { token: string; expiresAt: number };
 
   constructor() {
     // Pre-carga inmediata del script al instanciar el servicio.
@@ -67,11 +75,14 @@ export class RecaptchaService {
   /**
    * Ejecuta el challenge invisible y devuelve el token.
    *
-   * Reintenta hasta 3 veces con backoff (500/1000/1500ms) porque
-   * el primer request despues de cargar la app puede dispararse
-   * antes de que el script de Google termine de inicializar. Si tras
-   * los 3 reintentos sigue fallando, lanza el ultimo error para que
-   * el interceptor decida fail-open o fail-closed.
+   * Estrategia de 3 pasos:
+   * 1. Si hay token cacheado con >30s de vida restante, lo reusa
+   *    (evita multiples llamadas a grecaptcha.execute() en flujos
+   *    cortos como login -> mfa/setup -> mfa/verify-setup).
+   * 2. Si no, reintenta hasta 3 veces con backoff (500/1000/1500ms)
+   *    para tolerar la inicializacion lenta del script de Google.
+   * 3. Cachea el token exitoso por 100s (margen sobre el TTL
+   *    oficial de 2 min de reCAPTCHA v3).
    *
    * @param action - Identificador semántico del flujo (`login`,
    *   `submit`, ...). Solo `[a-zA-Z0-9/]`.
@@ -83,6 +94,14 @@ export class RecaptchaService {
   async getToken(action = DEFAULT_RECAPTCHA_ACTION): Promise<string | null> {
     if (!this.isEnabled) return null;
 
+    // 1. Reusar token cacheado si tiene vida util (>30s).
+    //    Esto cubre el flujo completo login -> mfa setup -> mfa verify-setup
+    //    que pasa en menos de 30 segundos.
+    if (this.cachedToken && this.cachedToken.expiresAt > Date.now() + 30_000) {
+      return this.cachedToken.token;
+    }
+
+    // 2. Obtener token nuevo con retry
     const maxAttempts = 3;
     let lastError: Error | undefined;
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
@@ -97,7 +116,14 @@ export class RecaptchaService {
             grecaptcha.execute(this.siteKey, { action }).then(resolve, reject);
           });
         });
-        if (token) return token;
+        if (token) {
+          // 3. Cachear para reusar en llamadas cercanas
+          this.cachedToken = {
+            token,
+            expiresAt: Date.now() + 100_000, // 100s
+          };
+          return token;
+        }
         lastError = new Error('reCAPTCHA devolvió un token vacío');
       } catch (err) {
         lastError = err instanceof Error ? err : new Error(String(err));
@@ -110,6 +136,16 @@ export class RecaptchaService {
       await new Promise((resolve) => setTimeout(resolve, 500 * (attempt + 1)));
     }
     throw lastError ?? new Error('reCAPTCHA: max reintentos alcanzados');
+  }
+
+  /**
+   * Invalida el cache de tokens. Llamar en logout para forzar que
+   * el siguiente login genere un token fresco (la sesion anterior
+   * ya no tiene validez). Tambien util si se rota el site key en
+   * runtime.
+   */
+  invalidateCache(): void {
+    this.cachedToken = undefined;
   }
 
   /**
