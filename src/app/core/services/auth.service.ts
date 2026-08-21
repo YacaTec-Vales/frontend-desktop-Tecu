@@ -5,7 +5,6 @@ import { LoginDto, TokenResponseDto, AuthUserResponseDto } from '../models/auth.
 import { sanitizePayload } from '../utils/sanitizer.util';
 import { environment } from '../../../environments/environment';
 import { Router } from '@angular/router';
-import { RecaptchaService } from '../services/recaptcha.service';
 
 @Injectable({
   providedIn: 'root'
@@ -13,7 +12,6 @@ import { RecaptchaService } from '../services/recaptcha.service';
 export class AuthService {
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
-  private readonly recaptcha = inject(RecaptchaService);
 
   // Utiliza la URL configurada en los archivos de environment (variables de entorno)
   private readonly baseUrl = `${environment.apiUrl}/auth`;
@@ -143,10 +141,6 @@ export class AuthService {
    * Cierra sesión en el backend y limpia el sessionStorage.
    */
   logout(): void {
-    // Invalida el cache de tokens reCAPTCHA para que el proximo
-    // login genere un token fresco (la sesion anterior ya no es valida).
-    this.recaptcha.invalidateCache();
-
     // El backend requiere un payload vacio o con refreshToken si existe
     // En este caso mandaremos un objeto vacio, pero podríamos mandar { refreshToken: ... } si se guardó
     this.http.post(`${this.baseUrl}/logout`, {}).pipe(
