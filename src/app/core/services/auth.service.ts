@@ -38,7 +38,6 @@ export class AuthService {
     
     return this.http.post<any>(`${this.baseUrl}/login`, sanitizedData, {
       headers: {
-        'X-Origin': 'vpn',
         'X-Client-App': 'Tecu'
       }
     }).pipe(
@@ -67,7 +66,6 @@ export class AuthService {
     return this.http.post<any>(`${environment.apiUrl}/mfa/setup`, {}, {
       headers: {
         Authorization: `Bearer ${token}`,
-        'X-Origin': 'vpn',
         'X-Client-App': 'Tecu'
       }
     });
@@ -77,7 +75,6 @@ export class AuthService {
     return this.http.post(`${environment.apiUrl}/mfa/verify-setup`, { code }, {
       headers: {
         Authorization: `Bearer ${token}`,
-        'X-Origin': 'vpn',
         'X-Client-App': 'Tecu'
       }
     });
@@ -87,7 +84,6 @@ export class AuthService {
     return this.http.post<any>(`${this.baseUrl}/mfa-verify`, { code }, {
       headers: {
         Authorization: `Bearer ${token}`,
-        'X-Origin': 'vpn',
         'X-Client-App': 'Tecu'
       }
     }).pipe(

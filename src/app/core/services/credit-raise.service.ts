@@ -23,7 +23,6 @@ export class CreditRaiseService {
 
   private buildHeaders(): HttpHeaders {
     let headers = new HttpHeaders({
-      'X-Origin': 'vpn',
       'X-Client-App': 'Tecu'
     });
     const token = this.authService.getToken();
