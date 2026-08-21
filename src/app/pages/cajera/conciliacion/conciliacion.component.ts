@@ -7,6 +7,7 @@ import { InputComponent } from '../../../components/ui/input/input';
 import { BadgeComponent } from '../../../components/ui/badge/badge';
 import { ModalComponent } from '../../../components/ui/modal/modal';
 import { TableComponent } from '../../../components/ui/table/table';
+import { VpnOnlyDirective } from '../../../core/directives/vpn-only.directive';
 
 import { ReconciliationService, BankMovement, ReconciliationBatch } from '../../../core/services/reconciliation.service';
 import { RelationService, RelationDetails } from '../../../core/services/relation.service';
@@ -15,7 +16,7 @@ import { DocumentService, DocumentResponse } from '../../../core/services/docume
 @Component({
   selector: 'app-conciliacion',
   standalone: true,
-  imports: [CommonModule, FormsModule, CardComponent, ButtonComponent, InputComponent, BadgeComponent, ModalComponent, TableComponent],
+  imports: [CommonModule, FormsModule, CardComponent, ButtonComponent, InputComponent, BadgeComponent, ModalComponent, TableComponent, VpnOnlyDirective],
   templateUrl: './conciliacion.component.html'
 })
 export class ConciliacionComponent implements OnInit {

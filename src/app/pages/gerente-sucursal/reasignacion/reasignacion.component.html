@@ -58,6 +58,7 @@
 
       <div class="mt-6 flex items-center gap-4">
         <app-button
+          *vpnOnly
           variant="primary"
           (onClick)="abrirConfirmacion()"
           [disabled]="!cutDate || isRunning">
@@ -231,7 +232,7 @@
     </div>
     <div class="flex justify-end gap-3 pt-2">
       <app-button variant="secondary" (onClick)="cancelarConfirmacion()">Cancelar</app-button>
-      <app-button variant="primary" (onClick)="ejecutarCorte()">Sí, ejecutar corte</app-button>
+      <app-button *vpnOnly variant="primary" (onClick)="ejecutarCorte()">Sí, ejecutar corte</app-button>
     </div>
   </div>
 </app-modal>

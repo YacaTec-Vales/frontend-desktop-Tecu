@@ -225,14 +225,14 @@
         <!-- Botones modo Normal -->
         <ng-container *ngIf="!isRejectingMode">
           <app-button variant="secondary" (onClick)="cerrarModal()" [disabled]="isLoading">Cerrar</app-button>
-          <app-button variant="error" (onClick)="iniciarRechazo()" [disabled]="isLoading">Rechazar</app-button>
-          <app-button variant="primary" (onClick)="aprobar()" [disabled]="isLoading">{{ isLoading ? 'Procesando...' : 'Aprobar Trámite' }}</app-button>
+          <app-button *vpnOnly variant="error" (onClick)="iniciarRechazo()" [disabled]="isLoading">Rechazar</app-button>
+          <app-button *vpnOnly variant="primary" (onClick)="aprobar()" [disabled]="isLoading">{{ isLoading ? 'Procesando...' : 'Aprobar Trámite' }}</app-button>
         </ng-container>
-        
+
         <!-- Botones modo Rechazo -->
         <ng-container *ngIf="isRejectingMode">
           <app-button variant="secondary" (onClick)="cancelarRechazo()" [disabled]="isLoading">Cancelar</app-button>
-          <app-button variant="error" (onClick)="rechazar()" [disabled]="isLoading">{{ isLoading ? 'Rechazando...' : 'Confirmar Rechazo' }}</app-button>
+          <app-button *vpnOnly variant="error" (onClick)="rechazar()" [disabled]="isLoading">{{ isLoading ? 'Rechazando...' : 'Confirmar Rechazo' }}</app-button>
         </ng-container>
       </div>
     </div>
