@@ -5,7 +5,8 @@ Frontend web (gerente) de taquizaschavez.com.mx.
 ## Stack
 - Angular 22 + `@angular/build:application`
 - Tailwind v4 + Flowbite (consumido de `frontend-global-styles`)
-- Backend: `/api/v1/*` -> https://api.taquizaschavez.com.mx
+- Backend: `/api/v1/*` -> https://api.taquizaschavez.com.mx/api/v1 (production, infra)
+- Dev mode: `proxy.conf.json` redirige `/api/*` -> `http://utete.ddns.net:45000` (casa dev)
 
 ## Build
 ```bash
