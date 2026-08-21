@@ -23,6 +23,7 @@ import { CatalogosComponent } from './pages/gerente-general/catalogos/catalogos.
 import { ConfiguracionComponent } from './pages/gerente-general/configuracion/configuracion.component';
 import { AprobacionesComponent as GerenteGeneralAprobaciones } from './pages/gerente-general/aprobaciones/aprobaciones.component';
 import { ReportesComponent } from './pages/gerente-general/reportes/reportes.component';
+import { CorteQuincenaComponent } from './pages/gerente-general/corte-quincena/corte-quincena.component';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
@@ -59,7 +60,8 @@ export const routes: Routes = [
       { path: 'catalogos', component: CatalogosComponent },
       { path: 'configuracion', component: ConfiguracionComponent },
       { path: 'aprobaciones', component: GerenteGeneralAprobaciones },
-      { path: 'reportes', component: ReportesComponent }
+      { path: 'reportes', component: ReportesComponent },
+      { path: 'corte-quincena', component: CorteQuincenaComponent }
     ]
   }
 ];

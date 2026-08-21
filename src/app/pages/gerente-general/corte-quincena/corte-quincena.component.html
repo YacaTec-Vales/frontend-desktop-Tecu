@@ -1,0 +1,276 @@
+<div class="max-w-6xl mx-auto space-y-6">
+
+  <div>
+    <h2 class="text-3xl font-bold text-gray-900 dark:text-white">Corte de Quincena — Todas las Sucursales</h2>
+    <p class="text-gray-500 dark:text-gray-400 mt-1 text-lg">
+      Ejecuta el cierre de periodo simultáneamente en todas las sucursales activas. Las relaciones de pago
+      se generan por distribuidora con todos los vales del periodo seleccionado.
+    </p>
+  </div>
+
+  <div *ngIf="errorMessage" class="p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50 border border-red-200" role="alert">
+    <span class="font-medium">Error:</span> {{ errorMessage }}
+  </div>
+
+  <div *ngIf="successMessage" class="p-4 mb-4 text-sm text-green-800 rounded-lg bg-green-50 border border-green-200" role="alert">
+    <span class="font-medium">✓</span> {{ successMessage }}
+  </div>
+
+  <div *ngIf="isLoadingBranches" class="flex justify-center p-12">
+    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-brand"></div>
+  </div>
+
+  <ng-container *ngIf="!isLoadingBranches && !totalExecuted">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <app-card title="Parámetros del Corte" subtitle="Define la fecha y las sucursales a las que se les aplicará el corte.">
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+              Fecha de Corte <span class="text-red-500">*</span>
+            </label>
+            <input
+              type="date"
+              [(ngModel)]="cutDate"
+              [disabled]="isExecuting"
+              class="w-full rounded-lg border border-gray-300 shadow-sm focus:border-brand focus:ring-brand sm:text-sm p-2.5 disabled:opacity-50 disabled:bg-gray-100"
+            >
+            <p class="mt-1 text-xs text-gray-500">Usa el día 15 o el último día del mes.</p>
+          </div>
+
+          <div class="pt-3 border-t border-gray-200">
+            <div class="flex justify-between items-center mb-2">
+              <span class="text-sm font-semibold text-gray-700">Sucursales seleccionadas</span>
+              <span class="text-2xl font-black text-brand">{{ selectedCount }} / {{ sucursales.length }}</span>
+            </div>
+            <div class="flex gap-2">
+              <app-button variant="text" size="sm" (onClick)="selectAll()" [disabled]="isExecuting">
+                Seleccionar todas
+              </app-button>
+              <app-button variant="text" size="sm" (onClick)="deselectAll()" [disabled]="isExecuting">
+                Deseleccionar todas
+              </app-button>
+            </div>
+          </div>
+
+          <div class="pt-4">
+            <app-button
+              variant="primary"
+              [fullWidth]="true"
+              (onClick)="abrirConfirmacion()"
+              [disabled]="!puedeEjecutar()">
+              <span *ngIf="!isExecuting">⚡ Ejecutar Corte para {{ selectedCount }} Sucursal(es)</span>
+              <span *ngIf="isExecuting" class="flex items-center justify-center gap-2">
+                <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                </svg>
+                Ejecutando cortes...
+              </span>
+            </app-button>
+          </div>
+        </div>
+      </app-card>
+
+      <app-card title="Sucursales Activas" subtitle="Solo se consideran sucursales con estado ACTIVO." class="lg:col-span-2">
+        <div *ngIf="sucursales.length === 0" class="text-sm text-gray-500 italic">
+          No hay sucursales activas registradas.
+        </div>
+        <div *ngIf="sucursales.length > 0" class="divide-y divide-gray-100 max-h-96 overflow-y-auto">
+          <label
+            *ngFor="let s of sucursales"
+            class="flex items-center gap-3 py-3 px-3 cursor-pointer hover:bg-gray-50 rounded-md transition-colors">
+            <input
+              type="checkbox"
+              [checked]="isSelected(s.id)"
+              (change)="toggleBranchSelection(s.id)"
+              [disabled]="isExecuting"
+              class="w-5 h-5 rounded border-gray-300 text-brand focus:ring-brand"
+            >
+            <div class="flex-1">
+              <div class="flex items-center gap-2">
+                <span class="font-bold text-gray-900">{{ s.name }}</span>
+                <app-badge
+                  *ngIf="s.esMatriz"
+                  [text]="'MATRIZ'"
+                  [variant]="'info'">
+                </app-badge>
+                <span class="text-xs text-gray-500 uppercase">{{ s.branchType }}</span>
+              </div>
+              <p class="text-xs text-gray-500 mt-0.5">
+                <span *ngIf="s.manager">
+                  Gerente: {{ s.manager.firstName }} {{ s.manager.lastNamePaternal }}
+                </span>
+                <span *ngIf="!s.manager" class="italic text-amber-600">Sin gerente asignado</span>
+              </p>
+            </div>
+            <span class="text-xs text-gray-400 truncate max-w-[80px]" [title]="s.cutoffDay + '/' + s.paymentDay">
+              Corte {{ s.cutoffDay }} / Pago {{ s.paymentDay }}
+            </span>
+          </label>
+        </div>
+      </app-card>
+    </div>
+
+    <app-card title="¿Qué hace este corte?">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+        <div class="flex items-start gap-3 p-3 bg-blue-50 rounded-lg">
+          <span class="text-2xl">📋</span>
+          <div>
+            <p class="font-semibold text-blue-900">Relaciones por Distribuidora</p>
+            <p class="text-blue-700 mt-0.5">Una relación por distribuidora con todos sus vales del periodo.</p>
+          </div>
+        </div>
+        <div class="flex items-start gap-3 p-3 bg-green-50 rounded-lg">
+          <span class="text-2xl">⭐</span>
+          <div>
+            <p class="font-semibold text-green-900">Puntos y Comisiones</p>
+            <p class="text-green-700 mt-0.5">Cálculo y asignación automática según la categoría del distribuidor.</p>
+          </div>
+        </div>
+        <div class="flex items-start gap-3 p-3 bg-red-50 rounded-lg">
+          <span class="text-2xl">⚠️</span>
+          <div>
+            <p class="font-semibold text-red-900">Cargos por Morosidad</p>
+            <p class="text-red-700 mt-0.5">Aplicación de penalizaciones a distribuidores con pagos vencidos.</p>
+          </div>
+        </div>
+      </div>
+    </app-card>
+  </ng-container>
+
+  <ng-container *ngIf="totalExecuted">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div class="bg-white border border-gray-200 rounded-xl p-4 text-center shadow-sm">
+        <p class="text-3xl font-black text-brand">{{ successCount }}</p>
+        <p class="text-xs text-gray-500 mt-1 uppercase tracking-wide">Exitosos</p>
+      </div>
+      <div class="bg-white border border-gray-200 rounded-xl p-4 text-center shadow-sm">
+        <p class="text-3xl font-black" [class.text-red-600]="errorCount > 0" [class.text-gray-900]="errorCount === 0">{{ errorCount }}</p>
+        <p class="text-xs text-gray-500 mt-1 uppercase tracking-wide">Con Error</p>
+      </div>
+      <div class="bg-white border border-gray-200 rounded-xl p-4 text-center shadow-sm">
+        <p class="text-3xl font-black text-gray-900">{{ totalRelationsCreated }}</p>
+        <p class="text-xs text-gray-500 mt-1 uppercase tracking-wide">Relaciones Creadas</p>
+      </div>
+      <div class="bg-white border border-gray-200 rounded-xl p-4 text-center shadow-sm">
+        <p class="text-2xl font-black text-emerald-600">{{ totalToPayCents / 100 | currency:'MXN' }}</p>
+        <p class="text-xs text-gray-500 mt-1 uppercase tracking-wide">Total a Cobrar</p>
+      </div>
+    </div>
+
+    <app-card title="Detalle por Sucursal" [noPadding]="true">
+      <table class="w-full text-sm text-left text-gray-700">
+        <thead class="text-xs text-gray-500 uppercase bg-gray-50 border-b">
+          <tr>
+            <th class="px-6 py-3">Sucursal</th>
+            <th class="px-6 py-3 text-center">Estado</th>
+            <th class="px-6 py-3 text-center">Distribuidoras</th>
+            <th class="px-6 py-3 text-center">Relaciones</th>
+            <th class="px-6 py-3 text-right">Total a Cobrar</th>
+            <th class="px-6 py-3 text-center">Puntos</th>
+            <th class="px-6 py-3">Detalle</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100">
+          <tr *ngFor="let o of outcomes" class="hover:bg-gray-50 transition-colors">
+            <td class="px-6 py-3 font-semibold text-gray-900">
+              {{ o.branch.name }}
+              <span *ngIf="o.branch.esMatriz" class="ml-2 text-xs text-blue-600 font-bold">MATRIZ</span>
+            </td>
+            <td class="px-6 py-3 text-center">
+              <app-badge
+                *ngIf="o.status === 'EXITOSO'"
+                [text]="'EXITOSO'"
+                [variant]="'success'">
+              </app-badge>
+              <app-badge
+                *ngIf="o.status === 'ERROR'"
+                [text]="'ERROR'"
+                [variant]="'error'">
+              </app-badge>
+              <app-badge
+                *ngIf="o.status === 'PENDIENTE'"
+                [text]="'PENDIENTE'"
+                [variant]="'warning'">
+              </app-badge>
+            </td>
+            <td class="px-6 py-3 text-center">
+              <span *ngIf="o.result">{{ o.result.distributorsAffected }}</span>
+              <span *ngIf="!o.result" class="text-gray-400">—</span>
+            </td>
+            <td class="px-6 py-3 text-center">
+              <span *ngIf="o.result">{{ o.result.relationsCreated }}</span>
+              <span *ngIf="!o.result" class="text-gray-400">—</span>
+            </td>
+            <td class="px-6 py-3 text-right">
+              <span *ngIf="o.result" class="font-bold text-brand">{{ o.result.totalToPayCents / 100 | currency:'MXN' }}</span>
+              <span *ngIf="!o.result" class="text-gray-400">—</span>
+            </td>
+            <td class="px-6 py-3 text-center">
+              <span *ngIf="o.result" class="font-medium text-yellow-700">{{ o.result.totalPointsAwarded }}</span>
+              <span *ngIf="!o.result" class="text-gray-400">—</span>
+            </td>
+            <td class="px-6 py-3 text-xs">
+              <span *ngIf="o.result && o.result.warnings?.length" class="text-amber-600 italic">
+                ⚠ {{ o.result.warnings!.length }} advertencia(s)
+              </span>
+              <span *ngIf="o.errorMessage" class="text-red-600" [title]="o.errorMessage">
+                {{ o.errorMessage }}
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </app-card>
+
+    <div class="flex justify-end">
+      <app-button variant="secondary" (onClick)="reiniciar()">Ejecutar Otro Corte</app-button>
+    </div>
+  </ng-container>
+
+</div>
+
+<app-modal [isOpen]="isConfirmModalOpen" title="Confirmar Corte Masivo" maxWidth="lg" (onClose)="cancelarConfirmacion()">
+  <div class="space-y-4">
+    <div class="flex items-center gap-3 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-amber-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+          d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+      </svg>
+      <p class="text-sm text-amber-800">
+        <strong>¿Estás seguro?</strong> Vas a ejecutar el corte de quincena en
+        <strong>{{ selectedCount }} sucursal(es)</strong>. Esta acción genera relaciones de pago y no puede revertirse.
+      </p>
+    </div>
+
+    <div class="bg-gray-50 rounded-lg p-4 text-sm space-y-2">
+      <div class="flex justify-between">
+        <span class="text-gray-500">Fecha de corte:</span>
+        <span class="font-bold text-gray-900">{{ cutDate }}</span>
+      </div>
+      <div class="flex justify-between">
+        <span class="text-gray-500">Sucursales:</span>
+        <span class="font-bold text-gray-900">{{ selectedCount }} de {{ sucursales.length }}</span>
+      </div>
+    </div>
+
+    <div *ngIf="selectedCount > 0" class="max-h-40 overflow-y-auto bg-white border border-gray-200 rounded-md p-3">
+      <p class="text-xs text-gray-500 uppercase font-bold mb-2">Sucursales a cortar:</p>
+      <ul class="text-sm space-y-1">
+        <li *ngFor="let s of sucursales" class="flex items-center gap-2">
+          <span *ngIf="isSelected(s.id)" class="text-brand">✓</span>
+          <span [class.text-gray-400]="!isSelected(s.id)" [class.line-through]="!isSelected(s.id)">
+            {{ s.name }}
+          </span>
+        </li>
+      </ul>
+    </div>
+
+    <div class="flex justify-end gap-3 pt-2">
+      <app-button variant="secondary" type="button" (onClick)="cancelarConfirmacion()">Cancelar</app-button>
+      <app-button variant="primary" (onClick)="ejecutarCorteMasivo()" [disabled]="isExecuting">
+        Sí, ejecutar {{ selectedCount }} corte(s)
+      </app-button>
+    </div>
+  </div>
+</app-modal>
