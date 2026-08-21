@@ -11,6 +11,10 @@ export interface VoucherDetails {
   montoPesos: number;
   status: string;
   requiresIdentityVerification: boolean;
+  bankAccount?: {
+    clabe: string;
+    banco: string;
+  };
 }
 
 @Injectable({
@@ -45,7 +49,8 @@ export class VoucherService {
           cliente: d.client.fullName,
           montoPesos: d.voucher.amountCents / 100,
           status: d.voucher.status,
-          requiresIdentityVerification: d.isPrevale
+          requiresIdentityVerification: d.isPrevale,
+          bankAccount: d.client.bankAccount
         } as VoucherDetails;
       }));
   }

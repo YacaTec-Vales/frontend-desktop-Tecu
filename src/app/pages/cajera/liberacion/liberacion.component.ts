@@ -64,6 +64,12 @@ export class LiberacionComponent {
         console.log('Vale encontrado procesado:', vale);
         this.isLoading = false;
         this.valeEncontrado = vale;
+        
+        // Auto-fill account number for Digital vouchers
+        if (vale.tipo !== 'Pre-Vale' && vale.bankAccount?.clabe) {
+          this.autorizacionBancaria = vale.bankAccount.clabe;
+        }
+
         // Cargar documentos del cliente si el voucher tiene clientId
         // GET /api/v1/uploads/client/{clientId}
         const clientId = (vale as any).clientId || (vale as any).client?.id;
@@ -99,7 +105,7 @@ export class LiberacionComponent {
   puedeLiberar(): boolean {
     if (!this.valeEncontrado) return false;
     if (this.valeEncontrado.tipo === 'Pre-Vale') {
-      return this.ineValidado && this.comprobanteValidado && this.autorizacionBancaria.length > 3;
+      return this.ineValidado && this.comprobanteValidado;
     }
     return this.ineValidado && this.autorizacionBancaria.length > 3;
   }
@@ -108,7 +114,7 @@ export class LiberacionComponent {
     if (this.puedeLiberar() && this.valeEncontrado) {
       this.isConfirming = true;
       const payload = {
-        authorizationNumber: this.autorizacionBancaria,
+        authorizationNumber: this.valeEncontrado.tipo === 'Pre-Vale' ? 'EFECTIVO' : this.autorizacionBancaria,
         dataConfirmed: true,
         documents: []
       };
