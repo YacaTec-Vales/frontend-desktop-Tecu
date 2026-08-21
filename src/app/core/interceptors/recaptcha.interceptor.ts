@@ -17,9 +17,11 @@ const MUTATING_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
  * Comportamiento:
  *  - GET/HEAD/OPTIONS pasan sin token.
  *  - Con `recaptchaSiteKey` vacía (dev) pasa sin tocar la petición.
- *  - Si Google falla al generar el token, la petición sale igual
- *    sin header: el backend es quien aplica la política final
- *    (fail-open en cliente para no bloquear despliegues escalonados).
+ *  - Si Google falla al generar el token tras los reintentos del
+ *    servicio, la petición sale igual sin header: el backend es quien
+ *    aplica la política final (fail-open en cliente para no bloquear
+ *    despliegues escalonados). En consola se loggea un warning claro
+ *    para diagnosticar.
  *
  * Los tokens son de un solo uso; este interceptor pide uno nuevo
  * en cada request, incluidos reintentos del usuario.
@@ -42,6 +44,13 @@ export const recaptchaInterceptor: HttpInterceptorFn = (req, next) => {
           : req,
       ),
     ),
-    catchError(() => next(req)),
+    catchError((err) => {
+      console.warn(
+        `[reCAPTCHA interceptor] no se pudo obtener token para ${req.method} ${req.url}:`,
+        err instanceof Error ? err.message : err,
+        '→ fail-open: request sale sin x-recaptcha-token.',
+      );
+      return next(req);
+    }),
   );
 };
