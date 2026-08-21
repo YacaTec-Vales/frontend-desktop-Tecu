@@ -1,84 +1,121 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { StaffService } from '../../../core/services/staff.service';
-import { DistribuidorService } from '../../../core/services/distribuidor.service';
-import { Coordinador } from '../../../core/models/staff.model';
+
+import { CardComponent } from '../../../components/ui/card/card';
+import { ButtonComponent } from '../../../components/ui/button/button';
+import { ModalComponent } from '../../../components/ui/modal/modal';
+import { BadgeComponent } from '../../../components/ui/badge/badge';
+
+import { CutService, CutResult, CutRelationSummary } from '../../../core/services/cut.service';
+import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
   selector: 'app-reasignacion',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, CardComponent, ButtonComponent, ModalComponent, BadgeComponent],
   templateUrl: './reasignacion.component.html'
 })
 export class ReasignacionComponent implements OnInit {
-  coordinadores: Coordinador[] = [];
-  
-  coordOrigenId: string = '';
-  coordDestinoId: string = '';
 
-  // Lista simulada de distribuidoras ya que no hay endpoint GET /coordinadores/{id}/distribuidores en API 1.4
-  distribuidorasOrigenMock = [
-    { id: 'DIST-MOCK-001', name: 'Ana García', cartera: 15000, selected: false },
-    { id: 'DIST-MOCK-002', name: 'Pedro López', cartera: 5000, selected: false },
-    { id: 'DIST-MOCK-003', name: 'María Sanchez', cartera: 22000, selected: false }
-  ];
+  // Datos del gerente autenticado
+  branchId: string | null = null;
 
-  isTransferring = false;
-  successMessage = '';
+  // Formulario de corte
+  // cutDate se inicializa con la quincena mas cercana (dia 15 o ultimo del mes)
+  cutDate: string = '';
+
+  // Estado de ejecucion
+  isRunning = false;
   errorMessage = '';
 
+  // Resultado del corte exitoso
+  cutResult: CutResult | null = null;
+
+  // Modal de confirmacion (accion destructiva)
+  isConfirmModalOpen = false;
+
   constructor(
-    private staffService: StaffService,
-    private distribuidorService: DistribuidorService
+    private cutService: CutService,
+    private authService: AuthService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit() {
-    this.staffService.getCoordinadores().subscribe({
-      next: (res) => this.coordinadores = res.data,
-      error: (err) => console.error('Error al cargar coordinadores', err)
-    });
+    const user = this.authService.currentUser();
+    this.branchId = user?.branchId ?? null;
+    this.cutDate = this.getDefaultCutDate();
   }
 
-  get canTransfer(): boolean {
-    return this.coordOrigenId !== '' 
-        && this.coordDestinoId !== '' 
-        && this.coordOrigenId !== this.coordDestinoId
-        && this.distribuidorasOrigenMock.some(d => d.selected)
-        && !this.isTransferring;
+  /**
+   * Calcula la fecha de corte por defecto:
+   * - Si hoy <= dia 15: sugiere el dia 15 del mes actual
+   * - Si hoy > dia 15: sugiere el ultimo dia del mes actual
+   */
+  getDefaultCutDate(): string {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = today.getMonth();
+    const day = today.getDate();
+
+    let cutDay: Date;
+    if (day <= 15) {
+      cutDay = new Date(year, month, 15);
+    } else {
+      // Ultimo dia del mes
+      cutDay = new Date(year, month + 1, 0);
+    }
+
+    return cutDay.toISOString().split('T')[0];
   }
 
-  get selectedCount(): number {
-    return this.distribuidorasOrigenMock.filter(d => d.selected).length;
-  }
-
-  transferir() {
-    if (!this.canTransfer) return;
-
-    const selectedIds = this.distribuidorasOrigenMock.filter(d => d.selected).map(d => d.id);
-    
-    this.isTransferring = true;
-    this.successMessage = '';
+  abrirConfirmacion() {
+    if (!this.branchId || !this.cutDate) return;
     this.errorMessage = '';
+    this.isConfirmModalOpen = true;
+  }
 
-    // Simulamos que transferimos la primera que encontremos seleccionada
-    // En la vida real, se haría un Promise.all o similar para transferir múltiples,
-    // o el backend tendría un endpoint masivo. El DistribuidorService actual cambia de a una.
-    const distribIdToTransfer = selectedIds[0];
+  cancelarConfirmacion() {
+    this.isConfirmModalOpen = false;
+  }
 
-    this.distribuidorService.changeCoordinator(distribIdToTransfer, this.coordDestinoId).subscribe({
-      next: () => {
-        this.isTransferring = false;
-        this.successMessage = `Se transfirió la distribuidora al nuevo coordinador exitosamente.`;
-        
-        // Removemos de la lista mockeada
-        this.distribuidorasOrigenMock = this.distribuidorasOrigenMock.filter(d => d.id !== distribIdToTransfer);
+  ejecutarCorte() {
+    if (!this.branchId || !this.cutDate) return;
+
+    this.isConfirmModalOpen = false;
+    this.isRunning = true;
+    this.errorMessage = '';
+    this.cutResult = null;
+
+    // POST /api/v1/cuts/run
+    this.cutService.runCut({ branchId: this.branchId, cutDate: this.cutDate }).subscribe({
+      next: (res) => {
+        this.isRunning = false;
+        this.cutResult = res.data;
+        this.cdr.detectChanges();
       },
       error: (err) => {
-        this.isTransferring = false;
-        // Even if it fails (because the DIST-MOCK ID doesn't exist in the real backend), we show the error message.
-        this.errorMessage = err.error?.message || 'Error al transferir cartera (probablemente el ID simulado no existe en el backend).';
+        this.isRunning = false;
+        const code = err.error?.message || err.message || '';
+        this.errorMessage = this.mapErrorCode(code);
+        this.cdr.detectChanges();
       }
     });
+  }
+
+  reiniciar() {
+    this.cutResult = null;
+    this.errorMessage = '';
+    this.cutDate = this.getDefaultCutDate();
+  }
+
+  private mapErrorCode(code: string): string {
+    const map: Record<string, string> = {
+      'CUT.NO_VOUCHERS': 'No hay vales registrados en el periodo seleccionado para esta sucursal.',
+      'CUT.INVALID_CUT_DATE': 'La fecha de corte no es válida. Usa el día 15 o el último día del mes.',
+      'CUT.BRANCH_NOT_FOUND': 'Sucursal no encontrada.',
+      'CUT.BRANCH_CUTOFF_NOT_FOUND': 'No se encontró configuración de corte para esta sucursal.',
+    };
+    return map[code] ?? `Error al ejecutar el corte: ${code}`;
   }
 }

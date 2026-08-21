@@ -6,6 +6,7 @@ import { InputComponent } from '../../../components/ui/input/input';
 import { ButtonComponent } from '../../../components/ui/button/button';
 import { ModalComponent } from '../../../components/ui/modal/modal';
 import { VoucherService, VoucherDetails } from '../../../core/services/voucher.service';
+import { DocumentService, DocumentResponse } from '../../../core/services/document.service';
 
 @Component({
   selector: 'app-liberacion',
@@ -28,6 +29,10 @@ export class LiberacionComponent {
   autorizacionBancaria: string = '';
   liberacionExitosa: boolean = false;
 
+  // Documentos del cliente (GET /api/v1/uploads/client/{clientId})
+  clientDocs: DocumentResponse[] = [];
+  isClientDocsLoading = false;
+
   // Modal Token (Disputa)
   isModalTokenOpen = false;
   tokenInput: string = '';
@@ -35,6 +40,7 @@ export class LiberacionComponent {
 
   constructor(
     private voucherService: VoucherService,
+    private documentService: DocumentService,
     private cdr: ChangeDetectorRef
   ) {}
 
@@ -58,12 +64,33 @@ export class LiberacionComponent {
         console.log('Vale encontrado procesado:', vale);
         this.isLoading = false;
         this.valeEncontrado = vale;
+        // Cargar documentos del cliente si el voucher tiene clientId
+        // GET /api/v1/uploads/client/{clientId}
+        const clientId = (vale as any).clientId || (vale as any).client?.id;
+        if (clientId) {
+          this.loadClientDocs(clientId);
+        }
         this.cdr.detectChanges();
       },
       error: (err) => {
         console.error('Error en findVoucher:', err);
         this.isLoading = false;
         this.errorBusqueda = err.error?.message || err.message || 'Error al buscar el folio. Verifique e intente nuevamente.';
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  loadClientDocs(clientId: string) {
+    this.isClientDocsLoading = true;
+    this.documentService.getDocumentsByClient(clientId).subscribe({
+      next: (docs) => {
+        this.clientDocs = docs;
+        this.isClientDocsLoading = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.isClientDocsLoading = false;
         this.cdr.detectChanges();
       }
     });
@@ -130,5 +157,7 @@ export class LiberacionComponent {
     this.ineValidado = false;
     this.comprobanteValidado = false;
     this.autorizacionBancaria = '';
+    this.clientDocs = [];
+    this.isClientDocsLoading = false;
   }
 }

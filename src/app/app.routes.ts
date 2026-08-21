@@ -15,6 +15,7 @@ import { PlantillaComponent } from './pages/gerente-sucursal/plantilla/plantilla
 import { ConfiguracionComponent as SucursalConfiguracion } from './pages/gerente-sucursal/configuracion/configuracion.component';
 import { AprobacionesComponent as SucursalAprobaciones } from './pages/gerente-sucursal/aprobaciones/aprobaciones.component';
 import { ReportesComponent as SucursalReportes } from './pages/gerente-sucursal/reportes/reportes.component';
+import { ReasignacionComponent } from './pages/gerente-sucursal/reasignacion/reasignacion.component';
 
 // Gerente General Layout & Pages
 import { LayoutComponent as GerenteGeneralLayout } from './pages/gerente-general/layout/layout.component';
@@ -45,7 +46,8 @@ export const routes: Routes = [
       { path: 'plantilla', component: PlantillaComponent },
       { path: 'configuracion', component: SucursalConfiguracion },
       { path: 'aprobaciones', component: SucursalAprobaciones },
-      { path: 'reportes', component: SucursalReportes }
+      { path: 'reportes', component: SucursalReportes },
+      { path: 'reasignacion', component: ReasignacionComponent }
     ]
   },
   {
