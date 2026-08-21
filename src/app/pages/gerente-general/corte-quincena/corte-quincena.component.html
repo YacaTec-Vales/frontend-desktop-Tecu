@@ -211,9 +211,12 @@
               <span *ngIf="!o.result" class="text-gray-400">—</span>
             </td>
             <td class="px-6 py-3 text-xs">
-              <span *ngIf="o.result && o.result.warnings?.length" class="text-amber-600 italic">
-                ⚠ {{ o.result.warnings!.length }} advertencia(s)
-              </span>
+              <div *ngIf="o.result && o.result.warnings?.length" class="text-amber-600">
+                <span class="font-bold">⚠ {{ o.result.warnings!.length }} advertencia(s):</span>
+                <ul class="list-disc list-inside mt-1">
+                  <li *ngFor="let w of o.result.warnings" class="truncate max-w-[200px]" [title]="w">{{ w }}</li>
+                </ul>
+              </div>
               <span *ngIf="o.errorMessage" class="text-red-600" [title]="o.errorMessage">
                 {{ o.errorMessage }}
               </span>

@@ -145,7 +145,16 @@ export class CorteQuincenaComponent implements OnInit {
         }),
         catchError(err => {
           outcome.status = 'ERROR';
-          outcome.errorMessage = err.error?.message || err.message || 'Error desconocido';
+          const code = err.error?.error?.code || err.error?.message || err.message || 'Error desconocido';
+          
+          const map: Record<string, string> = {
+            'CUT.NO_VOUCHERS': 'No hay vales registrados en este periodo.',
+            'CUT.INVALID_CUT_DATE': 'La fecha de corte no es válida.',
+            'CUT.BRANCH_NOT_FOUND': 'Sucursal no encontrada.',
+            'CUT.BRANCH_CUTOFF_NOT_FOUND': 'No se encontró config. de corte para esta sucursal.',
+          };
+
+          outcome.errorMessage = map[code] ?? code;
           return of(outcome);
         })
       )

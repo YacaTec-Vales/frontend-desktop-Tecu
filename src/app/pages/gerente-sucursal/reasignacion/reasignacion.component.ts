@@ -96,7 +96,7 @@ export class ReasignacionComponent implements OnInit {
       },
       error: (err) => {
         this.isRunning = false;
-        const code = err.error?.message || err.message || '';
+        const code = err.error?.error?.code || err.error?.message || err.message || '';
         this.errorMessage = this.mapErrorCode(code);
         this.cdr.detectChanges();
       }
