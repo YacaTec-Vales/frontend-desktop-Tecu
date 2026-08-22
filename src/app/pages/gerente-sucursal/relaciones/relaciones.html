@@ -8,7 +8,9 @@
 
   <app-card [noPadding]="true">
     <app-table
-      [columns]="['Folio / Fecha', 'Distribuidora', 'Monto a Pagar', 'Estado']"
+      title="Relaciones Activas"
+      subtitle="Directorio de relaciones de pago de la sucursal"
+      [columns]="['Folio / Fecha', 'Distribuidora', 'Monto a Pagar', 'Estado', 'Acciones']"
       [isEmpty]="relaciones.length === 0"
       emptyMessage="No se encontraron relaciones con los filtros aplicados."
       [dataTrigger]="relaciones"
@@ -26,8 +28,9 @@
             <div class="text-sm font-medium text-gray-900">{{ rel.id.substring(0,8) }}...</div>
             <div class="text-xs text-gray-500">{{ rel.cutDate | date:'shortDate' }}</div>
           </td>
-          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-            ID: {{ rel.distributorId.substring(0,8) }}...
+          <td class="px-6 py-4 whitespace-nowrap">
+            <div class="text-sm font-bold text-gray-900">{{ distributorNames[rel.distributorId] || 'Cargando...' }}</div>
+            <div class="text-xs text-gray-500">ID: {{ rel.distributorId.substring(0,8) }}...</div>
           </td>
           <td class="px-6 py-4 whitespace-nowrap">
             <div class="text-sm text-gray-900">{{ (rel.totalToPayCents / 100) | currency }}</div>
@@ -38,8 +41,75 @@
               {{ rel.reconciliationStatus }}
             </span>
           </td>
+          <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
+            <app-button variant="secondary" size="sm" (onClick)="verDetalles(rel)">Revisar Detalles</app-button>
+          </td>
         </tr>
       </ng-container>
     </app-table>
   </app-card>
 </div>
+
+<!-- Modal Detalles de Relación -->
+<app-modal [isOpen]="isModalOpen" title="Detalles de la Relación de Pago" maxWidth="xl" (onClose)="cerrarModal()">
+  <div class="space-y-4" *ngIf="selectedRelation">
+    <div class="grid grid-cols-2 gap-4 text-sm">
+      <div>
+        <p class="text-gray-500">Folio (ID)</p>
+        <p class="font-bold text-gray-900">{{ selectedRelation.id }}</p>
+      </div>
+      <div>
+        <p class="text-gray-500">Referencia de Pago</p>
+        <p class="font-bold text-gray-900">{{ selectedRelation.referencePayment || 'N/A' }}</p>
+      </div>
+      <div>
+        <p class="text-gray-500">Fecha de Corte</p>
+        <p class="font-medium text-gray-900">{{ selectedRelation.cutDate | date:'longDate' }}</p>
+      </div>
+      <div>
+        <p class="text-gray-500">Límite de Pago</p>
+        <p class="font-medium text-red-600">{{ selectedRelation.paymentDeadlineDate | date:'longDate' }}</p>
+      </div>
+      <div>
+        <p class="text-gray-500">Distribuidora</p>
+        <p class="font-bold text-gray-900">{{ distributorNames[selectedRelation.distributorId] || 'Desconocido' }}</p>
+      </div>
+      <div>
+        <p class="text-gray-500">Estado de Conciliación</p>
+        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800 mt-1">
+          {{ selectedRelation.reconciliationStatus }}
+        </span>
+      </div>
+    </div>
+
+    <div class="border-t border-gray-200 mt-4 pt-4">
+      <h3 class="font-semibold text-gray-900 mb-2">Desglose de Montos</h3>
+      <div class="bg-gray-50 p-4 rounded-lg space-y-2 text-sm">
+        <div class="flex justify-between">
+          <span class="text-gray-600">Total a Pagar (Corte):</span>
+          <span class="font-medium text-gray-900">{{ (selectedRelation.totalToPayCents / 100) | currency }}</span>
+        </div>
+        <div class="flex justify-between" *ngIf="selectedRelation.totalPenaltiesCents > 0">
+          <span class="text-red-600">Total Penalizaciones:</span>
+          <span class="font-medium text-red-600">{{ (selectedRelation.totalPenaltiesCents / 100) | currency }}</span>
+        </div>
+        <div class="flex justify-between border-t border-gray-200 pt-2 mt-2">
+          <span class="font-bold text-gray-900">Total Acumulado:</span>
+          <span class="font-bold text-gray-900">{{ (selectedRelation.totalPaymentCents / 100) | currency }}</span>
+        </div>
+        <div class="flex justify-between text-green-600 font-semibold" *ngIf="selectedRelation.totalPaidCents > 0">
+          <span>Total Pagado:</span>
+          <span>{{ (selectedRelation.totalPaidCents / 100) | currency }}</span>
+        </div>
+        <div class="flex justify-between border-t border-gray-200 pt-2 mt-2 font-bold text-brand">
+          <span>Restante por liquidar:</span>
+          <span>{{ (selectedRelation.remainingCents / 100) | currency }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-6 flex justify-end gap-3 pt-4 border-t border-gray-100">
+      <app-button variant="text" (onClick)="cerrarModal()">Cerrar</app-button>
+    </div>
+  </div>
+</app-modal>

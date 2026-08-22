@@ -7,11 +7,13 @@ import { Branch } from '../../../core/models/branch.model';
 import { CardComponent } from '../../../components/ui/card/card';
 import { TableComponent } from '../../../components/ui/table/table';
 import { ButtonComponent } from '../../../components/ui/button/button';
+import { ModalComponent } from '../../../components/ui/modal/modal';
+import { DistribuidorService } from '../../../core/services/distribuidor.service';
 
 @Component({
   selector: 'app-relaciones',
   standalone: true,
-  imports: [CommonModule, FormsModule, CardComponent, TableComponent],
+  imports: [CommonModule, FormsModule, CardComponent, TableComponent, ButtonComponent, ModalComponent],
   templateUrl: './relaciones.html',
 })
 export class Relaciones implements OnInit {
@@ -24,10 +26,16 @@ export class Relaciones implements OnInit {
   total = 0;
   
   selectedBranchId = '';
+  
+  distributorNames: { [id: string]: string } = {};
+
+  isModalOpen = false;
+  selectedRelation: RelationDetails | null = null;
 
   constructor(
     private relationService: RelationService,
     private branchService: BranchService,
+    private distribuidorService: DistribuidorService,
     private cdr: ChangeDetectorRef
   ) {}
 
@@ -50,6 +58,7 @@ export class Relaciones implements OnInit {
         this.relaciones = res.data;
         this.total = res.meta?.itemCount || 0;
         this.isLoading = false;
+        this.fetchDistributorNames();
         this.cdr.detectChanges();
       },
       error: () => {
@@ -73,5 +82,40 @@ export class Relaciones implements OnInit {
   onBranchFilterChange() {
     this.page = 1;
     this.loadRelaciones();
+  }
+
+  fetchDistributorNames() {
+    const uniqueIds = Array.from(new Set(this.relaciones.map(r => r.distributorId)));
+    uniqueIds.forEach(id => {
+      if (!this.distributorNames[id]) {
+        this.distributorNames[id] = 'Cargando...';
+        this.distribuidorService.getDistribuidorById(id).subscribe({
+          next: (dist) => {
+            if (dist && dist.generalData) {
+              this.distributorNames[id] = `${dist.generalData.nombre} ${dist.generalData.apellido_paterno}`;
+            } else if (dist && dist.nombre) {
+              this.distributorNames[id] = dist.nombre;
+            } else {
+              this.distributorNames[id] = 'Desconocido';
+            }
+            this.cdr.detectChanges();
+          },
+          error: () => {
+            this.distributorNames[id] = 'Error';
+            this.cdr.detectChanges();
+          }
+        });
+      }
+    });
+  }
+
+  verDetalles(rel: RelationDetails) {
+    this.selectedRelation = rel;
+    this.isModalOpen = true;
+  }
+
+  cerrarModal() {
+    this.isModalOpen = false;
+    this.selectedRelation = null;
   }
 }
