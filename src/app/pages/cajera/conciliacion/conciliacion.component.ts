@@ -96,6 +96,7 @@ export class ConciliacionComponent implements OnInit {
     this.isUploading = true;
     this.uploadSuccessMessage = '';
     this.uploadErrorMessage = '';
+    this.cdr.detectChanges();
 
     this.reconciliationService.uploadExcel(this.selectedFile).subscribe({
       next: (res) => {
@@ -122,6 +123,7 @@ export class ConciliacionComponent implements OnInit {
     this.isDocUploading = true;
     this.docUploadSuccess = '';
     this.docUploadError = '';
+    this.cdr.detectChanges();
 
     // POST /api/v1/uploads con documentType = conciliacion_evidence
     this.documentService.uploadFile(this.selectedDocFile, 'conciliacion_evidence').subscribe({
@@ -142,6 +144,7 @@ export class ConciliacionComponent implements OnInit {
 
   loadRecentDocs() {
     this.isRecentDocsLoading = true;
+    this.cdr.detectChanges();
     // GET /api/v1/uploads/type/conciliacion_evidence
     this.documentService.getDocumentsByType('conciliacion_evidence').subscribe({
       next: (docs) => {
@@ -158,6 +161,7 @@ export class ConciliacionComponent implements OnInit {
 
   loadBatches() {
     this.isBatchesLoading = true;
+    this.cdr.detectChanges();
     this.reconciliationService.getBatches(this.batchesPage, this.batchesLimit).subscribe({
       next: (res) => {
         this.batches = res.data;
@@ -187,6 +191,7 @@ export class ConciliacionComponent implements OnInit {
   // --- MANUAL ---
   loadUnmatched() {
     this.isUnmatchedLoading = true;
+    this.cdr.detectChanges();
     this.reconciliationService.getUnmatchedMovements(this.unmatchedPage, this.unmatchedLimit).subscribe({
       next: (res) => {
         this.unmatchedMovements = res.data;
@@ -253,6 +258,7 @@ export class ConciliacionComponent implements OnInit {
 
     this.isProcessingManual = true;
     this.manualErrorMessage = '';
+    this.cdr.detectChanges();
 
     this.reconciliationService.requestManualReconciliation(this.selectedMovement.id, this.selectedRelationId, this.authorizationId).subscribe({
       next: () => {
