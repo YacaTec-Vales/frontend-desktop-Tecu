@@ -62,4 +62,16 @@ export class RelationService {
 
     return this.http.get<PaginatedResponse<RelationDetails>>(`${this.apiUrl}/pending`, { params });
   }
+
+  getAllRelations(page: number = 1, limit: number = 100, branchId?: string): Observable<PaginatedResponse<RelationDetails>> {
+    let params = new HttpParams()
+      .set('page', page.toString())
+      .set('limit', limit.toString());
+
+    if (branchId) {
+      params = params.set('branchId', branchId);
+    }
+
+    return this.http.get<PaginatedResponse<RelationDetails>>(this.apiUrl, { params });
+  }
 }

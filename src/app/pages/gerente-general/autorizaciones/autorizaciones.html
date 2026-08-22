@@ -1,0 +1,76 @@
+<div class="p-6">
+  <div class="flex justify-between items-center mb-6">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900">Bandeja de Autorizaciones</h1>
+      <p class="text-gray-500 mt-1">Aprueba o rechaza peticiones de cajeras (ej. Tokens por Incoherencias).</p>
+    </div>
+    <app-button variant="primary" (click)="loadAutorizaciones()" [disabled]="isLoading">Actualizar</app-button>
+  </div>
+
+  <app-card title="Solicitudes Pendientes" [noPadding]="true">
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID / Fecha</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Entidad Afectada</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Justificación</th>
+            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          <tr *ngFor="let auth of autorizaciones">
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div class="text-sm font-medium text-gray-900">{{ auth.id.substring(0,8) }}...</div>
+              <div class="text-xs text-gray-500">{{ auth.createdAt | date:'short' }}</div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                {{ auth.authorizationType }}
+              </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              {{ auth.affectedEntity | json }}
+            </td>
+            <td class="px-6 py-4 text-sm text-gray-500 max-w-xs truncate" [title]="auth.justification">
+              {{ auth.justification || 'Sin justificación' }}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium space-x-2">
+              <button class="text-green-600 hover:text-green-900" (click)="aprobar(auth)">Aprobar</button>
+              <button class="text-red-600 hover:text-red-900" (click)="rechazar(auth)">Rechazar</button>
+            </td>
+          </tr>
+          <tr *ngIf="autorizaciones.length === 0">
+            <td colspan="5" class="px-6 py-4 text-center text-sm text-gray-500">
+              No hay autorizaciones pendientes en tu bandeja.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </app-card>
+</div>
+
+<!-- Modal Token -->
+<app-modal [isOpen]="isTokenModalOpen" title="Autorización Aprobada" (onClose)="isTokenModalOpen = false">
+  <div class="space-y-4 text-center">
+    <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100">
+      <svg class="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+      </svg>
+    </div>
+    <div class="mt-3 text-center sm:mt-5">
+      <h3 class="text-lg leading-6 font-medium text-gray-900">Token Generado</h3>
+      <div class="mt-2">
+        <p class="text-sm text-gray-500">Proporcione este token de 6 dígitos a la cajera para que pueda continuar con la operación.</p>
+        <div class="mt-4 p-4 bg-gray-100 rounded-lg">
+          <span class="text-4xl font-mono font-bold text-gray-800 tracking-widest">{{ generatedToken }}</span>
+        </div>
+      </div>
+    </div>
+    <div class="mt-5 sm:mt-6">
+      <app-button variant="primary" (click)="isTokenModalOpen = false" class="w-full">Entendido</app-button>
+    </div>
+  </div>
+</app-modal>

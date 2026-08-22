@@ -148,7 +148,6 @@
           </ng-container>
           
           <div *ngIf="valeEncontrado.tipo === 'Pre-Vale'" class="hidden md:block"></div>
-          
           <app-button *vpnOnly variant="primary" [fullWidth]="true" (onClick)="liberarPago()" [disabled]="!puedeLiberar() || isConfirming">
             {{ isConfirming ? 'Confirmando...' : (valeEncontrado.tipo === 'Pre-Vale' ? 'Entregar Efectivo y Confirmar' : 'Confirmar Liberación') }}
           </app-button>

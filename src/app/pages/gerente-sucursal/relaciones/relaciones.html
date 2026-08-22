@@ -1,0 +1,50 @@
+<div class="p-6">
+  <div class="flex justify-between items-center mb-6">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900">Relaciones de Pago</h1>
+      <p class="text-gray-500 mt-1">Historial de cortes y deudas de las distribuidoras.</p>
+    </div>
+  </div>
+
+
+
+  <app-card title="Resultados" [noPadding]="true">
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Folio / Fecha</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Distribuidora</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Monto a Pagar</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          <tr *ngFor="let rel of relaciones">
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div class="text-sm font-medium text-gray-900">{{ rel.id.substring(0,8) }}...</div>
+              <div class="text-xs text-gray-500">{{ rel.cutDate | date:'shortDate' }}</div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              ID: {{ rel.distributorId.substring(0,8) }}...
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div class="text-sm text-gray-900">{{ (rel.totalToPayCents / 100) | currency }}</div>
+              <div class="text-xs text-red-500" *ngIf="rel.totalPenaltiesCents > 0">Penalización: {{ (rel.totalPenaltiesCents / 100) | currency }}</div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                {{ rel.reconciliationStatus }}
+              </span>
+            </td>
+          </tr>
+          <tr *ngIf="relaciones.length === 0">
+            <td colspan="4" class="px-6 py-4 text-center text-sm text-gray-500">
+              No se encontraron relaciones con los filtros aplicados.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </app-card>
+</div>

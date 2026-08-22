@@ -31,13 +31,27 @@ export class DistribuidorService {
   }
 
   changeCategory(id: string, categoryId: string): Observable<any> {
-    return this.http.put(`${this.apiUrl}/${id}/category`, { categoryId }, {
+    return this.http.post(`${this.apiUrl}/${id}/category`, { categoryId, motivo: 'Actualización manual' }, {
       headers: this.buildHeaders()
     });
   }
 
   changeCoordinator(id: string, coordId: string): Observable<any> {
     return this.http.put(`${this.apiUrl}/${id}/coord-change`, { coordId }, {
+      headers: this.buildHeaders()
+    });
+  }
+
+  changeBranch(id: string, branchId: string): Observable<any> {
+    return this.http.put(`${this.apiUrl}/${id}/branch-change`, { branchId }, {
+      headers: this.buildHeaders()
+    });
+  }
+
+  getDistribuidores(page: number = 1, limit: number = 100, search?: string): Observable<any> {
+    let url = `${this.apiUrl}?page=${page}&limit=${limit}`;
+    if (search) url += `&search=${search}`;
+    return this.http.get<{ message: string, data: any[], meta: any }>(url, {
       headers: this.buildHeaders()
     });
   }

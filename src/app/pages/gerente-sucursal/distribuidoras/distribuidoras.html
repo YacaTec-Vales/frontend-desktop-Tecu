@@ -1,0 +1,59 @@
+<div class="max-w-7xl mx-auto space-y-6 pb-12">
+  <div>
+    <h1 class="text-2xl font-bold text-gray-900">Catálogo de Distribuidoras</h1>
+    <p class="text-gray-500 mt-1">Gestiona las asignaciones de categoría.</p>
+  </div>
+
+  <app-card title="Distribuidoras Activas" [noPadding]="true">
+    <app-table
+      title="Gestión de Distribuidoras"
+      subtitle="Directorio de distribuidoras"
+      [dataTrigger]="distribuidoras"
+      [columns]="['No. Distribuidora', 'Nombre', 'Límite Crédito', 'Estado', 'Categoría']"
+      [isEmpty]="distribuidoras.length === 0"
+      [useServerPagination]="true"
+      [currentPage]="page"
+      [totalItems]="total"
+      [limit]="limit"
+      [isLoading]="isLoading"
+      (pageChange)="onPageChange($event)"
+      (searchChange)="onSearch($event)"
+      (limitChange)="onLimitChange($event)">
+
+      <tr *ngFor="let dist of distribuidoras" class="bg-white border-b hover:bg-gray-50">
+        <td class="px-6 py-4 font-bold text-xs">{{ dist.distributorNumber }}</td>
+        <td class="px-6 py-4 text-xs text-gray-900 truncate max-w-[200px]" [title]="dist.generalData?.nombre + ' ' + dist.generalData?.apellido_paterno + ' ' + dist.generalData?.apellido_materno">
+          {{ dist.generalData?.nombre }} {{ dist.generalData?.apellido_paterno }} {{ dist.generalData?.apellido_materno }}
+        </td>
+        <td class="px-6 py-4">{{ (dist.creditLimitCents / 100) | currency }}</td>
+        <td class="px-6 py-4">
+          <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+            {{ dist.status }}
+          </span>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap">
+          <div class="relative">
+            <button (click)="toggleDropdown(dist.id)" class="text-gray-900 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm px-4 py-2 inline-flex items-center dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-600 dark:focus:ring-gray-700" type="button">
+              {{ dist.categoryId ? 'Ver Categoría' : 'Sin Asignar' }}
+              <svg class="w-2.5 h-2.5 ms-2.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
+                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 4 4 4-4"/>
+              </svg>
+            </button>
+            <div *ngIf="openDropdownId === dist.id" class="absolute z-10 right-0 bg-white divide-y divide-gray-100 rounded-lg shadow w-44 dark:bg-gray-700 mt-2">
+                <ul class="py-2 text-sm text-gray-700 dark:text-gray-200">
+                  <li *ngIf="categories.length === 0" class="px-4 py-2 text-xs text-gray-500">No hay categorías</li>
+                  <li *ngFor="let c of categories">
+                    <a href="javascript:void(0)" (click)="changeCategoryInline(dist, c.id); toggleDropdown(dist.id)" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
+                      {{ c.nombre }} ({{ c.gananciaBps / 100 }}%)
+                    </a>
+                  </li>
+                </ul>
+            </div>
+          </div>
+        </td>
+      </tr>
+    </app-table>
+  </app-card>
+</div>
+
+
