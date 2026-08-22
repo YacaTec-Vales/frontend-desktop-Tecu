@@ -91,10 +91,11 @@ export class Relaciones implements OnInit {
         this.distributorNames[id] = 'Cargando...';
         this.distribuidorService.getDistribuidorById(id).subscribe({
           next: (dist) => {
-            if (dist && dist.generalData) {
-              this.distributorNames[id] = `${dist.generalData.nombre} ${dist.generalData.apellido_paterno}`;
-            } else if (dist && dist.nombre) {
-              this.distributorNames[id] = dist.nombre;
+            const d = dist as any;
+            if (d && d.generalData) {
+              this.distributorNames[id] = `${d.generalData.nombre} ${d.generalData.apellido_paterno}`;
+            } else if (d && d.nombre) {
+              this.distributorNames[id] = d.nombre;
             } else {
               this.distributorNames[id] = 'Desconocido';
             }
