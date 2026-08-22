@@ -68,10 +68,26 @@ export class ReconciliationService {
       .set('page', page.toString())
       .set('limit', limit.toString());
 
-    return this.http.get<PaginatedResponse<ReconciliationBatch>>(`${this.apiUrl}/batches`, {
+    return this.http.get<any>(`${this.apiUrl}/batches`, {
       params,
       headers: this.buildHeaders()
-    });
+    }).pipe(
+      map(res => {
+        const dataArr = res?.data?.data || res?.data || [];
+        const rawMeta = res?.data?.meta || res?.meta;
+        const itemCount = rawMeta?.itemCount ?? rawMeta?.total ?? dataArr.length;
+        return {
+          data: dataArr,
+          meta: { 
+            ...rawMeta,
+            page: rawMeta?.page || page,
+            limit: rawMeta?.limit || limit,
+            itemCount: itemCount,
+            pageCount: rawMeta?.pageCount || Math.ceil(itemCount / limit) || 1
+          }
+        };
+      })
+    );
   }
 
   getUnmatchedMovements(page: number = 1, limit: number = 100): Observable<PaginatedResponse<BankMovement>> {
@@ -79,9 +95,25 @@ export class ReconciliationService {
       .set('page', page.toString())
       .set('limit', limit.toString());
 
-    return this.http.get<PaginatedResponse<BankMovement>>(`${this.apiUrl}/bank-movements/unmatched`, {
+    return this.http.get<any>(`${this.apiUrl}/bank-movements/unmatched`, {
       params,
       headers: this.buildHeaders()
-    });
+    }).pipe(
+      map(res => {
+        const dataArr = res?.data?.data || res?.data || [];
+        const rawMeta = res?.data?.meta || res?.meta;
+        const itemCount = rawMeta?.itemCount ?? rawMeta?.total ?? dataArr.length;
+        return {
+          data: dataArr,
+          meta: { 
+            ...rawMeta,
+            page: rawMeta?.page || page,
+            limit: rawMeta?.limit || limit,
+            itemCount: itemCount,
+            pageCount: rawMeta?.pageCount || Math.ceil(itemCount / limit) || 1
+          }
+        };
+      })
+    );
   }
 }
