@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RelationService, RelationDetails } from '../../../core/services/relation.service';
@@ -11,7 +11,7 @@ import { ButtonComponent } from '../../../components/ui/button/button';
 @Component({
   selector: 'app-relaciones',
   standalone: true,
-  imports: [CommonModule, FormsModule, CardComponent],
+  imports: [CommonModule, FormsModule, CardComponent, TableComponent],
   templateUrl: './relaciones.html',
 })
 export class Relaciones implements OnInit {
@@ -27,7 +27,8 @@ export class Relaciones implements OnInit {
 
   constructor(
     private relationService: RelationService,
-    private branchService: BranchService
+    private branchService: BranchService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit() {
@@ -43,14 +44,30 @@ export class Relaciones implements OnInit {
 
   loadRelaciones() {
     this.isLoading = true;
+    this.cdr.detectChanges();
     this.relationService.getAllRelations(this.page, this.limit, this.selectedBranchId || undefined).subscribe({
       next: (res) => {
         this.relaciones = res.data;
         this.total = res.meta?.itemCount || 0;
         this.isLoading = false;
+        this.cdr.detectChanges();
       },
-      error: () => this.isLoading = false
+      error: () => {
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      }
     });
+  }
+
+  onPageChange(page: number) {
+    this.page = page;
+    this.loadRelaciones();
+  }
+
+  onLimitChange(limit: number) {
+    this.limit = limit;
+    this.page = 1;
+    this.loadRelaciones();
   }
 
   onBranchFilterChange() {

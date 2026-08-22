@@ -23,7 +23,7 @@
       (limitChange)="onLimitChange($event)"
     >
       <ng-container *ngFor="let rel of relaciones">
-        <tr>
+        <tr class="bg-white border-b hover:bg-gray-50">
           <td class="px-6 py-4 whitespace-nowrap">
             <div class="text-sm font-medium text-gray-900">{{ rel.id.substring(0,8) }}...</div>
             <div class="text-xs text-gray-500">{{ rel.cutDate | date:'shortDate' }}</div>
