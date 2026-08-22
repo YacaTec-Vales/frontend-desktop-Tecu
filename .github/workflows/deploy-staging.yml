@@ -186,6 +186,32 @@ jobs:
             tar -xzf release.tar.gz -C "$DEST"
             rm -f release.tar.gz
 
+            # 3b. Sincronizar al path que sirve nginx y restaurar SELinux.
+            # El STAGING_DEST historico apunta a /var/www/<repo>/ pero nginx
+            # en front-01 lee de /opt/misvales/frontends/<rol>/browser/. Sin
+            # este sync, el browser recibe 500 (Permission denied por
+            # SELinux context var_t en lugar de httpd_sys_content_t).
+            NGINX_DEST=""
+            case "$DEST" in
+              /var/www/tecu/*)    NGINX_DEST="/opt/misvales/frontends/desktop/browser" ;;
+              /var/www/calpix/*)  NGINX_DEST="/opt/misvales/frontends/tablet/browser" ;;
+              /var/www/poch/*)    NGINX_DEST="/opt/misvales/frontends/mobile/browser" ;;
+            esac
+            if [ -n "$NGINX_DEST" ] && [ "$DEST" != "$NGINX_DEST" ]; then
+              echo "    sync $DEST -> $NGINX_DEST (nginx path)"
+              mkdir -p "$NGINX_DEST"
+              find "$NGINX_DEST" -mindepth 1 -delete
+              cp -a "$DEST"/. "$NGINX_DEST"/
+              # chown zombie:zombie (compatibilidad con procesos locales
+              # que esperan ese owner; nginx puede leer via 'other' perms).
+              chown -R zombie:zombie "$NGINX_DEST" 2>/dev/null || true
+              # restorecon para que el contexto SELinux sea
+              # httpd_sys_content_t y nginx pueda servir los archivos.
+              if command -v restorecon >/dev/null 2>&1; then
+                restorecon -R "$NGINX_DEST" >/dev/null 2>&1 || true
+              fi
+            fi
+
             # 4. Smoke test o restart
             if [ -n "$SERVICE" ]; then
               systemctl restart "$SERVICE"

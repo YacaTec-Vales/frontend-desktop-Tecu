@@ -8,6 +8,7 @@ import { CardComponent } from '../../../components/ui/card/card';
 import { ButtonComponent } from '../../../components/ui/button/button';
 import { ModalComponent } from '../../../components/ui/modal/modal';
 import { BadgeComponent } from '../../../components/ui/badge/badge';
+import { VpnOnlyDirective } from '../../../core/directives/vpn-only.directive';
 
 import { BranchService } from '../../../core/services/branch.service';
 import { CutService, CutResult } from '../../../core/services/cut.service';
@@ -23,7 +24,7 @@ interface BranchCutOutcome {
 @Component({
   selector: 'app-corte-quincena',
   standalone: true,
-  imports: [CommonModule, FormsModule, CardComponent, ButtonComponent, ModalComponent, BadgeComponent],
+  imports: [CommonModule, FormsModule, CardComponent, ButtonComponent, ModalComponent, BadgeComponent, VpnOnlyDirective],
   templateUrl: './corte-quincena.component.html'
 })
 export class CorteQuincenaComponent implements OnInit {

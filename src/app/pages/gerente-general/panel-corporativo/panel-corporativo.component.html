@@ -39,8 +39,9 @@
         </div>
 
         <div class="pt-4">
-          <app-button 
-            variant="primary" 
+          <app-button
+            *vpnOnly
+            variant="primary"
             class="w-full"
             (click)="ejecutarCorte()"
             [disabled]="isExecuting || !selectedBranchId || !cutDate">

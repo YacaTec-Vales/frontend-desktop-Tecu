@@ -5,6 +5,7 @@ import { CardComponent } from '../../../components/ui/card/card';
 import { ButtonComponent } from '../../../components/ui/button/button';
 import { InputComponent } from '../../../components/ui/input/input';
 import { SelectComponent } from '../../../components/ui/select/select';
+import { VpnOnlyDirective } from '../../../core/directives/vpn-only.directive';
 import { CutService, CutResult } from '../../../core/services/cut.service';
 import { BranchService } from '../../../core/services/branch.service';
 import { Branch } from '../../../core/models/branch.model';
@@ -12,7 +13,7 @@ import { Branch } from '../../../core/models/branch.model';
 @Component({
   selector: 'app-panel-corporativo',
   standalone: true,
-  imports: [CommonModule, FormsModule, CardComponent, ButtonComponent, InputComponent, SelectComponent],
+  imports: [CommonModule, FormsModule, CardComponent, ButtonComponent, InputComponent, SelectComponent, VpnOnlyDirective],
   templateUrl: './panel-corporativo.component.html'
 })
 export class PanelCorporativoComponent implements OnInit {

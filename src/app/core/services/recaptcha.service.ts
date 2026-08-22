@@ -30,14 +30,36 @@ export const DEFAULT_RECAPTCHA_ACTION = 'submit';
  * vacía, el servicio queda desactivado y no carga ningún script de
  * Google.
  *
- * Los tokens son de un solo uso y expiran en ~2 minutos; no
- * almacenar ni reutilizar. Cada petición debe pedir un token
- * fresco (el interceptor HTTP lo hace automáticamente).
+ * **IMPORTANTE**: los tokens reCAPTCHA v3 son SINGLE-USE. Una vez que
+ * el backend los valida con Google siteverify, quedan "quemados" y
+ * cualquier reuso devuelve `invalid-input-response`. Por eso NO
+ * cacheamos el token entre peticiones: cada request mutante genera
+ * uno nuevo con `grecaptcha.execute()`.
+ *
+ * El servicio PRE-CARGA el script de Google en cuanto se instancia
+ * (constructor), para que cuando el usuario haga el primer POST ya
+ * haya `window.grecaptcha` disponible. Sin esta precarga, el primer
+ * request puede dispararse antes de que el script termine de cargar y
+ * el backend responde 400 RECAPTCHA.MISSING.
  */
 @Service()
 export class RecaptchaService {
   private readonly siteKey = environment.recaptchaSiteKey;
   private scriptLoading?: Promise<void>;
+
+  constructor() {
+    // Pre-carga inmediata del script al instanciar el servicio.
+    // La primera vez se inyecta el <script>; despues queda cacheado
+    // por el browser via el http cache normal.
+    if (this.isEnabled) {
+      void this.ensureScript().catch((err) => {
+        console.warn(
+          '[reCAPTCHA] precarga inicial falló (se reintentará por peticion):',
+          err instanceof Error ? err.message : err,
+        );
+      });
+    }
+  }
 
   /** Indica si el captcha está activo en este entorno. */
   get isEnabled(): boolean {
@@ -45,28 +67,55 @@ export class RecaptchaService {
   }
 
   /**
-   * Ejecuta el challenge invisible y devuelve el token.
+   * Ejecuta el challenge invisible y devuelve un token FRESCO.
+   *
+   * Estrategia de retry (sin cache):
+   * 1. Asegurar que el script de Google está cargado (una sola vez).
+   * 2. Llamar a `grecaptcha.execute()` que genera un NUEVO token.
+   * 3. Si falla, reintentar hasta 3 veces con backoff (500/1000/1500ms)
+   *    para tolerar la inicializacion lenta del script o rate limits
+   *    momentaneos de Google.
+   *
+   * El token NO se cachea porque reCAPTCHA v3 tokens son single-use.
+   * Cada peticion mutante del frontend genera y envia uno nuevo.
    *
    * @param action - Identificador semántico del flujo (`login`,
    *   `submit`, ...). Solo `[a-zA-Z0-9/]`.
-   * @returns Token reCAPTCHA v3, o `null` si el captcha está
-   *   desactivado.
-   * @throws Error si el script de Google no pudo cargarse.
+   * @returns Token reCAPTCHA v3 fresco, o `null` si el captcha
+   *   está desactivado.
+   * @throws Error si el script de Google no pudo cargarse tras
+   *   los reintentos.
    */
   async getToken(action = DEFAULT_RECAPTCHA_ACTION): Promise<string | null> {
     if (!this.isEnabled) return null;
 
-    await this.ensureScript();
-    const grecaptcha = window.grecaptcha;
-    if (!grecaptcha) {
-      throw new Error('grecaptcha no está disponible tras cargar el script');
+    const maxAttempts = 3;
+    let lastError: Error | undefined;
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      try {
+        await this.ensureScript();
+        const grecaptcha = window.grecaptcha;
+        if (!grecaptcha) {
+          throw new Error('grecaptcha no está disponible tras cargar el script');
+        }
+        const token = await new Promise<string>((resolve, reject) => {
+          grecaptcha.ready(() => {
+            grecaptcha.execute(this.siteKey, { action }).then(resolve, reject);
+          });
+        });
+        if (token) return token;
+        lastError = new Error('reCAPTCHA devolvió un token vacío');
+      } catch (err) {
+        lastError = err instanceof Error ? err : new Error(String(err));
+        console.warn(
+          `[reCAPTCHA] intento ${attempt + 1}/${maxAttempts} falló:`,
+          lastError.message,
+        );
+      }
+      // Espera antes del siguiente intento (500ms, 1000ms, 1500ms).
+      await new Promise((resolve) => setTimeout(resolve, 500 * (attempt + 1)));
     }
-
-    return new Promise<string>((resolve, reject) => {
-      grecaptcha.ready(() => {
-        grecaptcha.execute(this.siteKey, { action }).then(resolve, reject);
-      });
-    });
+    throw lastError ?? new Error('reCAPTCHA: max reintentos alcanzados');
   }
 
   /**

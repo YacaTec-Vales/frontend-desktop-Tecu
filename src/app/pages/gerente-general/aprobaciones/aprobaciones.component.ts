@@ -6,6 +6,7 @@ import { TableComponent } from '../../../components/ui/table/table';
 import { ButtonComponent } from '../../../components/ui/button/button';
 import { ModalComponent } from '../../../components/ui/modal/modal';
 import { BadgeComponent } from '../../../components/ui/badge/badge';
+import { VpnOnlyDirective } from '../../../core/directives/vpn-only.directive';
 
 import { SolicitudService, Solicitud } from '../../../core/services/solicitud.service';
 import { CreditRaiseService, CreditRaiseRequest } from '../../../core/services/credit-raise.service';
@@ -33,7 +34,7 @@ type FilterType = 'TODAS' | 'ALTAS' | 'AUMENTOS';
 @Component({
   selector: 'app-aprobaciones',
   standalone: true,
-  imports: [CommonModule, FormsModule, CardComponent, TableComponent, ButtonComponent, ModalComponent, BadgeComponent],
+  imports: [CommonModule, FormsModule, CardComponent, TableComponent, ButtonComponent, ModalComponent, BadgeComponent, VpnOnlyDirective],
   templateUrl: './aprobaciones.component.html'
 })
 export class AprobacionesComponent implements OnInit {

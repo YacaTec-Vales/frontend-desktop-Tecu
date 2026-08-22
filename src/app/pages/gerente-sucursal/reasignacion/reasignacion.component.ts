@@ -6,6 +6,7 @@ import { CardComponent } from '../../../components/ui/card/card';
 import { ButtonComponent } from '../../../components/ui/button/button';
 import { ModalComponent } from '../../../components/ui/modal/modal';
 import { BadgeComponent } from '../../../components/ui/badge/badge';
+import { VpnOnlyDirective } from '../../../core/directives/vpn-only.directive';
 
 import { CutService, CutResult, CutRelationSummary } from '../../../core/services/cut.service';
 import { AuthService } from '../../../core/services/auth.service';
@@ -13,7 +14,7 @@ import { AuthService } from '../../../core/services/auth.service';
 @Component({
   selector: 'app-reasignacion',
   standalone: true,
-  imports: [CommonModule, FormsModule, CardComponent, ButtonComponent, ModalComponent, BadgeComponent],
+  imports: [CommonModule, FormsModule, CardComponent, ButtonComponent, ModalComponent, BadgeComponent, VpnOnlyDirective],
   templateUrl: './reasignacion.component.html'
 })
 export class ReasignacionComponent implements OnInit {

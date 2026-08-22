@@ -38,7 +38,6 @@ export class AuthService {
     
     return this.http.post<any>(`${this.baseUrl}/login`, sanitizedData, {
       headers: {
-        'X-Origin': 'vpn',
         'X-Client-App': 'Tecu'
       }
     }).pipe(
@@ -50,10 +49,17 @@ export class AuthService {
           this.currentUser.set(tokens.user);
           this.isAuthenticated.set(true);
 
-          this.http.post(`${this.baseUrl}/sessions/revoke-others`, {}).subscribe({
-            next: () => console.log('Sesiones previas revocadas exitosamente.'),
-            error: (err) => console.warn('No se pudieron revocar otras sesiones', err)
-          });
+          // FIX 401: pequeno delay para asegurar que setTokens() propago
+          // el JWT a sessionStorage antes de que el http.post() del
+          // authInterceptor lea `authService.getToken()`. Sin el delay,
+          // el interceptor ve null y no agrega el header Authorization
+          // -> backend responde 401 AUTH.MISSING_TOKEN.
+          setTimeout(() => {
+            this.http.post(`${this.baseUrl}/sessions/revoke-others`, {}).subscribe({
+              next: () => console.log('Sesiones previas revocadas exitosamente.'),
+              error: (err) => console.warn('No se pudieron revocar otras sesiones', err)
+            });
+          }, 100);
         }
       }),
       map(response => response),
@@ -67,7 +73,6 @@ export class AuthService {
     return this.http.post<any>(`${environment.apiUrl}/mfa/setup`, {}, {
       headers: {
         Authorization: `Bearer ${token}`,
-        'X-Origin': 'vpn',
         'X-Client-App': 'Tecu'
       }
     });
@@ -77,7 +82,6 @@ export class AuthService {
     return this.http.post(`${environment.apiUrl}/mfa/verify-setup`, { code }, {
       headers: {
         Authorization: `Bearer ${token}`,
-        'X-Origin': 'vpn',
         'X-Client-App': 'Tecu'
       }
     });
@@ -87,7 +91,6 @@ export class AuthService {
     return this.http.post<any>(`${this.baseUrl}/mfa-verify`, { code }, {
       headers: {
         Authorization: `Bearer ${token}`,
-        'X-Origin': 'vpn',
         'X-Client-App': 'Tecu'
       }
     }).pipe(
