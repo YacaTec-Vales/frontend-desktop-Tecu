@@ -85,24 +85,29 @@ export class Relaciones implements OnInit {
   }
 
   fetchDistributorNames() {
-    this.distribuidorService.getDistribuidores(1, 5000).subscribe({
-      next: (res) => {
-        const dists = Array.isArray(res.data) ? res.data : (res.data?.data || []);
-        dists.forEach((d: any) => {
-          let name = 'Desconocido';
-          if (d.user && d.user.username) {
-            name = d.user.username;
-          } else if (d.generalData && d.generalData.nombre) {
-            name = `${d.generalData.nombre} ${d.generalData.apellido_paterno || ''}`.trim();
-          } else if (d.nombre) {
-            name = d.nombre;
+    const uniqueIds = Array.from(new Set(this.relaciones.map(r => r.distributorId)));
+    uniqueIds.forEach(id => {
+      if (!this.distributorNames[id]) {
+        this.distributorNames[id] = 'Cargando...';
+        this.distribuidorService.getDistribuidorById(id).subscribe({
+          next: (dist) => {
+            const d = dist as any;
+            if (d && d.user && d.user.username) {
+              this.distributorNames[id] = d.user.username;
+            } else if (d && d.generalData) {
+              this.distributorNames[id] = `${d.generalData.nombre} ${d.generalData.apellido_paterno || ''}`.trim();
+            } else if (d && d.nombre) {
+              this.distributorNames[id] = d.nombre;
+            } else {
+              this.distributorNames[id] = 'Desconocido';
+            }
+            this.cdr.detectChanges();
+          },
+          error: () => {
+            this.distributorNames[id] = 'Error';
+            this.cdr.detectChanges();
           }
-          this.distributorNames[d.id] = name;
         });
-        this.cdr.detectChanges();
-      },
-      error: () => {
-        console.error('Failed to fetch distributors for names mapping');
       }
     });
   }
