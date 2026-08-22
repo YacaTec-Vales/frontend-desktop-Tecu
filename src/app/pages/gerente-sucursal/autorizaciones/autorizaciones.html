@@ -1,8 +1,8 @@
-<div class="p-6">
-  <div class="flex justify-between items-center mb-6">
+<div class="max-w-7xl mx-auto space-y-6 pb-12">
+  <div class="flex justify-between items-center">
     <div>
-      <h1 class="text-2xl font-bold text-gray-900">Bandeja de Autorizaciones</h1>
-      <p class="text-gray-500 mt-1">Aprueba o rechaza peticiones de cajeras (ej. Tokens por Incoherencias).</p>
+      <h2 class="text-3xl font-bold text-gray-900 dark:text-white">Bandeja de Autorizaciones</h2>
+      <p class="text-gray-500 dark:text-gray-400 mt-1 text-lg">Aprueba o rechaza peticiones de cajeras (ej. Tokens por Incoherencias).</p>
     </div>
     <app-button variant="primary" (click)="loadAutorizaciones()" [disabled]="isLoading">Actualizar</app-button>
   </div>
