@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AutorizacionService, AutorizacionResponseDto } from '../../../core/services/autorizacion.service';
@@ -10,7 +10,7 @@ import { ModalComponent } from '../../../components/ui/modal/modal';
 @Component({
   selector: 'app-autorizaciones',
   standalone: true,
-  imports: [CommonModule, FormsModule, CardComponent, ButtonComponent, ModalComponent],
+  imports: [CommonModule, FormsModule, CardComponent, ButtonComponent, ModalComponent, TableComponent],
   templateUrl: './autorizaciones.html',
 })
 export class Autorizaciones implements OnInit {
@@ -21,7 +21,10 @@ export class Autorizaciones implements OnInit {
   isTokenModalOpen = false;
   generatedToken = '';
 
-  constructor(private autorizacionService: AutorizacionService) {}
+  constructor(
+    private autorizacionService: AutorizacionService,
+    private cdr: ChangeDetectorRef
+  ) {}
 
   ngOnInit() {
     this.loadAutorizaciones();
@@ -29,13 +32,18 @@ export class Autorizaciones implements OnInit {
 
   loadAutorizaciones() {
     this.isLoading = true;
+    this.cdr.detectChanges();
     this.autorizacionService.getAutorizaciones().subscribe({
       next: (data) => {
         // Filter pending authorizations or just show all
         this.autorizaciones = data.filter(a => a.status === 'PENDIENTE');
         this.isLoading = false;
+        this.cdr.detectChanges();
       },
-      error: () => this.isLoading = false
+      error: () => {
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      }
     });
   }
 
