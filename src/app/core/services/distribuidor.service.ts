@@ -32,7 +32,7 @@ export class DistribuidorService {
   }
 
   changeCategory(id: string, categoryId: string): Observable<any> {
-    return this.http.put(`${this.apiUrl}/${id}/category`, { categoryId }, {
+    return this.http.post(`${this.apiUrl}/${id}/category`, { categoryId, motivo: 'Actualización manual' }, {
       headers: this.buildHeaders()
     });
   }
