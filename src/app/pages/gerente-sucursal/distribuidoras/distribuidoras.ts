@@ -19,10 +19,7 @@ import { TableComponent } from '../../../components/ui/table/table';
 export class Distribuidoras implements OnInit {
   distribuidoras: any[] = [];
   branches: Branch[] = [];
-  categories: CreditCategory[] = [
-    { id: '123e4567-e89b-12d3-a456-426614174000', nombre: 'Mock Category 1', gananciaBps: 600 },
-    { id: '223e4567-e89b-12d3-a456-426614174001', nombre: 'Mock Category 2', gananciaBps: 500 }
-  ];
+  categories: CreditCategory[] = [];
   coordinators: Coordinador[] = [];
   
   page = 1;
@@ -92,7 +89,10 @@ export class Distribuidoras implements OnInit {
   }
 
   loadCatalogs() {
-    // Categories are not fetched here anymore
+    this.categoryService.getCategories(1, 100).subscribe(res => {
+      this.categories = res.data;
+      this.cdr.detectChanges();
+    });
   }
 
   changeCategoryInline(dist: any, newCategoryId: string) {

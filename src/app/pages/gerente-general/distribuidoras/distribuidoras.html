@@ -1,9 +1,7 @@
-<div class="p-6">
-  <div class="flex justify-between items-center mb-6">
-    <div>
-      <h1 class="text-2xl font-bold text-gray-900">Catálogo de Distribuidoras</h1>
-      <p class="text-gray-500 mt-1">Gestiona las asignaciones de sucursal, coordinador y categoría.</p>
-    </div>
+<div class="max-w-7xl mx-auto space-y-6">
+  <div>
+    <h2 class="text-3xl font-bold text-gray-900 dark:text-white">Catálogo de Distribuidoras</h2>
+    <p class="text-gray-500 dark:text-gray-400 mt-1 text-lg">Gestiona las asignaciones de sucursal, coordinador y categoría.</p>
   </div>
 
   <app-card title="Distribuidoras Activas" [noPadding]="true">
@@ -14,103 +12,58 @@
       <app-button variant="primary" (click)="loadDistribuidores()">Buscar</app-button>
     </div>
 
-    <div class="overflow-x-auto">
-      <table class="min-w-full divide-y divide-gray-200">
-        <thead class="bg-gray-50">
-          <tr>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID / Nombre</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Categoría</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sucursal</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Coordinador</th>
-            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
-          </tr>
-        </thead>
-        <tbody class="bg-white divide-y divide-gray-200">
-          <tr *ngFor="let dist of distribuidoras">
-            <td class="px-6 py-4 whitespace-nowrap">
-              <div class="text-sm font-medium text-gray-900">{{ dist.id }}</div>
-              <div class="text-sm text-gray-500">{{ dist.nombre }}</div>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap">
-              <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                {{ dist.category?.nombre || 'Sin Asignar' }}
-              </span>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-              {{ dist.branch?.name || 'Sin Asignar' }}
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-              {{ dist.coordinator?.user?.firstName }} {{ dist.coordinator?.user?.lastNamePaternal }}
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium space-x-2">
-              <button class="text-blue-600 hover:text-blue-900" (click)="openCategoryModal(dist)">Categoría</button>
-              <button class="text-indigo-600 hover:text-indigo-900" (click)="openBranchModal(dist)">Sucursal</button>
-              <button class="text-green-600 hover:text-green-900" (click)="openCoordinatorModal(dist)">Coordinador</button>
-            </td>
-          </tr>
-          <tr *ngIf="distribuidoras.length === 0">
-            <td colspan="5" class="px-6 py-4 text-center text-sm text-gray-500">
-              No se encontraron distribuidoras.
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+    <div *ngIf="isLoading" class="p-8 text-center text-gray-500">Cargando distribuidoras...</div>
+
+    <app-table *ngIf="!isLoading"
+      title="Gestión de Distribuidoras"
+      subtitle="Directorio de distribuidoras"
+      [columns]="['No. Distribuidora', 'Nombre', 'Sucursal', 'Coordinador', 'Categoría']"
+      [isEmpty]="distribuidoras.length === 0"
+      emptyMessage="No se encontraron distribuidoras."
+      [dataTrigger]="distribuidoras"
+      [useServerPagination]="true"
+      [currentPage]="page"
+      [totalItems]="total"
+      [limit]="limit"
+      [isLoading]="isLoading"
+      (pageChange)="onPageChange($event)"
+      (searchChange)="onSearch($event)"
+      (limitChange)="onLimitChange($event)"
+    >
+      <ng-container *ngFor="let dist of distribuidoras">
+        <tr class="bg-white border-b hover:bg-gray-50">
+          <td class="px-6 py-4 font-bold text-xs">{{ dist.distributorNumber || dist.id.substring(0,8) + '...' }}</td>
+          <td class="px-6 py-4 text-xs text-gray-900 truncate max-w-[200px]" [title]="(dist.generalData?.nombre || '') + ' ' + (dist.generalData?.apellido_paterno || '') + ' ' + (dist.generalData?.apellido_materno || '')">
+            {{ dist.generalData?.nombre || 'Desconocido' }} {{ dist.generalData?.apellido_paterno }} {{ dist.generalData?.apellido_materno }}
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-500">
+            {{ getBranchName(dist.branchId) }}
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-500">
+            {{ getCoordinatorName(dist.coordinatorId) }}
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap">
+            <div class="relative">
+              <button (click)="toggleDropdown(dist.id)" class="text-gray-900 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm px-4 py-2 inline-flex items-center dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-600 dark:focus:ring-gray-700" type="button">
+                {{ getCategoryName(dist.categoryId) }}
+                <svg class="w-2.5 h-2.5 ms-2.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
+                  <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 4 4 4-4"/>
+                </svg>
+              </button>
+              <div *ngIf="openDropdownId === dist.id" class="absolute z-10 right-0 bg-white divide-y divide-gray-100 rounded-lg shadow w-44 dark:bg-gray-700 mt-2">
+                  <ul class="py-2 text-sm text-gray-700 dark:text-gray-200">
+                    <li *ngIf="categories.length === 0" class="px-4 py-2 text-xs text-gray-500">No hay categorías</li>
+                    <li *ngFor="let c of categories">
+                      <a href="javascript:void(0)" (click)="changeCategoryInline(dist, c.id); toggleDropdown(dist.id)" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
+                        {{ c.nombre }} ({{ c.gananciaBps / 100 }}%)
+                      </a>
+                    </li>
+                  </ul>
+              </div>
+            </div>
+          </td>
+        </tr>
+      </ng-container>
+    </app-table>
   </app-card>
 </div>
-
-<!-- Modal Cambiar Sucursal -->
-<app-modal [isOpen]="isBranchModalOpen" title="Cambiar Sucursal" (onClose)="isBranchModalOpen = false">
-  <div class="space-y-4">
-    <p class="text-sm text-gray-500">Selecciona la nueva sucursal para <strong>{{ selectedDistribuidora?.nombre }}</strong>.</p>
-    <div>
-      <label class="block text-sm font-medium text-gray-700">Sucursal Destino</label>
-      <select [(ngModel)]="selectedBranchId" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-brand focus:border-brand sm:text-sm rounded-md">
-        <option value="">Seleccione una sucursal</option>
-        <option *ngFor="let b of branches" [value]="b.id">{{ b.name }}</option>
-      </select>
-    </div>
-    <div class="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
-      <app-button variant="primary" (click)="changeBranch()" [disabled]="!selectedBranchId">Guardar Cambios</app-button>
-      <app-button variant="secondary" (click)="isBranchModalOpen = false">Cancelar</app-button>
-    </div>
-  </div>
-</app-modal>
-
-<!-- Modal Cambiar Categoría -->
-<app-modal [isOpen]="isCategoryModalOpen" title="Cambiar Categoría" (onClose)="isCategoryModalOpen = false">
-  <div class="space-y-4">
-    <p class="text-sm text-gray-500">Selecciona la nueva categoría de crédito para <strong>{{ selectedDistribuidora?.nombre }}</strong>.</p>
-    <div>
-      <label class="block text-sm font-medium text-gray-700">Categoría</label>
-      <select [(ngModel)]="selectedCategoryId" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-brand focus:border-brand sm:text-sm rounded-md">
-        <option value="">Seleccione una categoría</option>
-        <option *ngFor="let c of categories" [value]="c.id">{{ c.nombre }} ({{ c.gananciaBps / 100 }}%)</option>
-      </select>
-    </div>
-    <div class="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
-      <app-button variant="primary" (click)="changeCategory()" [disabled]="!selectedCategoryId">Guardar Cambios</app-button>
-      <app-button variant="secondary" (click)="isCategoryModalOpen = false">Cancelar</app-button>
-    </div>
-  </div>
-</app-modal>
-
-<!-- Modal Cambiar Coordinador -->
-<app-modal [isOpen]="isCoordinatorModalOpen" title="Reasignar Coordinador" (onClose)="isCoordinatorModalOpen = false">
-  <div class="space-y-4">
-    <p class="text-sm text-gray-500">Selecciona el nuevo coordinador para <strong>{{ selectedDistribuidora?.nombre }}</strong>.</p>
-    <div>
-      <label class="block text-sm font-medium text-gray-700">Coordinador</label>
-      <select [(ngModel)]="selectedCoordinatorId" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-brand focus:border-brand sm:text-sm rounded-md">
-        <option value="">Seleccione un coordinador</option>
-        <option *ngFor="let c of coordinators" [value]="c.id">
-          {{ c.firstName }} {{ c.lastNamePaternal }} (Suc: {{ c.branchId }})
-        </option>
-      </select>
-    </div>
-    <div class="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
-      <app-button variant="primary" (click)="changeCoordinator()" [disabled]="!selectedCoordinatorId">Guardar Cambios</app-button>
-      <app-button variant="secondary" (click)="isCoordinatorModalOpen = false">Cancelar</app-button>
-    </div>
-  </div>
-</app-modal>

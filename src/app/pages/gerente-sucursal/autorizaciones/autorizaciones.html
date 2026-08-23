@@ -1,54 +1,45 @@
-<div class="p-6">
-  <div class="flex justify-between items-center mb-6">
+<div class="max-w-7xl mx-auto space-y-6 pb-12">
+  <div class="flex justify-between items-center">
     <div>
-      <h1 class="text-2xl font-bold text-gray-900">Bandeja de Autorizaciones</h1>
-      <p class="text-gray-500 mt-1">Aprueba o rechaza peticiones de cajeras (ej. Tokens por Incoherencias).</p>
+      <h2 class="text-3xl font-bold text-gray-900 dark:text-white">Bandeja de Autorizaciones</h2>
+      <p class="text-gray-500 dark:text-gray-400 mt-1 text-lg">Aprueba o rechaza peticiones de cajeras (ej. Tokens por Incoherencias).</p>
     </div>
     <app-button variant="primary" (click)="loadAutorizaciones()" [disabled]="isLoading">Actualizar</app-button>
   </div>
 
-  <app-card title="Solicitudes Pendientes" [noPadding]="true">
-    <div class="overflow-x-auto">
-      <table class="min-w-full divide-y divide-gray-200">
-        <thead class="bg-gray-50">
-          <tr>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID / Fecha</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Entidad Afectada</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Justificación</th>
-            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
-          </tr>
-        </thead>
-        <tbody class="bg-white divide-y divide-gray-200">
-          <tr *ngFor="let auth of autorizaciones">
-            <td class="px-6 py-4 whitespace-nowrap">
-              <div class="text-sm font-medium text-gray-900">{{ auth.id.substring(0,8) }}...</div>
-              <div class="text-xs text-gray-500">{{ auth.createdAt | date:'short' }}</div>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap">
-              <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
-                {{ auth.authorizationType }}
-              </span>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-              {{ auth.affectedEntity | json }}
-            </td>
-            <td class="px-6 py-4 text-sm text-gray-500 max-w-xs truncate" [title]="auth.justification">
-              {{ auth.justification || 'Sin justificación' }}
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium space-x-2">
-              <button class="text-green-600 hover:text-green-900" (click)="aprobar(auth)">Aprobar</button>
-              <button class="text-red-600 hover:text-red-900" (click)="rechazar(auth)">Rechazar</button>
-            </td>
-          </tr>
-          <tr *ngIf="autorizaciones.length === 0">
-            <td colspan="5" class="px-6 py-4 text-center text-sm text-gray-500">
-              No hay autorizaciones pendientes en tu bandeja.
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+  <app-card [noPadding]="true">
+    <app-table
+      title="Solicitudes Pendientes"
+      [columns]="['ID / Fecha', 'Tipo', 'Entidad Afectada', 'Justificación', 'Acciones']"
+      [isEmpty]="autorizaciones.length === 0"
+      emptyMessage="No hay autorizaciones pendientes en tu bandeja."
+      [dataTrigger]="autorizaciones"
+      [isLoading]="isLoading"
+    >
+      <ng-container *ngFor="let auth of autorizaciones">
+        <tr class="bg-white border-b hover:bg-gray-50">
+          <td class="px-6 py-4 whitespace-nowrap">
+            <div class="text-sm font-medium text-gray-900">{{ auth.id.substring(0,8) }}...</div>
+            <div class="text-xs text-gray-500">{{ auth.createdAt | date:'short' }}</div>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap">
+            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+              {{ auth.authorizationType }}
+            </span>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            {{ auth.affectedEntity | json }}
+          </td>
+          <td class="px-6 py-4 text-sm text-gray-500 max-w-xs truncate" [title]="auth.justification">
+            {{ auth.justification || 'Sin justificación' }}
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium space-x-2">
+            <button class="text-green-600 hover:text-green-900" (click)="aprobar(auth)">Aprobar</button>
+            <button class="text-red-600 hover:text-red-900" (click)="rechazar(auth)">Rechazar</button>
+          </td>
+        </tr>
+      </ng-container>
+    </app-table>
   </app-card>
 </div>
 

@@ -60,7 +60,23 @@ export class RelationService {
       params = params.set('search', search);
     }
 
-    return this.http.get<PaginatedResponse<RelationDetails>>(`${this.apiUrl}/pending`, { params });
+    return this.http.get<any>(`${this.apiUrl}/pending`, { params }).pipe(
+      map(res => {
+        const dataArr = res?.data?.data || res?.data || [];
+        const rawMeta = res?.data?.meta || res?.meta;
+        const itemCount = rawMeta?.itemCount ?? rawMeta?.total ?? dataArr.length;
+        return {
+          data: dataArr,
+          meta: { 
+            ...rawMeta,
+            page: rawMeta?.page || page,
+            limit: rawMeta?.limit || limit,
+            itemCount: itemCount,
+            pageCount: rawMeta?.pageCount || Math.ceil(itemCount / limit) || 1
+          }
+        };
+      })
+    );
   }
 
   getAllRelations(page: number = 1, limit: number = 100, branchId?: string): Observable<PaginatedResponse<RelationDetails>> {
@@ -72,6 +88,22 @@ export class RelationService {
       params = params.set('branchId', branchId);
     }
 
-    return this.http.get<PaginatedResponse<RelationDetails>>(this.apiUrl, { params });
+    return this.http.get<any>(this.apiUrl, { params }).pipe(
+      map(res => {
+        const dataArr = res?.data?.data || res?.data || [];
+        const rawMeta = res?.data?.meta || res?.meta;
+        const itemCount = rawMeta?.itemCount ?? rawMeta?.total ?? dataArr.length;
+        return {
+          data: dataArr,
+          meta: { 
+            ...rawMeta,
+            page: rawMeta?.page || page,
+            limit: rawMeta?.limit || limit,
+            itemCount: itemCount,
+            pageCount: rawMeta?.pageCount || Math.ceil(itemCount / limit) || 1
+          }
+        };
+      })
+    );
   }
 }

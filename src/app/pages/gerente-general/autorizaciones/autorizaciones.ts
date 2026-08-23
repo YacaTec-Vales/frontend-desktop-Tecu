@@ -10,7 +10,7 @@ import { ModalComponent } from '../../../components/ui/modal/modal';
 @Component({
   selector: 'app-autorizaciones',
   standalone: true,
-  imports: [CommonModule, FormsModule, CardComponent, ButtonComponent, ModalComponent],
+  imports: [CommonModule, FormsModule, CardComponent, ButtonComponent, ModalComponent, TableComponent],
   templateUrl: './autorizaciones.html',
 })
 export class Autorizaciones implements OnInit {

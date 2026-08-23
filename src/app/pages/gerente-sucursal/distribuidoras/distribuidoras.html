@@ -10,7 +10,7 @@
       subtitle="Directorio de distribuidoras"
       [dataTrigger]="distribuidoras"
       [columns]="['No. Distribuidora', 'Nombre', 'Límite Crédito', 'Estado', 'Categoría']"
-      [isEmpty]="distribuidoras.length === 0"
+      [isEmpty]="distribuidoras.length === 0 && !isLoading"
       [useServerPagination]="true"
       [currentPage]="page"
       [totalItems]="total"
