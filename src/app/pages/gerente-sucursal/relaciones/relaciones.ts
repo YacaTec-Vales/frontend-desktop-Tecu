@@ -85,33 +85,43 @@ export class Relaciones implements OnInit {
   }
 
   fetchDistributorNames() {
-    const uniqueIds = Array.from(new Set(this.relaciones.map(r => r.distributorId)));
-    uniqueIds.forEach(id => {
-      if (!this.distributorNames[id]) {
-        this.distributorNames[id] = 'Cargando...';
-        this.distribuidorService.getDistribuidorById(id).subscribe({
-          next: (dist) => {
-            const d = dist as any;
-            let name = 'Desconocido';
-            
-            if (d?.user?.username) {
-              name = d.user.username;
-            } else if (d?.user?.name) {
-              name = `${d.user.name} ${d.user.lastName || ''}`.trim();
-            } else if (d?.generalData?.nombre) {
-              name = `${d.generalData.nombre} ${d.generalData.apellido_paterno || ''}`.trim();
-            } else if (d?.nombre) {
-              name = d.nombre;
-            }
-            
-            this.distributorNames[id] = name || 'Desconocido';
-            this.cdr.detectChanges();
-          },
-          error: () => {
-            this.distributorNames[id] = 'Error';
-            this.cdr.detectChanges();
+    // Usamos el endpoint de distribuidores como sugirió el usuario,
+    // limitando a 100 para evitar el error BAD_REQUEST (limit > 100).
+    this.distribuidorService.getDistribuidores(1, 100).subscribe({
+      next: (res) => {
+        const dists = Array.isArray(res.data) ? res.data : (res.data?.data || []);
+        dists.forEach((d: any) => {
+          let name = 'Desconocido';
+          
+          if (d?.user?.username) {
+            name = d.user.username;
+          } else if (d?.user?.name) {
+            name = `${d.user.name} ${d.user.lastName || ''}`.trim();
+          } else if (d?.generalData?.nombre) {
+            name = `${d.generalData.nombre} ${d.generalData.apellido_paterno || ''}`.trim();
+          } else if (d?.nombre) {
+            name = d.nombre;
+          }
+          
+          this.distributorNames[d.id] = name || 'Desconocido';
+        });
+        
+        // Si hay IDs en la tabla que no vinieron en la página 1, los marcamos como Desconocidos
+        // para que no se queden en undefined
+        this.relaciones.forEach(r => {
+          if (!this.distributorNames[r.distributorId]) {
+            this.distributorNames[r.distributorId] = 'Desconocido';
           }
         });
+        
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        console.error('Error al obtener lista de distribuidores para mapear nombres');
+        this.relaciones.forEach(r => {
+          this.distributorNames[r.distributorId] = 'Error';
+        });
+        this.cdr.detectChanges();
       }
     });
   }
