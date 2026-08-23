@@ -92,15 +92,19 @@ export class Relaciones implements OnInit {
         this.distribuidorService.getDistribuidorById(id).subscribe({
           next: (dist) => {
             const d = dist as any;
-            if (d && d.user && d.user.username) {
-              this.distributorNames[id] = d.user.username;
-            } else if (d && d.generalData) {
-              this.distributorNames[id] = `${d.generalData.nombre} ${d.generalData.apellido_paterno || ''}`.trim();
-            } else if (d && d.nombre) {
-              this.distributorNames[id] = d.nombre;
-            } else {
-              this.distributorNames[id] = 'Desconocido';
+            let name = 'Desconocido';
+            
+            if (d?.user?.username) {
+              name = d.user.username;
+            } else if (d?.user?.name) {
+              name = `${d.user.name} ${d.user.lastName || ''}`.trim();
+            } else if (d?.generalData?.nombre) {
+              name = `${d.generalData.nombre} ${d.generalData.apellido_paterno || ''}`.trim();
+            } else if (d?.nombre) {
+              name = d.nombre;
             }
+            
+            this.distributorNames[id] = name || 'Desconocido';
             this.cdr.detectChanges();
           },
           error: () => {
