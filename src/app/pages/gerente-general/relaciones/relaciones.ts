@@ -87,39 +87,9 @@ export class Relaciones implements OnInit {
   fetchDistributorNames() {
     const uniqueIds = Array.from(new Set(this.relaciones.map(r => r.distributorId)));
     uniqueIds.forEach(id => {
-      if (!this.distributorNames[id]) {
-        this.distributorNames[id] = 'Cargando...';
-        this.distribuidorService.getDistribuidorById(id).subscribe({
-          next: (dist) => {
-            const d = dist as any;
-            let name = '';
-            
-            if (d?.user?.username) {
-              name = d.user.username;
-            } else if (d?.user?.name) {
-              name = `${d.user.name} ${d.user.lastName || ''}`.trim();
-            } else if (d?.generalData?.nombre) {
-              name = `${d.generalData.nombre} ${d.generalData.apellido_paterno || ''}`.trim();
-            } else if (d?.nombre) {
-              name = d.nombre;
-            }
-            
-            // Debugging payload structure
-            if (!name) {
-               const keys = Object.keys(d || {});
-               name = 'KEYS: ' + keys.join(', ').substring(0, 40);
-            }
-            
-            this.distributorNames[id] = name || 'Desconocido';
-            this.cdr.detectChanges();
-          },
-          error: () => {
-            this.distributorNames[id] = 'Error';
-            this.cdr.detectChanges();
-          }
-        });
-      }
+      this.distributorNames[id] = id; // El usuario solicitó mostrar únicamente el UUID
     });
+    this.cdr.detectChanges();
   }
 
   verDetalles(rel: RelationDetails) {
