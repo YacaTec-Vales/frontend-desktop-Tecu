@@ -1,9 +1,7 @@
-<div class="p-6">
-  <div class="flex justify-between items-center mb-6">
-    <div>
-      <h1 class="text-2xl font-bold text-gray-900">Relaciones de Pago</h1>
-      <p class="text-gray-500 mt-1">Historial de cortes y deudas de las distribuidoras.</p>
-    </div>
+<div class="max-w-7xl mx-auto space-y-6">
+  <div>
+    <h2 class="text-3xl font-bold text-gray-900 dark:text-white">Relaciones de Pago</h2>
+    <p class="text-gray-500 dark:text-gray-400 mt-1 text-lg">Historial de cortes y deudas de las distribuidoras.</p>
   </div>
 
   <app-card title="Filtros" [noPadding]="true" class="mb-6">
@@ -19,7 +17,8 @@
   </app-card>
 
   <app-card title="Resultados" [noPadding]="true">
-    <app-table
+    <div *ngIf="isLoading" class="p-8 text-center text-gray-500">Cargando relaciones...</div>
+    <app-table *ngIf="!isLoading"
       title="Relaciones Activas"
       subtitle="Directorio de relaciones de pago de todas las sucursales"
       [columns]="['Folio / Fecha', 'Distribuidora', 'Monto a Pagar', 'Estado', 'Acciones']"

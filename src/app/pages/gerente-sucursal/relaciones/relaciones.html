@@ -11,7 +11,7 @@
       title="Relaciones Activas"
       subtitle="Directorio de relaciones de pago de la sucursal"
       [columns]="['Folio / Fecha', 'Distribuidora', 'Monto a Pagar', 'Estado', 'Acciones']"
-      [isEmpty]="relaciones.length === 0"
+      [isEmpty]="relaciones.length === 0 && !isLoading"
       emptyMessage="No se encontraron relaciones con los filtros aplicados."
       [dataTrigger]="relaciones"
       [useServerPagination]="true"
