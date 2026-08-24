@@ -34,7 +34,7 @@ export class ValesDigitalesComponent implements OnInit {
       next: (res) => {
         this.vales = res.data.map((v: any) => ({
           folio: v.folio,
-          cliente: v.distributor?.generalData ? `${v.distributor.generalData.nombre} ${v.distributor.generalData.apellido_paterno}` : (v.distributorId || 'Desconocido'),
+          cliente: v.distributor?.generalData ? `${v.distributor.generalData.nombre} ${v.distributor.generalData.apellido_paterno}` : (v.clientId || v.distributorId || 'Desconocido'),
           tipo: v.voucherType === 'PREVALE' ? 'Pre-Vale' : 'Digital',
           montoPesos: v.amountCents / 100,
           status: v.status,

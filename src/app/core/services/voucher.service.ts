@@ -76,8 +76,8 @@ export class VoucherService {
       headers: this.buildHeaders()
     }).pipe(
       map(res => {
-        // Asumimos que el backend retorna un array en res.data o res.data.data
-        const items = Array.isArray(res.data) ? res.data : (res.data?.data || []);
+        // Asumimos que el backend retorna un array en res.data, res.data.vouchers o res.data.data
+        const items = Array.isArray(res.data) ? res.data : (res.data?.vouchers || res.data?.data || []);
         const total = res.meta?.totalItems || items.length;
         return {
           data: items,
