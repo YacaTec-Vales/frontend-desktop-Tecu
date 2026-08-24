@@ -115,7 +115,7 @@ export class ReasignacionComponent implements OnInit {
       'CUT.NO_VOUCHERS': 'No hay vales registrados en el periodo seleccionado para esta sucursal.',
       'CUT.INVALID_CUT_DATE': 'La fecha de corte no es válida. Usa el día 15 o el último día del mes.',
       'CUT.BRANCH_NOT_FOUND': 'Sucursal no encontrada.',
-      'CUT.BRANCH_CUTOFF_NOT_FOUND': 'No se encontró configuración de corte para esta sucursal.',
+      'CUT.BRANCH_CUTOFF_NOT_FOUND': 'No se encontró configuración de corte para esta fecha. Asegúrate de usar el día 15 o el último día del mes.',
     };
     return map[code] ?? `Error al ejecutar el corte: ${code}`;
   }
