@@ -11,7 +11,7 @@ import { VpnOnlyDirective } from '../../../core/directives/vpn-only.directive';
 
 import { ReconciliationService, BankMovement, ReconciliationBatch } from '../../../core/services/reconciliation.service';
 import { RelationService, RelationDetails } from '../../../core/services/relation.service';
-
+import { fileTypeFromBlob } from 'file-type';
 
 @Component({
   selector: 'app-conciliacion',
@@ -95,28 +95,32 @@ export class ConciliacionComponent implements OnInit {
   }
 
   /**
-   * Lee los primeros bytes del archivo para verificar su firma hexadecimal (Magic Number)
-   * en lugar de confiar ciegamente en la extensión del nombre del archivo.
+   * Valida la firma real del archivo usando la librería externa 'file-type'.
+   * Esto previene que se evada la seguridad simplemente cambiando la extensión.
    */
-  private validateExcelMagicNumber(file: File): Promise<boolean> {
-    return new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onloadend = (e) => {
-        const arr = new Uint8Array(e.target?.result as ArrayBuffer).subarray(0, 8);
-        const header = Array.from(arr).map(b => b.toString(16).padStart(2, '0')).join('').toUpperCase();
-        
-        // xlsx (zip header): 504B0304
-        // xls (OLE compound document): D0CF11E0A1B11AE1
-        if (header.startsWith('504B0304') || header.startsWith('D0CF11E0A1B11AE1')) {
-          resolve(true);
-        } else {
-          resolve(false);
-        }
-      };
-      reader.onerror = () => resolve(false);
-      // Leemos solamente los primeros 8 bytes para rendimiento
-      reader.readAsArrayBuffer(file.slice(0, 8));
-    });
+  private async validateExcelMagicNumber(file: File): Promise<boolean> {
+    try {
+      const type = await fileTypeFromBlob(file);
+      
+      // file-type detecta los .xlsx (ZIP archives) usualmente como:
+      // mime: 'application/zip' o 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      // los .xls antiguos como 'application/x-cfb' o 'application/vnd.ms-excel'
+      
+      if (!type) {
+        // Si no pudo identificarlo, lo rechazamos por seguridad
+        return false;
+      }
+      
+      const isZip = type.mime === 'application/zip';
+      const isXlsx = type.mime === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+      const isCfb = type.mime === 'application/x-cfb';
+      const isXls = type.mime === 'application/vnd.ms-excel';
+
+      return isZip || isXlsx || isCfb || isXls;
+    } catch (err) {
+      console.error('Error validando el magic number:', err);
+      return false;
+    }
   }
 
   uploadFile() {
