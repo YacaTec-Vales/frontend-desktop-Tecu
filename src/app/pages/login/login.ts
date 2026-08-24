@@ -187,7 +187,7 @@ export class Login {
     this.isLoading = true;
     this.authService.changePassword({
       currentPassword: this.currentPassword,
-      password: this.newPassword
+      newPassword: this.newPassword
     }).subscribe({
       next: () => {
         this.isLoading = false;
