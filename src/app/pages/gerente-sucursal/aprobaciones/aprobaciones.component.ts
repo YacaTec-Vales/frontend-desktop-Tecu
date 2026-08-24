@@ -12,6 +12,7 @@ import { VpnOnlyDirective } from '../../../core/directives/vpn-only.directive';
 import { SolicitudService, Solicitud } from '../../../core/services/solicitud.service';
 import { CreditRaiseService, CreditRaiseRequest } from '../../../core/services/credit-raise.service';
 import { DistribuidorService } from '../../../core/services/distribuidor.service';
+import { SolicitudPhotosService } from '../../../core/services/solicitud-photos.service';
 import { AlertService } from '../../../core/services/alert.service';
 import { forkJoin, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
@@ -38,19 +39,19 @@ type FilterType = 'TODAS' | 'ALTAS' | 'AUMENTOS';
 })
 export class AprobacionesComponent implements OnInit {
   filterType: FilterType = 'TODAS';
-  
+
   dictamenes: Solicitud[] = [];
   incrementos: CreditRaiseRequest[] = [];
-  
+
   unifiedList: UnifiedRequest[] = [];
   filteredList: UnifiedRequest[] = [];
-  
+
   // Paginación local
   page = 1;
   limit = 10;
   totalItems = 0;
   searchQuery = '';
-  
+
   loadedCount = 0;
   isDataLoaded = false;
   renderTable = true;
@@ -59,7 +60,12 @@ export class AprobacionesComponent implements OnInit {
   selectedItem: UnifiedRequest | null = null;
   selectedItemPhotos: string[] = [];
   isLoading = false;
-  
+
+  // URLs firmadas resueltas para la galeria de fotos del dictamen
+  // seleccionado. Se hidrata en `abrirModal()` via
+  // `SolicitudPhotosService.resolve()` y se limpia en `cerrarModal()`.
+  resolvedPhotos: string[] = [];
+
   // Form Variables
   montoAprobacion: number | null = null;
   notasGerencia: string = '';
@@ -67,13 +73,13 @@ export class AprobacionesComponent implements OnInit {
   trackById(index: number, item: UnifiedRequest): string {
     return item.id;
   }
-  
+
   get paginatedList() {
     let list = this.filteredList;
     if (this.searchQuery) {
       const q = this.searchQuery.toLowerCase();
-      list = list.filter(item => 
-        item.name.toLowerCase().includes(q) || 
+      list = list.filter(item =>
+        item.name.toLowerCase().includes(q) ||
         item.description.toLowerCase().includes(q)
       );
     }
@@ -85,8 +91,8 @@ export class AprobacionesComponent implements OnInit {
     let list = this.filteredList;
     if (this.searchQuery) {
       const q = this.searchQuery.toLowerCase();
-      list = list.filter(item => 
-        item.name.toLowerCase().includes(q) || 
+      list = list.filter(item =>
+        item.name.toLowerCase().includes(q) ||
         item.description.toLowerCase().includes(q)
       );
     }
@@ -106,7 +112,7 @@ export class AprobacionesComponent implements OnInit {
     this.limit = limit;
     this.page = 1;
   }
-  
+
   // Rejection Mode
   isRejectingMode = false;
   motivoRechazo = '';
@@ -115,6 +121,7 @@ export class AprobacionesComponent implements OnInit {
     private solicitudService: SolicitudService,
     private creditRaiseService: CreditRaiseService,
     private distribuidorService: DistribuidorService,
+    private photoService: SolicitudPhotosService,
     private alertService: AlertService,
     private documentService: DocumentService,
     private cdr: ChangeDetectorRef
@@ -163,7 +170,7 @@ export class AprobacionesComponent implements OnInit {
 
   buildUnifiedList() {
     this.unifiedList = [];
-    
+
     this.dictamenes.forEach(d => {
       this.unifiedList.push({
         id: d.id,
@@ -187,7 +194,7 @@ export class AprobacionesComponent implements OnInit {
           } else if (distInfo && distInfo.user) {
             name = `${distInfo.user.name || ''} ${distInfo.user.lastName || ''} ${distInfo.user.secondLastName || ''}`.trim() || name;
           }
-          
+
           return {
             id: i.id,
             type: 'AUMENTO' as const,
@@ -316,11 +323,28 @@ export class AprobacionesComponent implements OnInit {
     this.notasGerencia = '';
     this.isRejectingMode = false;
     this.motivoRechazo = '';
+    this.resolvedPhotos = [];
+  }
+
+  /**
+   * Manejador para el evento (error) de <img>: la URL firmada
+   * murio (>15 min). Re-fetcheamos todas las URLs de la verificacion.
+   */
+  onPhotoError(solicitationId: string): void {
+    this.photoService.refreshFromVerification(solicitationId).subscribe({
+      next: (urls) => {
+        this.resolvedPhotos = urls;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.resolvedPhotos = [];
+      },
+    });
   }
 
   aprobar() {
     if (!this.selectedItem) return;
-    
+
     if (this.selectedItem.type === 'ALTA' && (!this.montoAprobacion || this.montoAprobacion <= 0)) {
       this.alertService.warning('Debes asignar un límite de crédito válido mayor a 0.');
       return;
@@ -390,7 +414,7 @@ export class AprobacionesComponent implements OnInit {
 
   rechazar() {
     if (!this.selectedItem) return;
-    
+
     if (!this.motivoRechazo || this.motivoRechazo.trim() === '') {
       this.alertService.error('Debes proporcionar un motivo de rechazo.');
       return;
