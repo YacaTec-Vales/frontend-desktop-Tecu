@@ -11,6 +11,7 @@ import { VpnOnlyDirective } from '../../../core/directives/vpn-only.directive';
 import { SolicitudService, Solicitud } from '../../../core/services/solicitud.service';
 import { CreditRaiseService, CreditRaiseRequest } from '../../../core/services/credit-raise.service';
 import { DistribuidorService } from '../../../core/services/distribuidor.service';
+import { SolicitudPhotosService } from '../../../core/services/solicitud-photos.service';
 import { AlertService } from '../../../core/services/alert.service';
 import { forkJoin, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
@@ -61,11 +62,16 @@ export class AprobacionesComponent implements OnInit {
   isModalOpen = false;
   selectedItem: UnifiedRequest | null = null;
   isLoading = false;
-  
+
+  // URLs firmadas resueltas para la galeria de fotos del dictamen
+  // seleccionado. Se hidrata en `abrirModal()` via
+  // `SolicitudPhotosService.resolve()` y se limpia en `cerrarModal()`.
+  resolvedPhotos: string[] = [];
+
   // Form Variables
   montoAprobacion: number | null = null;
   notasGerencia: string = '';
-  
+
   trackById(index: number, item: UnifiedRequest): string {
     return item.id;
   }
@@ -119,6 +125,7 @@ export class AprobacionesComponent implements OnInit {
     private solicitudService: SolicitudService,
     private creditRaiseService: CreditRaiseService,
     private distribuidorService: DistribuidorService,
+    private photoService: SolicitudPhotosService,
     private alertService: AlertService,
     private branchService: BranchService,
     private cdr: ChangeDetectorRef
@@ -265,6 +272,25 @@ export class AprobacionesComponent implements OnInit {
       this.montoAprobacion = cents / 100;
     } else {
       this.montoAprobacion = null;
+      // Resuelve verificationPhotos (UUIDs -> URLs firmadas frescas).
+      // El backend ya entrega URLs en la respuesta de GET /solicitudes
+      // (post PR #98 backend-api), pero mantenemos el resolver por
+      // si llegan UUIDs (legacy) o si queremos re-firmar URLs.
+      const solicitud = this.selectedItem.originalData as Solicitud;
+      const entries = solicitud?.verificationPhotos ?? [];
+      if (entries.length > 0) {
+        this.photoService.resolve(entries).subscribe({
+          next: (urls) => {
+            this.resolvedPhotos = urls;
+            this.cdr.detectChanges();
+          },
+          error: () => {
+            this.resolvedPhotos = [];
+          },
+        });
+      } else {
+        this.resolvedPhotos = [];
+      }
     }
 
     // Open modal after a micro‑task to avoid clashes with table re‑render
@@ -281,6 +307,23 @@ export class AprobacionesComponent implements OnInit {
     this.notasGerencia = '';
     this.isRejectingMode = false;
     this.motivoRechazo = '';
+    this.resolvedPhotos = [];
+  }
+
+  /**
+   * Manejador para el evento (error) de <img>: la URL firmada
+   * murio (>15 min). Re-fetcheamos todas las URLs de la verificacion.
+   */
+  onPhotoError(solicitationId: string): void {
+    this.photoService.refreshFromVerification(solicitationId).subscribe({
+      next: (urls) => {
+        this.resolvedPhotos = urls;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.resolvedPhotos = [];
+      },
+    });
   }
 
   aprobar() {

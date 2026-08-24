@@ -147,33 +147,39 @@
         </div>
       </div>
 
-      <!-- Evidencia Fotográfica (verificationPhotos vienen en la respuesta de solicitudes) -->
+      <!-- Evidencia Fotográfica (URLs firmadas resueltas via SolicitudPhotosService) -->
       <div class="border border-gray-200 rounded-lg p-4">
         <h4 class="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
           Evidencia Fotográfica
-          <span *ngIf="selectedItem.originalData.verificationPhotos?.length > 0"
+          <span *ngIf="resolvedPhotos.length > 0"
             class="bg-brand text-white text-xs font-bold px-2 py-0.5 rounded-full">
-            {{ selectedItem.originalData.verificationPhotos.length }}
+            {{ resolvedPhotos.length }}
           </span>
         </h4>
 
-        <!-- Sin fotos -->
-        <p *ngIf="!selectedItem.originalData.verificationPhotos?.length"
+        <!-- Sin fotos en la BD -->
+        <p *ngIf="resolvedPhotos.length === 0 && !selectedItem.originalData.verificationPhotos?.length"
           class="text-sm text-gray-500 italic">
           No se adjuntaron fotografías en la verificación.
         </p>
 
-        <!-- Galería de fotos firmadas -->
-        <div *ngIf="selectedItem.originalData.verificationPhotos?.length > 0"
+        <!-- Cargando firmas -->
+        <p *ngIf="resolvedPhotos.length === 0 && selectedItem.originalData.verificationPhotos?.length > 0"
+          class="text-sm text-gray-500 italic">
+          Cargando fotografías firmadas...
+        </p>
+
+        <!-- Galería de fotos firmadas (TTL 15 min) -->
+        <div *ngIf="resolvedPhotos.length > 0"
           class="flex flex-wrap gap-3">
-          <a *ngFor="let photoUrl of selectedItem.originalData.verificationPhotos; let i = index"
+          <a *ngFor="let photoUrl of resolvedPhotos; let i = index"
             [href]="photoUrl" target="_blank" rel="noopener"
             class="group relative block w-28 h-28 rounded-lg bg-gray-100 border border-gray-200 overflow-hidden hover:border-brand hover:shadow-md transition-all"
             [title]="'Foto ' + (i + 1)">
             <img [src]="photoUrl" [alt]="'Evidencia ' + (i + 1)"
               class="w-full h-full object-cover transition-transform group-hover:scale-105"
               loading="lazy"
-              (error)="$any($event.target).style.display='none'">
+              (error)="onPhotoError(selectedItem.id)">
             <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/20">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white drop-shadow" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
