@@ -76,11 +76,47 @@ export class ConciliacionComponent implements OnInit {
   }
 
   // --- AUTOMATICA ---
-  onFileSelected(event: any) {
+  async onFileSelected(event: any) {
     const file: File = event.target.files[0];
     if (file) {
-      this.selectedFile = file;
+      this.uploadErrorMessage = '';
+      this.uploadSuccessMessage = '';
+      this.selectedFile = null;
+
+      const isValid = await this.validateExcelMagicNumber(file);
+      if (isValid) {
+        this.selectedFile = file;
+      } else {
+        this.uploadErrorMessage = 'Por razones de seguridad, el sistema detectó que el archivo no es un documento de Excel genuino (Magic Number inválido). Asegúrate de subir un archivo .xlsx o .xls real.';
+        event.target.value = ''; // Reset the file input
+        this.cdr.detectChanges();
+      }
     }
+  }
+
+  /**
+   * Lee los primeros bytes del archivo para verificar su firma hexadecimal (Magic Number)
+   * en lugar de confiar ciegamente en la extensión del nombre del archivo.
+   */
+  private validateExcelMagicNumber(file: File): Promise<boolean> {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = (e) => {
+        const arr = new Uint8Array(e.target?.result as ArrayBuffer).subarray(0, 8);
+        const header = Array.from(arr).map(b => b.toString(16).padStart(2, '0')).join('').toUpperCase();
+        
+        // xlsx (zip header): 504B0304
+        // xls (OLE compound document): D0CF11E0A1B11AE1
+        if (header.startsWith('504B0304') || header.startsWith('D0CF11E0A1B11AE1')) {
+          resolve(true);
+        } else {
+          resolve(false);
+        }
+      };
+      reader.onerror = () => resolve(false);
+      // Leemos solamente los primeros 8 bytes para rendimiento
+      reader.readAsArrayBuffer(file.slice(0, 8));
+    });
   }
 
   uploadFile() {
