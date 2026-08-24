@@ -11,7 +11,7 @@ import { TableActionsComponent } from '../../../components/ui/table/table-action
 
 import { BranchService } from '../../../core/services/branch.service';
 import { StaffService } from '../../../core/services/staff.service';
-import { ProductService, Product, CreateProductDto } from '../../../core/services/product.service';
+import { ProductService, Product, CreateProductDto, UpdateProductDto } from '../../../core/services/product.service';
 import { CategoryService, CreditCategory, CreateCategoryDto, UpdateCategoryDto } from '../../../core/services/category.service';
 import { Branch, CreateBranchDto, UpdateBranchDto } from '../../../core/models/branch.model';
 import { Coordinador, Verificador, Cajero, CreateStaffDto } from '../../../core/models/staff.model';
