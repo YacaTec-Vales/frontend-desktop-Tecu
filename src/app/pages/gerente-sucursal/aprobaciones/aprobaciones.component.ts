@@ -241,13 +241,21 @@ export class AprobacionesComponent implements OnInit {
       this.montoAprobacion = this.selectedItem.originalData.requestedAmountCents / 100;
     } else {
       this.montoAprobacion = null;
-      // Fetch photos from DocumentService
+      // Fetch photos from DocumentService and merge with legacy verificationPhotos array
       this.documentService.getDocumentsByVerification(item.originalData.id).subscribe({
         next: (docs) => {
-          this.selectedItemPhotos = docs.map(d => d.publicUrl);
+          const apiPhotos = docs.map(d => d.publicUrl);
+          const legacyPhotos = Array.isArray(item.originalData?.verificationPhotos) ? item.originalData.verificationPhotos : [];
+          // Merge unique URLs
+          this.selectedItemPhotos = Array.from(new Set([...legacyPhotos, ...apiPhotos]));
           this.cdr.detectChanges();
         },
-        error: (err) => console.error('Error fetching verification photos:', err)
+        error: (err) => {
+          console.error('Error fetching verification photos:', err);
+          // Fallback to legacy photos on error
+          this.selectedItemPhotos = Array.isArray(item.originalData?.verificationPhotos) ? item.originalData.verificationPhotos : [];
+          this.cdr.detectChanges();
+        }
       });
     }
 
