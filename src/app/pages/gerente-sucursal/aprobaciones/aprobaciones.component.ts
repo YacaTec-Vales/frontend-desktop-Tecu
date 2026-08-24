@@ -14,6 +14,7 @@ import { DistribuidorService } from '../../../core/services/distribuidor.service
 import { AlertService } from '../../../core/services/alert.service';
 import { forkJoin, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
+import { DocumentService } from '../../../core/services/document.service';
 
 export interface UnifiedRequest {
   id: string;
@@ -55,6 +56,7 @@ export class AprobacionesComponent implements OnInit {
 
   isModalOpen = false;
   selectedItem: UnifiedRequest | null = null;
+  selectedItemPhotos: string[] = [];
   isLoading = false;
   
   // Form Variables
@@ -113,6 +115,7 @@ export class AprobacionesComponent implements OnInit {
     private creditRaiseService: CreditRaiseService,
     private distribuidorService: DistribuidorService,
     private alertService: AlertService,
+    private documentService: DocumentService,
     private cdr: ChangeDetectorRef
   ) {}
 
@@ -231,21 +234,34 @@ export class AprobacionesComponent implements OnInit {
 
   abrirModal(item: UnifiedRequest) {
     this.selectedItem = item;
-    this.isModalOpen = true;
     this.notasGerencia = '';
+    this.selectedItemPhotos = [];
 
     if (this.selectedItem.type === 'AUMENTO') {
       this.montoAprobacion = this.selectedItem.originalData.requestedAmountCents / 100;
     } else {
       this.montoAprobacion = null;
-      // verificationPhotos ya viene en originalData como URLs firmadas
-      // No es necesaria una llamada adicional al API
+      // Fetch photos from DocumentService
+      this.documentService.getDocumentsByVerification(item.originalData.id).subscribe({
+        next: (docs) => {
+          this.selectedItemPhotos = docs.map(d => d.publicUrl);
+          this.cdr.detectChanges();
+        },
+        error: (err) => console.error('Error fetching verification photos:', err)
+      });
     }
+
+    // Open modal after micro-task
+    setTimeout(() => {
+      this.isModalOpen = true;
+      this.cdr.detectChanges();
+    }, 0);
   }
 
   cerrarModal() {
     this.isModalOpen = false;
     this.selectedItem = null;
+    this.selectedItemPhotos = [];
     this.montoAprobacion = null;
     this.notasGerencia = '';
     this.isRejectingMode = false;

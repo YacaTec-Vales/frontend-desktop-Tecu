@@ -1,6 +1,6 @@
 {
     "/api": {
-        "target": "http://utete.ddns.net:45000",
+        "target": "https://apiv2.taquizaschavez.com.mx",
         "secure": false,
         "changeOrigin": true,
         "logLevel": "debug"
