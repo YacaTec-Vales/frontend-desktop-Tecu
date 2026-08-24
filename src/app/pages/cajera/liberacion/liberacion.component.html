@@ -29,7 +29,7 @@
           <div>
             <p class="text-xs text-gray-500 uppercase tracking-wider font-bold mb-1">Beneficiario Final</p>
             
-            <div *ngIf="!modoEdicionActivo">
+            <div>
               <p class="text-xl font-black text-gray-900">{{ valeEncontrado.cliente }}</p>
               
               <div *ngIf="valeEncontrado.tipo !== 'Pre-Vale' && valeEncontrado.bankAccount" class="mt-3 text-sm bg-white border border-gray-200 p-3 rounded-md shadow-sm">
@@ -37,11 +37,6 @@
                 <p><strong>Banco:</strong> {{ valeEncontrado.bankAccount.banco }}</p>
                 <p><strong>CLABE:</strong> <span class="font-mono text-brand font-bold">{{ valeEncontrado.bankAccount.clabe }}</span></p>
               </div>
-            </div>
-            
-            <div *ngIf="modoEdicionActivo" class="mt-2 flex gap-2">
-              <app-input [(ngModel)]="valeEncontrado.cliente" placeholder="Corregir nombre"></app-input>
-              <app-button variant="primary" size="sm" (onClick)="guardarEdicion()">Guardar</app-button>
             </div>
           </div>
           
@@ -53,7 +48,7 @@
         
         <div class="mt-4 flex justify-between items-center">
           <p class="text-sm font-semibold">Estado actual: <span class="text-brand">{{ valeEncontrado.status }}</span></p>
-          <app-button variant="text" size="sm" (onClick)="abrirDisputa()" *ngIf="!modoEdicionActivo">
+          <app-button variant="text" size="sm" (onClick)="abrirModalInconsistencia()">
             <span class="text-orange-600 font-bold">¿Error en los datos?</span>
           </app-button>
         </div>
@@ -85,10 +80,10 @@
           <ng-container *ngFor="let doc of clientDocs">
             <!-- Imagen (INE, comprobante foto) -->
             <a *ngIf="doc.mimeType?.startsWith('image/')"
-              [href]="doc.publicUrl" target="_blank" rel="noopener"
+              [href]="doc.publicUrl | safeUrl" target="_blank" rel="noopener"
               class="group relative block w-24 h-24 rounded-lg bg-gray-100 border-2 border-gray-200 overflow-hidden hover:border-brand hover:shadow-md transition-all"
               [title]="doc.fileName">
-              <img [src]="doc.publicUrl" [alt]="doc.documentType"
+              <img [src]="doc.publicUrl | safeUrl" [alt]="doc.documentType"
                 class="w-full h-full object-cover transition-transform group-hover:scale-105" loading="lazy">
               <div class="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-[10px] px-1 py-0.5 text-center font-medium">
                 {{ doc.documentType === 'ine' ? 'INE' : doc.documentType === 'address_proof' ? 'Domicilio' : doc.documentType }}
@@ -96,7 +91,7 @@
             </a>
             <!-- Archivo -->
             <a *ngIf="!doc.mimeType?.startsWith('image/')"
-              [href]="doc.publicUrl" target="_blank" rel="noopener"
+              [href]="doc.publicUrl | safeUrl" target="_blank" rel="noopener"
               class="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 bg-gray-50 hover:border-brand hover:bg-brand-50 transition-all text-sm"
               [title]="doc.fileName">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -171,18 +166,80 @@
 
 </div>
 
-<!-- Modal Token de Disputa -->
-<app-modal [isOpen]="isModalTokenOpen" title="Autorización Requerida" maxWidth="sm" (onClose)="cerrarDisputa()">
+<!-- Modal Inconsistencia -->
+<app-modal [isOpen]="isModalDiscrepancyOpen" title="Reportar Inconsistencia en Datos" maxWidth="2xl" (onClose)="cerrarModalInconsistencia()">
   <div class="space-y-4">
-    <p class="text-sm text-gray-600">
-      Para editar los datos sensibles del cliente, necesitas ingresar el <strong>Token de 6 dígitos</strong> generado por el Gerente o Coordinador desde su bandeja de aprobaciones.
+    <div *ngIf="discrepancyError"
+      class="flex items-center p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400"
+      role="alert">
+      <svg class="shrink-0 inline w-4 h-4 me-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+        fill="currentColor" viewBox="0 0 20 20">
+        <path
+          d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5ZM9.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM12 15H8a1 1 0 0 1 0-2h1v-3H8a1 1 0 0 1 0-2h2a1 1 0 0 1 1 1v4h1a1 1 0 0 1 0 2Z" />
+      </svg>
+      <span class="sr-only">Info</span>
+      <div>
+        <span class="font-bold">Error:</span> {{ discrepancyError }}
+      </div>
+    </div>
+
+    <div *ngIf="discrepancySuccess"
+      class="flex items-center p-4 mb-4 text-sm text-green-800 rounded-lg bg-green-50 dark:bg-gray-800 dark:text-green-400"
+      role="alert">
+      <svg class="shrink-0 inline w-4 h-4 me-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+        fill="currentColor" viewBox="0 0 20 20">
+        <path
+          d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5ZM9.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM12 15H8a1 1 0 0 1 0-2h1v-3H8a1 1 0 0 1 0-2h2a1 1 0 0 1 1 1v4h1a1 1 0 0 1 0 2Z" />
+      </svg>
+      <span class="sr-only">Info</span>
+      <div>
+        {{ discrepancySuccess }}
+      </div>
+    </div>
+
+    <p class="text-sm text-gray-600 mb-4">
+      Si los datos del cliente no coinciden con su identificación oficial (INE) o con el estado de cuenta proporcionado, por favor reporta la inconsistencia aquí. Esto enviará la solicitud de corrección al Gerente para su aprobación.
     </p>
     
-    <app-input label="Token de Seguridad" placeholder="------" [(ngModel)]="tokenInput" type="text" class="text-center text-2xl tracking-widest uppercase"></app-input>
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Descripción del problema *</label>
+      <textarea [(ngModel)]="discrepancyData.description" rows="3" class="w-full rounded-md border-gray-300 shadow-sm focus:border-brand focus:ring-brand sm:text-sm" placeholder="Ej: El nombre del cliente en el sistema está mal escrito..."></textarea>
+    </div>
+
+    <div class="bg-gray-50 p-4 border border-gray-200 rounded-md space-y-4 mt-4">
+      <h3 class="text-sm font-bold text-gray-800">Datos Propuestos (Corregidos)</h3>
+      <div class="grid grid-cols-1 gap-4">
+        <app-input label="Nombre Completo" [(ngModel)]="discrepancyData.fullName"></app-input>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <app-input label="CURP" [(ngModel)]="discrepancyData.curp"></app-input>
+        <app-input label="Banco" [(ngModel)]="discrepancyData.banco"></app-input>
+        <app-input label="CLABE Bancaria" [(ngModel)]="discrepancyData.clabe"></app-input>
+      </div>
+    </div>
+
+    <div class="mt-4">
+      <label class="block text-sm font-medium text-gray-700 mb-1">Evidencias (Fotos INE, Comprobantes, etc.)</label>
+      <input type="file" multiple (change)="onFilesSelected($event)" accept="image/*,.pdf" class="block w-full text-sm text-gray-500
+        file:mr-4 file:py-2 file:px-4
+        file:rounded-md file:border-0
+        file:text-sm file:font-semibold
+        file:bg-brand-50 file:text-brand-700
+        hover:file:bg-brand-100" />
+      <p class="text-xs text-gray-500 mt-1">Sube hasta 3 archivos. Tamaño máximo 5MB cada uno.</p>
+
+      <div *ngIf="discrepancyPreviews.length > 0" class="mt-4 flex flex-wrap gap-4">
+        <div *ngFor="let previewUrl of discrepancyPreviews" class="relative group">
+          <img [src]="previewUrl | safeUrl" class="h-24 w-24 object-cover rounded-lg border-2 border-gray-200 shadow-sm" />
+        </div>
+      </div>
+    </div>
     
-    <div class="pt-4 flex justify-end gap-2">
-      <app-button variant="text" (onClick)="cerrarDisputa()">Cancelar</app-button>
-      <app-button variant="primary" (onClick)="validarToken()">Validar y Habilitar Edición</app-button>
+    <div class="pt-4 flex justify-end gap-2 border-t mt-6">
+      <app-button variant="text" (onClick)="cerrarModalInconsistencia()" [disabled]="isSubmittingDiscrepancy">Cancelar</app-button>
+      <app-button variant="primary" (onClick)="submitDiscrepancy()" [disabled]="isSubmittingDiscrepancy || !discrepancyData.description">
+        {{ isSubmittingDiscrepancy ? 'Enviando...' : 'Enviar Reporte' }}
+      </app-button>
     </div>
   </div>
 </app-modal>

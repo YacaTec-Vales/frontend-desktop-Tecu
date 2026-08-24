@@ -19,7 +19,7 @@
       <ng-container *ngFor="let auth of autorizaciones">
         <tr class="bg-white border-b hover:bg-gray-50">
           <td class="px-6 py-4 whitespace-nowrap">
-            <div class="text-sm font-medium text-gray-900">{{ auth.id.substring(0,8) }}...</div>
+            <div class="text-sm font-medium text-gray-900">{{ (auth.id | slice:0:8) || 'N/A' }}...</div>
             <div class="text-xs text-gray-500">{{ auth.createdAt | date:'short' }}</div>
           </td>
           <td class="px-6 py-4 whitespace-nowrap">
@@ -28,15 +28,21 @@
             </span>
           </td>
           <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+          <ng-container *ngIf="auth.authorizationType === 'MODIFICACION_CLIENTE'">
+            <span class="font-bold text-gray-900">{{ auth.resolvedNames?.clientName || 'Cliente' }}</span>
+          </ng-container>
+          <ng-container *ngIf="auth.authorizationType !== 'MODIFICACION_CLIENTE'">
             {{ auth.affectedEntity | json }}
-          </td>
-          <td class="px-6 py-4 text-sm text-gray-500 max-w-xs truncate" [title]="auth.justification">
-            {{ auth.justification || 'Sin justificación' }}
-          </td>
-          <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium space-x-2">
-            <button class="text-green-600 hover:text-green-900" (click)="aprobar(auth)">Aprobar</button>
-            <button class="text-red-600 hover:text-red-900" (click)="rechazar(auth)">Rechazar</button>
-          </td>
+          </ng-container>
+        </td>
+        <td class="px-6 py-4 text-sm text-gray-500 max-w-xs truncate" [title]="auth.justification">
+          {{ auth.justification || 'Sin justificación' }}
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium space-x-2">
+          <app-button *ngIf="auth.authorizationType !== 'MODIFICACION_CLIENTE'" variant="success" size="sm" (click)="aprobar(auth)">Aprobar</app-button>
+          <app-button *ngIf="auth.authorizationType === 'MODIFICACION_CLIENTE'" variant="primary" size="sm" (click)="openResolveModal(auth)">Resolver</app-button>
+          <app-button variant="error" size="sm" (click)="rechazar(auth)">Rechazar</app-button>
+        </td>
         </tr>
       </ng-container>
     </app-table>
@@ -62,6 +68,61 @@
     </div>
     <div class="mt-5 sm:mt-6">
       <app-button variant="primary" (click)="isTokenModalOpen = false" class="w-full">Entendido</app-button>
+    </div>
+  </div>
+</app-modal>
+
+<!-- Modal Resolución -->
+<app-modal [isOpen]="isResolveModalOpen" title="Resolver Autorización" maxWidth="2xl" (onClose)="cerrarResolveModal()">
+  <div *ngIf="selectedAuth" class="space-y-6">
+    <div *ngIf="resolveError" class="flex items-center p-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400" role="alert">
+      <svg class="shrink-0 inline w-4 h-4 me-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
+        <path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5ZM9.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM12 15H8a1 1 0 0 1 0-2h1v-3H8a1 1 0 0 1 0-2h2a1 1 0 0 1 1 1v4h1a1 1 0 0 1 0 2Z" />
+      </svg>
+      <span class="sr-only">Info</span>
+      <div><span class="font-bold">Error:</span> {{ resolveError }}</div>
+    </div>
+
+    <div *ngIf="resolveSuccess" class="flex items-center p-4 text-sm text-green-800 rounded-lg bg-green-50 dark:bg-gray-800 dark:text-green-400" role="alert">
+      <svg class="shrink-0 inline w-4 h-4 me-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
+        <path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5ZM9.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM12 15H8a1 1 0 0 1 0-2h1v-3H8a1 1 0 0 1 0-2h2a1 1 0 0 1 1 1v4h1a1 1 0 0 1 0 2Z" />
+      </svg>
+      <span class="sr-only">Info</span>
+      <div>{{ resolveSuccess }}</div>
+    </div>
+
+    <div class="p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+      <h4 class="text-sm font-bold text-yellow-800 mb-1">Descripción de la Cajera</h4>
+      <p class="text-sm text-yellow-700">{{ selectedAuth.justification }}</p>
+    </div>
+
+    <ng-container *ngIf="selectedAuth.authorizationType === 'MODIFICACION_CLIENTE'">
+      <div class="bg-white border border-gray-200 rounded-md overflow-hidden">
+        <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
+          <h3 class="text-sm font-bold text-gray-800">Datos Propuestos (Revisar y Editar)</h3>
+        </div>
+        <div *ngIf="selectedAuth.affectedEntity?.discrepancyData" class="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <app-input label="Nombre Completo" [(ngModel)]="selectedAuth.affectedEntity.discrepancyData.fullName"></app-input>
+          <app-input label="Banco" [(ngModel)]="selectedAuth.affectedEntity.discrepancyData.bankAccount.banco"></app-input>
+          <app-input label="CLABE Bancaria" [(ngModel)]="selectedAuth.affectedEntity.discrepancyData.bankAccount.clabe"></app-input>
+        </div>
+      </div>
+
+      <div *ngIf="selectedAuth.affectedEntity?.evidenceUrls && selectedAuth.affectedEntity.evidenceUrls.length > 0" class="mt-4">
+        <h4 class="text-sm font-bold text-gray-800 mb-2">Evidencias Adjuntas</h4>
+        <div class="flex flex-wrap gap-4">
+          <a *ngFor="let url of selectedAuth.affectedEntity.evidenceUrls" [href]="url | safeUrl" target="_blank" class="block">
+            <img [src]="url | safeUrl" class="h-24 w-24 object-cover rounded border hover:opacity-75 transition-opacity" />
+          </a>
+        </div>
+      </div>
+    </ng-container>
+
+    <div class="pt-4 border-t flex justify-end gap-2">
+      <app-button variant="text" (onClick)="cerrarResolveModal()" [disabled]="isSubmitting">Cancelar</app-button>
+      <app-button *ngIf="selectedAuth.authorizationType === 'MODIFICACION_CLIENTE'" variant="primary" (onClick)="aprobarModificacionCliente()" [disabled]="isSubmitting">
+        {{ isSubmitting ? 'Aprobando...' : 'Aprobar Modificación' }}
+      </app-button>
     </div>
   </div>
 </app-modal>
