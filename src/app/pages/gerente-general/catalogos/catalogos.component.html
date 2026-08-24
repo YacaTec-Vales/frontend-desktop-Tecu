@@ -280,6 +280,9 @@
       <div>
         <app-input label="Comisión (%)" type="number" placeholder="0" formControlName="commissionPorc"
           [maxlength]="4"></app-input>
+        <p class="mt-1 text-[10px] text-gray-500">Ej: 10 para 10%</p>
+        <p *ngIf="productoForm.get('commissionPorc')?.errors?.['max'] && productoForm.get('commissionPorc')?.touched"
+          class="mt-1 text-xs text-red-600">No puede superar el 100%.</p>
       </div>
       <div>
         <app-input label="Seguro ($ MXN)" type="number" placeholder="0" formControlName="insurancePesos"
@@ -288,6 +291,9 @@
       <div>
         <app-input label="Interés/Q (%)" type="number" placeholder="5" formControlName="interestPorc"
           [maxlength]="4"></app-input>
+        <p class="mt-1 text-[10px] text-gray-500">Ej: 3 para 3%</p>
+        <p *ngIf="productoForm.get('interestPorc')?.errors?.['max'] && productoForm.get('interestPorc')?.touched"
+          class="mt-1 text-xs text-red-600">No puede superar el 100%.</p>
       </div>
       <div>
         <app-input label="Multa ($ MXN)" type="number" placeholder="50" formControlName="penaltyPesos"

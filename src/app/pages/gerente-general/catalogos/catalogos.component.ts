@@ -116,9 +116,9 @@ export class CatalogosComponent implements OnInit {
       variant: ['NORMAL', Validators.required],
       costPesos: [null, [Validators.required, Validators.min(1)]],
       totalPeriods: [null, [Validators.required, Validators.min(1), Validators.max(60)]],
-      commissionPorc: [0, [Validators.required, Validators.min(0)]],
+      commissionPorc: [0, [Validators.required, Validators.min(0), Validators.max(100)]],
       insurancePesos: [0, [Validators.required, Validators.min(0)]],
-      interestPorc: [0, [Validators.required, Validators.min(0)]],
+      interestPorc: [0, [Validators.required, Validators.min(0), Validators.max(100)]],
       penaltyPesos: [0, [Validators.required, Validators.min(0)]]
     });
 
