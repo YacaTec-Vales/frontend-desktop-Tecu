@@ -137,7 +137,7 @@ export class Distribuidoras implements OnInit {
     if (!newCategoryId) return;
     this.distribuidorService.changeCategory(dist.id, newCategoryId).subscribe({
       next: () => {
-        dist.categoryId = newCategoryId;
+        this.loadDistribuidores();
       },
       error: (err) => {
         console.error('Error changing category', err);
