@@ -100,6 +100,7 @@ export class CatalogosComponent implements OnInit {
   sucursalError: string | null = null;
   personalError: string | null = null;
   productoError: string | null = null;
+  productoSuccess: string | null = null;
   productoActivo: Product | null = null;
 
   constructor(
@@ -117,7 +118,8 @@ export class CatalogosComponent implements OnInit {
       totalPeriods: [null, [Validators.required, Validators.min(1), Validators.max(60)]],
       commissionPorc: [0, [Validators.required, Validators.min(0)]],
       insurancePesos: [0, [Validators.required, Validators.min(0)]],
-      interestPorc: [0, [Validators.required, Validators.min(0)]]
+      interestPorc: [0, [Validators.required, Validators.min(0)]],
+      penaltyPesos: [0, [Validators.required, Validators.min(0)]]
     });
 
     this.sucursalForm = this.fb.group({
@@ -375,12 +377,13 @@ export class CatalogosComponent implements OnInit {
   }
 
   // Productos
-  abrirModalProducto() { 
-    this.isEditingMode = false;
+  abrirModalProducto() {
     this.productoError = null;
-    this.productoForm.reset({ variant: 'NORMAL', commissionPorc: 0, insurancePesos: 0, interestPorc: 0 });
-    this.isProductoModalOpen = true; 
+    this.isEditingMode = false;
+    this.isProductoModalOpen = true;
+    this.productoForm.reset({ variant: 'NORMAL', commissionPorc: 0, insurancePesos: 0, interestPorc: 0, penaltyPesos: 0 });
   }
+
   cerrarModalProducto() { 
     this.isProductoModalOpen = false; 
     this.isEditingMode = false;
@@ -399,13 +402,16 @@ export class CatalogosComponent implements OnInit {
         totalPeriods: formValue.totalPeriods!,
         commissionBps: Math.round(formValue.commissionPorc * 100),
         insuranceCents: Math.round(formValue.insurancePesos * 100),
-        interestPerPeriodBps: Math.round(formValue.interestPorc * 100)
+        interestPerPeriodBps: Math.round(formValue.interestPorc * 100),
+        penaltyCents: Math.round(formValue.penaltyPesos * 100)
       };
       
       this.productService.createProduct(dto).subscribe({
         next: () => {
+          this.productoSuccess = 'Producto creado exitosamente.';
           this.loadActiveTab(true);
           this.cerrarModalProducto();
+          setTimeout(() => { this.productoSuccess = null; this.cdr.detectChanges(); }, 4000);
         },
         error: (err) => {
           this.productoError = err.error?.message || 'Error al crear el producto. Revisa que el código no exista.';
@@ -425,7 +431,8 @@ export class CatalogosComponent implements OnInit {
       totalPeriods: prod.totalPeriods,
       commissionPorc: prod.commissionBps / 100,
       insurancePesos: prod.insuranceCents / 100,
-      interestPorc: prod.interestPerPeriodBps / 100
+      interestPorc: prod.interestPerPeriodBps / 100,
+      penaltyPesos: (prod.penaltyCents || 0) / 100
     });
     this.isProductoModalOpen = true;
   }
@@ -459,7 +466,18 @@ export class CatalogosComponent implements OnInit {
 
     if (type === 'producto') {
       const p = this.productos.find(x => x.code === id);
-      if (p) p.isActive = false;
+      if (p) {
+        this.productService.deleteProduct(p.id).subscribe({
+          next: () => {
+            this.productoSuccess = 'Producto desactivado exitosamente.';
+            this.loadActiveTab(true);
+            setTimeout(() => { this.productoSuccess = null; this.cdr.detectChanges(); }, 4000);
+          },
+          error: (err) => {
+            console.error('Error al desactivar el producto:', err);
+          }
+        });
+      }
     } else if (type === 'sucursal') {
       this.branchService.deleteBranch(id).subscribe(() => {
         this.loadActiveTab(true);

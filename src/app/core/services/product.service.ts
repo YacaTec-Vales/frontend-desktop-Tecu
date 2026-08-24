@@ -12,6 +12,7 @@ export interface Product {
   commissionBps: number;
   insuranceCents: number;
   interestPerPeriodBps: number;
+  penaltyCents: number;
   isActive: boolean;
 }
 
@@ -23,6 +24,7 @@ export interface CreateProductDto {
   commissionBps: number;
   insuranceCents: number;
   interestPerPeriodBps: number;
+  penaltyCents: number;
 }
 
 export interface UpdateProductDto {

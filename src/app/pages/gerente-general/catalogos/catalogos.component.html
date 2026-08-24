@@ -34,11 +34,25 @@
 
   <!-- Tab Content: PRODUCTOS -->
   <div *ngIf="activeTab === 'productos'" class="animate-fade-in">
+    <div *ngIf="productoSuccess"
+      class="flex items-center p-4 mb-4 text-sm text-green-800 rounded-lg bg-green-50 dark:bg-gray-800 dark:text-green-400"
+      role="alert">
+      <svg class="shrink-0 inline w-4 h-4 me-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+        fill="currentColor" viewBox="0 0 20 20">
+        <path
+          d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5ZM9.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM12 15H8a1 1 0 0 1 0-2h1v-3H8a1 1 0 0 1 0-2h2a1 1 0 0 1 1 1v4h1a1 1 0 0 1 0 2Z" />
+      </svg>
+      <span class="sr-only">Success</span>
+      <div>
+        {{ productoSuccess }}
+      </div>
+    </div>
+    
     <app-card title="Catálogo de Vales Permitidos"
       subtitle="Define montos cerrados estrictos. Sin múltiplos fraccionados." [noPadding]="true">
       <!-- Header / Acciones -->
         <app-table title="Productos (Vales)" [dataTrigger]="productos" (onAction)="handleTableAction($event, 'producto')"
-          [columns]="['Código', 'Variante', 'Costo', 'Quincenas', 'Comisión', 'Seguro', 'Interés/Q', 'Estado', 'Acciones']"
+          [columns]="['Código', 'Variante', 'Costo', 'Quincenas', 'Comisión', 'Seguro', 'Interés/Q', 'Multa', 'Estado', 'Acciones']"
           [useServerPagination]="true" [currentPage]="productosPage" [totalItems]="productosTotal" [limit]="productosLimit"
           [isLoading]="isProductsLoading"
           (pageChange)="onPageChange($event, 'productos')" (searchChange)="onSearch($event, 'productos')"
@@ -55,6 +69,7 @@
               <td class="px-6 py-4 text-gray-500">{{ p.commissionBps / 100 | number:'1.2-2' }}%</td>
               <td class="px-6 py-4 text-gray-500">{{ p.insuranceCents / 100 | currency:'MXN' }}</td>
               <td class="px-6 py-4 text-gray-500">{{ p.interestPerPeriodBps / 100 | number:'1.2-2' }}%</td>
+              <td class="px-6 py-4 text-red-500 font-bold">{{ p.penaltyCents / 100 | currency:'MXN' }}</td>
               <td class="px-6 py-4">
                 <app-badge [text]="p.isActive ? 'Activo' : 'Inactivo'"
                   [variant]="p.isActive ? 'success' : 'error'"></app-badge>
@@ -261,7 +276,7 @@
       </div>
     </div>
 
-    <div class="grid grid-cols-3 gap-4">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
       <div>
         <app-input label="Comisión (%)" type="number" placeholder="0" formControlName="commissionPorc"
           [maxlength]="4"></app-input>
@@ -273,6 +288,10 @@
       <div>
         <app-input label="Interés/Q (%)" type="number" placeholder="5" formControlName="interestPorc"
           [maxlength]="4"></app-input>
+      </div>
+      <div>
+        <app-input label="Multa ($ MXN)" type="number" placeholder="50" formControlName="penaltyPesos"
+          [maxlength]="6"></app-input>
       </div>
     </div>
 
