@@ -209,6 +209,11 @@ export class Login {
   }
 
   private evaluateUserState(user: any, token: string) {
+    // Si tenemos un token (ya sea completo o parcial), lo guardamos para que el interceptor lo use
+    if (token) {
+      sessionStorage.setItem('ACCESS_TOKEN', token);
+    }
+
     if (user.mustChangePassword) {
       this.step = 'change_password';
       this.currentPassword = this.password; // asumiendo que this.password aún tiene la contraseña del form
