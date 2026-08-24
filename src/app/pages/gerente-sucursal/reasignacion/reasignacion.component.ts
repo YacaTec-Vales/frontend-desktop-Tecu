@@ -104,6 +104,26 @@ export class ReasignacionComponent implements OnInit {
     });
   }
 
+  isTriggering = false;
+  triggerMessage = '';
+
+  forzarCronJob() {
+    this.isTriggering = true;
+    this.triggerMessage = '';
+    this.cutService.triggerCut().subscribe({
+      next: (res) => {
+        this.isTriggering = false;
+        this.triggerMessage = `Éxito: Se procesaron ${res.data.procesadas} relaciones y hubo ${res.data.errores} errores.`;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.isTriggering = false;
+        this.triggerMessage = 'Error al disparar cron job.';
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
   reiniciar() {
     this.cutResult = null;
     this.errorMessage = '';
