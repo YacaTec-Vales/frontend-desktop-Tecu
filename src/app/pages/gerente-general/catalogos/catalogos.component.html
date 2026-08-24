@@ -81,8 +81,8 @@
         <app-button table-actions variant="primary" (onClick)="abrirModalCategoria()">+ Nueva Categoría</app-button>
 
         <tr *ngFor="let c of categorias" class="bg-white border-b hover:bg-gray-50">
-          <td class="px-6 py-4 font-bold uppercase">{{ c.nombre }}</td>
-          <td class="px-6 py-4 text-green-600 font-bold">{{ c.gananciaBps / 100 | number:'1.2-2' }}%</td>
+          <td class="px-6 py-4 font-bold uppercase">{{ c.name }}</td>
+          <td class="px-6 py-4 text-green-600 font-bold">{{ c.commissionBps / 100 | number:'1.2-2' }}%</td>
           <td class="px-6 py-4 flex gap-2">
             <app-table-actions [id]="c.id"></app-table-actions>
           </td>
@@ -310,8 +310,8 @@
       El porcentaje de ganancia se expresará como base de cálculo para las distribuidoras de esta categoría.
     </p>
 
-    <app-input label="Nombre de Categoría" type="text" placeholder="Ej: Diamante" formControlName="nombre"></app-input>
-    <p *ngIf="categoriaForm.get('nombre')?.invalid && categoriaForm.get('nombre')?.touched"
+    <app-input label="Nombre de Categoría" type="text" placeholder="Ej: Diamante" formControlName="name"></app-input>
+    <p *ngIf="categoriaForm.get('name')?.invalid && categoriaForm.get('name')?.touched"
       class="-mt-3 text-xs text-red-600">Requerido (mín. 2 caracteres).</p>
 
     <app-input label="Porcentaje de Ganancia (%)" type="number" placeholder="Ej: 12" formControlName="ganancia"

@@ -110,7 +110,7 @@ export class Distribuidoras implements OnInit {
   getCategoryName(id: string): string {
     if (!id) return 'Sin Asignar';
     const c = this.categories.find(cat => cat.id === id);
-    return c ? c.nombre : 'Sin Asignar';
+    return c ? c.name : 'Sin Asignar';
   }
 
   getBranchName(id: string): string {
@@ -137,7 +137,7 @@ export class Distribuidoras implements OnInit {
     if (!newCategoryId) return;
     this.distribuidorService.changeCategory(dist.id, newCategoryId).subscribe({
       next: () => {
-        dist.categoryId = newCategoryId;
+        this.loadDistribuidores();
       },
       error: (err) => {
         console.error('Error changing category', err);

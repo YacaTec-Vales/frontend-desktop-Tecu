@@ -55,7 +55,7 @@
                     <li *ngIf="categories.length === 0" class="px-4 py-2 text-xs text-gray-500">No hay categorías</li>
                     <li *ngFor="let c of categories">
                       <a href="javascript:void(0)" (click)="changeCategoryInline(dist, c.id); toggleDropdown(dist.id)" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
-                        {{ c.nombre }} ({{ c.gananciaBps / 100 }}%)
+                        {{ c.name }} ({{ c.commissionBps / 100 }}%)
                       </a>
                     </li>
                   </ul>
