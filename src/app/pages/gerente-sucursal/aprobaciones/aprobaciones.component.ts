@@ -1,6 +1,7 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, CurrencyPipe, DatePipe, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { environment } from '../../../../environments/environment';
 import { CardComponent } from '../../../components/ui/card/card';
 import { TableComponent } from '../../../components/ui/table/table';
 import { ButtonComponent } from '../../../components/ui/button/button';
@@ -15,6 +16,7 @@ import { SolicitudPhotosService } from '../../../core/services/solicitud-photos.
 import { AlertService } from '../../../core/services/alert.service';
 import { forkJoin, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
+import { DocumentService } from '../../../core/services/document.service';
 
 export interface UnifiedRequest {
   id: string;
@@ -56,6 +58,7 @@ export class AprobacionesComponent implements OnInit {
 
   isModalOpen = false;
   selectedItem: UnifiedRequest | null = null;
+  selectedItemPhotos: string[] = [];
   isLoading = false;
 
   // URLs firmadas resueltas para la galeria de fotos del dictamen
@@ -120,6 +123,7 @@ export class AprobacionesComponent implements OnInit {
     private distribuidorService: DistribuidorService,
     private photoService: SolicitudPhotosService,
     private alertService: AlertService,
+    private documentService: DocumentService,
     private cdr: ChangeDetectorRef
   ) {}
 
@@ -238,38 +242,83 @@ export class AprobacionesComponent implements OnInit {
 
   abrirModal(item: UnifiedRequest) {
     this.selectedItem = item;
-    this.isModalOpen = true;
     this.notasGerencia = '';
+    this.selectedItemPhotos = [];
 
     if (this.selectedItem.type === 'AUMENTO') {
       this.montoAprobacion = this.selectedItem.originalData.requestedAmountCents / 100;
     } else {
       this.montoAprobacion = null;
-      // Resuelve verificationPhotos (UUIDs -> URLs firmadas frescas).
-      // El backend ya entrega URLs en la respuesta de GET /solicitudes
-      // (post PR #98 backend-api), pero mantenemos el resolver por
-      // si llegan UUIDs (legacy) o si queremos re-firmar URLs.
-      const solicitud = this.selectedItem.originalData as Solicitud;
-      const entries = solicitud?.verificationPhotos ?? [];
-      if (entries.length > 0) {
-        this.photoService.resolve(entries).subscribe({
-          next: (urls) => {
-            this.resolvedPhotos = urls;
-            this.cdr.detectChanges();
+      const fixUrl = (url: string) => {
+        if (!url) return url;
+        if (url.includes('localhost:9000')) {
+          try {
+            const apiHost = new URL(environment.apiUrl).hostname;
+            return url.replace('localhost', apiHost);
+          } catch (e) {
+            return url;
+          }
+        }
+        return url;
+      };
+
+      const addUniquePhoto = (url: string) => {
+        const fixed = fixUrl(url);
+        if (fixed && !this.selectedItemPhotos.includes(fixed)) {
+          this.selectedItemPhotos.push(fixed);
+          this.cdr.detectChanges();
+        }
+      };
+
+      const legacyPhotos = Array.isArray(item.originalData?.verificationPhotos) ? item.originalData.verificationPhotos : [];
+      const uuidRegex = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
+      
+      legacyPhotos.forEach((photo: any) => {
+        if (typeof photo === 'string') {
+          if (uuidRegex.test(photo)) {
+            // It's a UUID, fetch it
+            this.documentService.getDocumentById(photo).subscribe({
+              next: (doc) => {
+                if (doc?.publicUrl) addUniquePhoto(doc.publicUrl);
+              },
+              error: (err) => console.error('Error fetching legacy photo by ID:', err)
+            });
+          } else if (photo.startsWith('http')) {
+            addUniquePhoto(photo);
+          }
+        }
+      });
+
+      // Fetch photos from DocumentService
+      this.documentService.getDocumentsByVerification(item.originalData.id).subscribe({
+        next: (docs) => {
+          docs.forEach(d => addUniquePhoto(d.publicUrl));
+        },
+        error: (err) => console.error('Error fetching verification photos:', err)
+      });
+
+      // Also check if there's an explicit INE document ID in generalData
+      if (item.originalData?.generalData?.ine_document_id) {
+        this.documentService.getDocumentById(item.originalData.generalData.ine_document_id).subscribe({
+          next: (doc) => {
+            if (doc?.publicUrl) addUniquePhoto(doc.publicUrl);
           },
-          error: () => {
-            this.resolvedPhotos = [];
-          },
+          error: (err) => console.error('Error fetching INE document:', err)
         });
-      } else {
-        this.resolvedPhotos = [];
       }
     }
+
+    // Open modal after micro-task
+    setTimeout(() => {
+      this.isModalOpen = true;
+      this.cdr.detectChanges();
+    }, 0);
   }
 
   cerrarModal() {
     this.isModalOpen = false;
     this.selectedItem = null;
+    this.selectedItemPhotos = [];
     this.montoAprobacion = null;
     this.notasGerencia = '';
     this.isRejectingMode = false;

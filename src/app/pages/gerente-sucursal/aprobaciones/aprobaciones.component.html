@@ -150,28 +150,22 @@
       <div class="border border-gray-200 rounded-lg p-4">
         <h4 class="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
           Evidencia Fotográfica
-          <span *ngIf="resolvedPhotos.length > 0"
+          <span *ngIf="selectedItemPhotos?.length > 0"
             class="bg-brand text-white text-xs font-bold px-2 py-0.5 rounded-full">
-            {{ resolvedPhotos.length }}
+            {{ selectedItemPhotos.length }}
           </span>
         </h4>
 
-        <!-- Sin fotos en la BD -->
-        <p *ngIf="resolvedPhotos.length === 0 && !selectedItem.originalData.verificationPhotos?.length"
+        <!-- Sin fotos -->
+        <p *ngIf="!selectedItemPhotos?.length"
           class="text-sm text-gray-500 italic">
           No se adjuntaron fotografías en la verificación.
         </p>
 
-        <!-- Cargando firmas -->
-        <p *ngIf="resolvedPhotos.length === 0 && selectedItem.originalData.verificationPhotos?.length > 0"
-          class="text-sm text-gray-500 italic">
-          Cargando fotografías firmadas...
-        </p>
-
-        <!-- Galería de fotos firmadas (TTL 15 min) -->
-        <div *ngIf="resolvedPhotos.length > 0"
+        <!-- Galería de fotos firmadas -->
+        <div *ngIf="selectedItemPhotos?.length > 0"
           class="flex flex-wrap gap-3">
-          <a *ngFor="let photoUrl of resolvedPhotos; let i = index"
+          <a *ngFor="let photoUrl of selectedItemPhotos; let i = index"
             [href]="photoUrl" target="_blank" rel="noopener"
             class="group relative block w-28 h-28 rounded-lg bg-gray-100 border border-gray-200 overflow-hidden hover:border-brand hover:shadow-md transition-all"
             [title]="'Foto ' + (i + 1)">
