@@ -8,6 +8,7 @@ import { Login } from './pages/login/login';
 import { LayoutComponent as CajeraLayout } from './pages/cajera/layout/layout.component';
 import { LiberacionComponent } from './pages/cajera/liberacion/liberacion.component';
 import { ConciliacionComponent } from './pages/cajera/conciliacion/conciliacion.component';
+import { ValesDigitalesComponent } from './pages/cajera/vales-digitales/vales-digitales';
 
 // Gerente Sucursal Layout & Pages
 import { LayoutComponent as GerenteSucursalLayout } from './pages/gerente-sucursal/layout/layout.component';
@@ -41,7 +42,8 @@ export const routes: Routes = [
     children: [
       { path: '', redirectTo: 'liberacion', pathMatch: 'full' },
       { path: 'liberacion', component: LiberacionComponent },
-      { path: 'conciliacion', component: ConciliacionComponent }
+      { path: 'conciliacion', component: ConciliacionComponent },
+      { path: 'vales-digitales', component: ValesDigitalesComponent }
     ]
   },
   {

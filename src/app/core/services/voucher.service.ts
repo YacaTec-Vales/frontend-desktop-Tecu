@@ -70,4 +70,27 @@ export class VoucherService {
       headers: this.buildHeaders()
     });
   }
+
+  getVouchers(status: string = 'ACTIVO', voucherType: string = 'PREVALE', limit: number = 50): Observable<{data: any[], meta: any}> {
+    return this.http.get<{ message: string; data: any; meta?: any }>(`${this.apiUrl}?status=${status}&voucherType=${voucherType}&limit=${limit}`, {
+      headers: this.buildHeaders()
+    }).pipe(
+      map(res => {
+        // Asumimos que el backend retorna un array en res.data o res.data.data
+        const items = Array.isArray(res.data) ? res.data : (res.data?.data || []);
+        const total = res.meta?.totalItems || items.length;
+        return {
+          data: items,
+          meta: {
+            page: 1,
+            limit: limit,
+            itemCount: total,
+            pageCount: Math.ceil(total / limit) || 1,
+            hasPreviousPage: false,
+            hasNextPage: false
+          }
+        };
+      })
+    );
+  }
 }
