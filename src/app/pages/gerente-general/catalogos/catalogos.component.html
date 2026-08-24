@@ -81,8 +81,8 @@
         <app-button table-actions variant="primary" (onClick)="abrirModalCategoria()">+ Nueva Categoría</app-button>
 
         <tr *ngFor="let c of categorias" class="bg-white border-b hover:bg-gray-50">
-          <td class="px-6 py-4 font-bold uppercase">{{ c.nombre }}</td>
-          <td class="px-6 py-4 text-green-600 font-bold">{{ c.gananciaBps / 100 | number:'1.2-2' }}%</td>
+          <td class="px-6 py-4 font-bold uppercase">{{ c.name }}</td>
+          <td class="px-6 py-4 text-green-600 font-bold">{{ c.commissionBps / 100 | number:'1.2-2' }}%</td>
           <td class="px-6 py-4 flex gap-2">
             <app-table-actions [id]="c.id"></app-table-actions>
           </td>
