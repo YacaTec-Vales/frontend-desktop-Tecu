@@ -1,0 +1,33 @@
+<div class="max-w-7xl mx-auto space-y-6">
+  <div>
+    <h2 class="text-3xl font-bold text-gray-900 dark:text-white">Vales Digitales</h2>
+    <p class="text-gray-500 dark:text-gray-400 mt-1 text-lg">Consulta y administra los vales digitales activos y prevales listos para liberación.</p>
+  </div>
+
+  <div class="animate-fade-in mt-6">
+    <app-card [noPadding]="true">
+      <app-table title="Lista de Vales Digitales" [dataTrigger]="vales"
+        [columns]="['Folio', 'Cliente', 'Tipo', 'Monto', 'Estatus', 'Fecha']"
+        [useServerPagination]="true" [currentPage]="page" [totalItems]="totalFilteredItems" [limit]="limit"
+        [isLoading]="isLoading"
+        (pageChange)="onPageChange($event)" (searchChange)="onSearch($event)"
+        (limitChange)="onLimitChange($event)">
+        
+        <tr *ngFor="let v of paginatedList" class="bg-white border-b hover:bg-gray-50">
+          <td class="px-6 py-4 font-bold text-xs">{{ v.folio }}</td>
+          <td class="px-6 py-4 font-semibold text-gray-900">{{ v.cliente }}</td>
+          <td class="px-6 py-4">
+            <span class="px-2 py-1 text-xs font-semibold rounded-full border bg-emerald-50 text-emerald-700 border-emerald-200">
+              {{ v.tipo }}
+            </span>
+          </td>
+          <td class="px-6 py-4 font-bold text-emerald-600">{{ v.montoPesos | currency:'MXN' }}</td>
+          <td class="px-6 py-4">
+            <app-badge [text]="v.status" variant="success"></app-badge>
+          </td>
+          <td class="px-6 py-4 text-gray-500 text-xs">{{ v.fecha | date:'short' }}</td>
+        </tr>
+      </app-table>
+    </app-card>
+  </div>
+</div>

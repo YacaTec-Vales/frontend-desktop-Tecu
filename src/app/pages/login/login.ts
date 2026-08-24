@@ -18,10 +18,13 @@ export class Login {
   error = '';
   success = '';
   isLoading = false;
-  step: 'login' | 'mfa_verify' | 'mfa_setup' = 'login';
+  step: 'login' | 'mfa_verify' | 'mfa_setup' | 'change_password' = 'login';
   mfaCode = '';
   partialToken = '';
   otpauthUrl = '';
+  currentPassword = '';
+  newPassword = '';
+  confirmPassword = '';
 
   private router = inject(Router);
   private authService = inject(AuthService);
@@ -47,28 +50,8 @@ export class Login {
           this.partialToken = loginData.mfaToken;
           this.step = 'mfa_verify';
           this.cdr.detectChanges();
-        } else if (loginData.user?.mfaEnabled === false) {
-          this.success = 'Credenciales correctas. Configura tu Autenticador.';
-          this.partialToken = loginData.accessToken;
-          this.authService.setupMfa(this.partialToken).subscribe({
-            next: (setupRes: any) => {
-              this.otpauthUrl = setupRes.data?.otpauthUrl || setupRes.otpauthUrl;
-              this.step = 'mfa_setup';
-              this.cdr.detectChanges();
-            },
-            error: (err) => {
-              this.error = 'Error generando código de configuración MFA.';
-              this.cdr.detectChanges();
-            }
-          });
         } else {
-          this.success = 'Inicio de sesión exitoso.';
-          this.cdr.detectChanges();
-          const user = loginData.user;
-          if (user.mustChangePassword) {
-            console.warn('El usuario debe cambiar la contraseña');
-          }
-          this.navigateToRole(user.role);
+          this.evaluateUserState(loginData.user, loginData.accessToken);
         }
       },
       error: (err) => {
@@ -77,6 +60,17 @@ export class Login {
         if (err.status === 401 && err.error?.code === 'AUTH.MFA_REQUIRED') {
             this.step = 'mfa_verify';
             this.partialToken = err.error.data?.accessToken || '';
+            this.cdr.detectChanges();
+            return;
+        }
+
+        if (err.error?.error?.code === 'AUTH.MUST_CHANGE_PASSWORD' || err.error?.code === 'AUTH.MUST_CHANGE_PASSWORD') {
+            this.step = 'change_password';
+            this.currentPassword = this.password;
+            // Si el backend envía un token temporal en el error, lo guardamos
+            if (err.error?.data?.accessToken) {
+               sessionStorage.setItem('ACCESS_TOKEN', err.error.data.accessToken);
+            }
             this.cdr.detectChanges();
             return;
         }
@@ -111,7 +105,7 @@ export class Login {
           this.success = 'TOTP correcto. Iniciando sesión...';
           const user = this.authService.currentUser();
           if (user) {
-            this.navigateToRole(user.role);
+            this.evaluateUserState(user, sessionStorage.getItem('ACCESS_TOKEN') || '');
           } else {
             this.error = 'No se pudo obtener la información del usuario.';
             this.cdr.detectChanges();
@@ -144,7 +138,7 @@ export class Login {
           
           // Re-fetch me to get the updated role/user
           this.authService.getMe().subscribe(user => {
-            this.navigateToRole(user.role);
+            this.evaluateUserState(user, sessionStorage.getItem('ACCESS_TOKEN') || '');
           });
         },
         error: (err) => {
@@ -167,6 +161,81 @@ export class Login {
       this.router.navigate(['/gerente-general/catalogos']);
     } else {
       this.error = 'Rol no autorizado para acceder al sistema.';
+    }
+  }
+
+  onChangePasswordSubmit(event: Event) {
+    event.preventDefault();
+    this.error = '';
+    this.success = '';
+
+    if (!this.currentPassword || !this.newPassword || !this.confirmPassword) {
+      this.error = 'Todos los campos son obligatorios.';
+      return;
+    }
+
+    if (this.newPassword !== this.confirmPassword) {
+      this.error = 'La nueva contraseña y la confirmación no coinciden.';
+      return;
+    }
+
+    if (this.newPassword.length < 8) {
+      this.error = 'La nueva contraseña debe tener al menos 8 caracteres.';
+      return;
+    }
+
+    this.isLoading = true;
+    this.authService.changePassword({
+      currentPassword: this.currentPassword,
+      newPassword: this.newPassword
+    }).subscribe({
+      next: () => {
+        this.isLoading = false;
+        this.success = 'Contraseña actualizada. Redirigiendo...';
+        const user = this.authService.currentUser();
+        if (user) {
+          this.evaluateUserState(user, sessionStorage.getItem('ACCESS_TOKEN') || '');
+        } else {
+          this.error = 'No se pudo obtener información del usuario.';
+          this.cdr.detectChanges();
+        }
+      },
+      error: (err: any) => {
+        this.isLoading = false;
+        this.error = err.error?.message || 'Error al actualizar la contraseña.';
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  private evaluateUserState(user: any, token: string) {
+    // Si tenemos un token (ya sea completo o parcial), lo guardamos para que el interceptor lo use
+    if (token) {
+      sessionStorage.setItem('ACCESS_TOKEN', token);
+    }
+
+    if (user.mustChangePassword) {
+      this.step = 'change_password';
+      this.currentPassword = this.password; // asumiendo que this.password aún tiene la contraseña del form
+      this.cdr.detectChanges();
+    } else if (user.mfaEnabled === false) {
+      this.success = 'Credenciales correctas. Configura tu Autenticador.';
+      this.partialToken = token || this.partialToken;
+      this.authService.setupMfa(this.partialToken).subscribe({
+        next: (setupRes: any) => {
+          this.otpauthUrl = setupRes.data?.otpauthUrl || setupRes.otpauthUrl;
+          this.step = 'mfa_setup';
+          this.cdr.detectChanges();
+        },
+        error: (err) => {
+          this.error = err.error?.message || err.error?.error?.message || 'Error generando código de configuración MFA.';
+          this.cdr.detectChanges();
+        }
+      });
+    } else {
+      this.success = 'Inicio de sesión exitoso.';
+      this.cdr.detectChanges();
+      this.navigateToRole(user.role);
     }
   }
 

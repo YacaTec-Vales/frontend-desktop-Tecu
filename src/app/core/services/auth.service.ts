@@ -69,6 +69,18 @@ export class AuthService {
     );
   }
 
+  changePassword(payload: any): Observable<any> {
+    const sanitizedData = sanitizePayload(payload);
+    return this.http.post<any>(`${this.baseUrl}/change-password`, sanitizedData).pipe(
+      tap(response => {
+        if (response.data?.accessToken) {
+          this.setTokens(response.data);
+          this.currentUser.set(response.data.user);
+        }
+      })
+    );
+  }
+
   setupMfa(token: string): Observable<any> {
     return this.http.post<any>(`${environment.apiUrl}/mfa/setup`, {}, {
       headers: {

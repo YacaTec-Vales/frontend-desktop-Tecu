@@ -1,6 +1,6 @@
 {
     "/api": {
-        "target": "https://apiv2.taquizaschavez.com.mx",
+        "target": "https://api.taquizaschavez.com.mx",
         "secure": false,
         "changeOrigin": true,
         "logLevel": "debug"

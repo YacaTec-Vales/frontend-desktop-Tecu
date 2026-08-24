@@ -125,6 +125,26 @@ export class CorteQuincenaComponent implements OnInit {
     this.isConfirmModalOpen = false;
   }
 
+  isTriggering = false;
+  triggerMessage = '';
+
+  forzarCronJob() {
+    this.isTriggering = true;
+    this.triggerMessage = '';
+    this.cutService.triggerCut().subscribe({
+      next: (res) => {
+        this.isTriggering = false;
+        this.triggerMessage = `Éxito: Se procesaron ${res.data.procesadas} relaciones y hubo ${res.data.errores} errores.`;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.isTriggering = false;
+        this.triggerMessage = 'Error al disparar cron job.';
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
   ejecutarCorteMasivo() {
     if (!this.puedeEjecutar()) return;
 

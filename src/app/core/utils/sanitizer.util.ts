@@ -22,7 +22,12 @@ export function sanitizePayload<T>(payload: T): T {
   if (typeof payload === 'object' && !(payload instanceof Date)) {
     const sanitizedObj: any = {};
     for (const [key, value] of Object.entries(payload)) {
-      sanitizedObj[key] = sanitizePayload(value);
+      // No sanitizar etiquetas HTML en contraseñas porque pueden contener caracteres como < o >
+      if (key.toLowerCase().includes('password') && typeof value === 'string') {
+        sanitizedObj[key] = value.trim();
+      } else {
+        sanitizedObj[key] = sanitizePayload(value);
+      }
     }
     return sanitizedObj as T;
   }

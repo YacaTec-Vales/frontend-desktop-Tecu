@@ -57,4 +57,10 @@ export class CutService {
       headers: this.buildHeaders()
     });
   }
+
+  triggerCut(): Observable<{ message: string, data: any }> {
+    return this.http.post<{ message: string, data: any }>(`${this.apiUrl}/trigger-cut`, {}, {
+      headers: this.buildHeaders()
+    });
+  }
 }

@@ -36,8 +36,15 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
       }
 
       // Mutamos el objeto de error para que los componentes reciban el mensaje amigable
+      // Pero conservamos el codigo original y los datos
+      const originalError = error.error || {};
       const modifiedError = new HttpErrorResponse({
-        error: { message: userFriendlyMessage },
+        error: { 
+          message: userFriendlyMessage,
+          code: originalError.code || originalError.error?.code,
+          data: originalError.data || originalError.error?.data,
+          original: originalError
+        },
         headers: error.headers,
         status: error.status,
         statusText: error.statusText,
