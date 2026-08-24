@@ -52,7 +52,7 @@
       subtitle="Define montos cerrados estrictos. Sin múltiplos fraccionados." [noPadding]="true">
       <!-- Header / Acciones -->
         <app-table title="Productos (Vales)" [dataTrigger]="productos" (onAction)="handleTableAction($event, 'producto')"
-          [columns]="['Código', 'Variante', 'Costo', 'Quincenas', 'Comisión', 'Seguro', 'Interés/Q', 'Estado', 'Acciones']"
+          [columns]="['Código', 'Variante', 'Costo', 'Quincenas', 'Comisión', 'Seguro', 'Interés/Q', 'Multa', 'Estado', 'Acciones']"
           [useServerPagination]="true" [currentPage]="productosPage" [totalItems]="productosTotal" [limit]="productosLimit"
           [isLoading]="isProductsLoading"
           (pageChange)="onPageChange($event, 'productos')" (searchChange)="onSearch($event, 'productos')"
@@ -69,6 +69,7 @@
               <td class="px-6 py-4 text-gray-500">{{ p.commissionBps / 100 | number:'1.2-2' }}%</td>
               <td class="px-6 py-4 text-gray-500">{{ p.insuranceCents / 100 | currency:'MXN' }}</td>
               <td class="px-6 py-4 text-gray-500">{{ p.interestPerPeriodBps / 100 | number:'1.2-2' }}%</td>
+              <td class="px-6 py-4 text-red-500 font-bold">{{ p.penaltyCents / 100 | currency:'MXN' }}</td>
               <td class="px-6 py-4">
                 <app-badge [text]="p.isActive ? 'Activo' : 'Inactivo'"
                   [variant]="p.isActive ? 'success' : 'error'"></app-badge>
@@ -275,7 +276,7 @@
       </div>
     </div>
 
-    <div class="grid grid-cols-3 gap-4">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
       <div>
         <app-input label="Comisión (%)" type="number" placeholder="0" formControlName="commissionPorc"
           [maxlength]="4"></app-input>
@@ -287,6 +288,10 @@
       <div>
         <app-input label="Interés/Q (%)" type="number" placeholder="5" formControlName="interestPorc"
           [maxlength]="4"></app-input>
+      </div>
+      <div>
+        <app-input label="Multa ($ MXN)" type="number" placeholder="50" formControlName="penaltyPesos"
+          [maxlength]="6"></app-input>
       </div>
     </div>
 

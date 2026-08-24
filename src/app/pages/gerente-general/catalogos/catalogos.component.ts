@@ -118,7 +118,8 @@ export class CatalogosComponent implements OnInit {
       totalPeriods: [null, [Validators.required, Validators.min(1), Validators.max(60)]],
       commissionPorc: [0, [Validators.required, Validators.min(0)]],
       insurancePesos: [0, [Validators.required, Validators.min(0)]],
-      interestPorc: [0, [Validators.required, Validators.min(0)]]
+      interestPorc: [0, [Validators.required, Validators.min(0)]],
+      penaltyPesos: [0, [Validators.required, Validators.min(0)]]
     });
 
     this.sucursalForm = this.fb.group({
@@ -376,12 +377,13 @@ export class CatalogosComponent implements OnInit {
   }
 
   // Productos
-  abrirModalProducto() { 
-    this.isEditingMode = false;
+  abrirModalProducto() {
     this.productoError = null;
-    this.productoForm.reset({ variant: 'NORMAL', commissionPorc: 0, insurancePesos: 0, interestPorc: 0 });
-    this.isProductoModalOpen = true; 
+    this.isEditingMode = false;
+    this.isProductoModalOpen = true;
+    this.productoForm.reset({ variant: 'NORMAL', commissionPorc: 0, insurancePesos: 0, interestPorc: 0, penaltyPesos: 0 });
   }
+
   cerrarModalProducto() { 
     this.isProductoModalOpen = false; 
     this.isEditingMode = false;
@@ -400,7 +402,8 @@ export class CatalogosComponent implements OnInit {
         totalPeriods: formValue.totalPeriods!,
         commissionBps: Math.round(formValue.commissionPorc * 100),
         insuranceCents: Math.round(formValue.insurancePesos * 100),
-        interestPerPeriodBps: Math.round(formValue.interestPorc * 100)
+        interestPerPeriodBps: Math.round(formValue.interestPorc * 100),
+        penaltyCents: Math.round(formValue.penaltyPesos * 100)
       };
       
       this.productService.createProduct(dto).subscribe({
@@ -428,7 +431,8 @@ export class CatalogosComponent implements OnInit {
       totalPeriods: prod.totalPeriods,
       commissionPorc: prod.commissionBps / 100,
       insurancePesos: prod.insuranceCents / 100,
-      interestPorc: prod.interestPerPeriodBps / 100
+      interestPorc: prod.interestPerPeriodBps / 100,
+      penaltyPesos: (prod.penaltyCents || 0) / 100
     });
     this.isProductoModalOpen = true;
   }
