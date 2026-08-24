@@ -87,6 +87,17 @@ export class Login {
             return;
         }
 
+        if (err.error?.error?.code === 'AUTH.MUST_CHANGE_PASSWORD' || err.error?.code === 'AUTH.MUST_CHANGE_PASSWORD') {
+            this.step = 'change_password';
+            this.currentPassword = this.password;
+            // Si el backend envía un token temporal en el error, lo guardamos
+            if (err.error?.data?.accessToken) {
+               sessionStorage.setItem('ACCESS_TOKEN', err.error.data.accessToken);
+            }
+            this.cdr.detectChanges();
+            return;
+        }
+
         if (err.error && err.error.message) {
           this.error = err.error.message;
         } else if (err.status === 400 || err.status === 401) {
