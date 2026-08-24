@@ -36,8 +36,12 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
       }
 
       // Mutamos el objeto de error para que los componentes reciban el mensaje amigable
+      // Pero conservamos el payload original para no perder codigos de error como AUTH.MUST_CHANGE_PASSWORD
+      const originalError = error.error || {};
+      const newErrorObj = typeof originalError === 'object' ? { ...originalError, message: userFriendlyMessage } : { message: userFriendlyMessage };
+
       const modifiedError = new HttpErrorResponse({
-        error: { message: userFriendlyMessage },
+        error: newErrorObj,
         headers: error.headers,
         status: error.status,
         statusText: error.statusText,
