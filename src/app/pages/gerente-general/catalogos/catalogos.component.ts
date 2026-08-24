@@ -142,7 +142,7 @@ export class CatalogosComponent implements OnInit {
     });
 
     this.categoriaForm = this.fb.group({
-      nombre: ['', [Validators.required, Validators.minLength(2)]],
+      name: ['', [Validators.required, Validators.minLength(2)]],
       ganancia: [null, [Validators.required, Validators.min(0), Validators.max(100)]]
     });
   }
@@ -489,8 +489,8 @@ export class CatalogosComponent implements OnInit {
       this.selectedCategoriaId = cat.id;
       // Convertimos bps => porcentaje para mostrarlo en el campo del formulario
       this.categoriaForm.patchValue({
-        nombre: cat.nombre,
-        ganancia: cat.gananciaBps / 100
+        name: cat.name,
+        ganancia: cat.commissionBps / 100
       });
     } else {
       this.isEditingMode = false;
@@ -513,13 +513,13 @@ export class CatalogosComponent implements OnInit {
 
     const formValue = this.categoriaForm.value;
     // El usuario ingresa porcentaje (Ej: 6.5%), lo convertimos a bps (650)
-    const gananciaBps = Math.round(formValue.ganancia * 100);
+    const commissionBps = Math.round(formValue.ganancia * 100);
 
     if (this.isEditingMode && this.selectedCategoriaId) {
       // EDITAR — PATCH /api/v1/categories/:id
       const dto: UpdateCategoryDto = {
-        nombre: formValue.nombre,
-        gananciaBps
+        name: formValue.name,
+        commissionBps
       };
       this.categoryService.updateCategory(this.selectedCategoriaId, dto).subscribe({
         next: () => {
@@ -534,7 +534,7 @@ export class CatalogosComponent implements OnInit {
       });
     } else {
       // CREAR — POST /api/v1/categories
-      const dto: CreateCategoryDto = { nombre: formValue.nombre, gananciaBps };
+      const dto: CreateCategoryDto = { name: formValue.name, commissionBps };
       this.categoryService.createCategory(dto).subscribe({
         next: () => {
           this.isCategoriaLoaded = false;

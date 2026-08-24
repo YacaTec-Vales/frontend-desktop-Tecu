@@ -310,8 +310,8 @@
       El porcentaje de ganancia se expresará como base de cálculo para las distribuidoras de esta categoría.
     </p>
 
-    <app-input label="Nombre de Categoría" type="text" placeholder="Ej: Diamante" formControlName="nombre"></app-input>
-    <p *ngIf="categoriaForm.get('nombre')?.invalid && categoriaForm.get('nombre')?.touched"
+    <app-input label="Nombre de Categoría" type="text" placeholder="Ej: Diamante" formControlName="name"></app-input>
+    <p *ngIf="categoriaForm.get('name')?.invalid && categoriaForm.get('name')?.touched"
       class="-mt-3 text-xs text-red-600">Requerido (mín. 2 caracteres).</p>
 
     <app-input label="Porcentaje de Ganancia (%)" type="number" placeholder="Ej: 12" formControlName="ganancia"

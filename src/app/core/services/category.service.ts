@@ -8,20 +8,20 @@ import { environment } from '../../../environments/environment';
 // Ejemplo: gananciaBps: 600 => 6.00%
 export interface CreditCategory {
   id: string;
-  nombre: string;
-  gananciaBps: number;
+  name: string;
+  commissionBps: number;
 }
 
 // DTO para crear una categoria.
 export interface CreateCategoryDto {
-  nombre: string;
-  gananciaBps: number;
+  name: string;
+  commissionBps: number;
 }
 
 // DTO para actualizar (PATCH semantico, ambos opcionales).
 export interface UpdateCategoryDto {
-  nombre?: string;
-  gananciaBps?: number;
+  name?: string;
+  commissionBps?: number;
 }
 
 export interface PaginatedCategories {
@@ -65,7 +65,7 @@ export class CategoryService {
         const raw = res?.data;
         if (Array.isArray(raw)) {
           const filtered = search
-            ? raw.filter((c: CreditCategory) => c.nombre.toLowerCase().includes(search.toLowerCase()))
+            ? raw.filter((c: CreditCategory) => c.name.toLowerCase().includes(search.toLowerCase()))
             : raw;
           const start = (page - 1) * limit;
           const sliced = filtered.slice(start, start + limit);
