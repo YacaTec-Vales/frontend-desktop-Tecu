@@ -1,6 +1,7 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { environment } from '../../../../environments/environment';
 import { CardComponent } from '../../../components/ui/card/card';
 import { TableComponent } from '../../../components/ui/table/table';
 import { ButtonComponent } from '../../../components/ui/button/button';
@@ -293,7 +294,7 @@ export class AprobacionesComponent implements OnInit {
       const legacyPhotos = Array.isArray(item.originalData?.verificationPhotos) ? item.originalData.verificationPhotos : [];
       const uuidRegex = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
       
-      legacyPhotos.forEach((photo) => {
+      legacyPhotos.forEach((photo: any) => {
         if (typeof photo === 'string') {
           if (uuidRegex.test(photo)) {
             // It's a UUID, fetch it
