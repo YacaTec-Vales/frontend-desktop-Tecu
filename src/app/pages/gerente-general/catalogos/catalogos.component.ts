@@ -459,7 +459,16 @@ export class CatalogosComponent implements OnInit {
 
     if (type === 'producto') {
       const p = this.productos.find(x => x.code === id);
-      if (p) p.isActive = false;
+      if (p) {
+        this.productService.deleteProduct(p.id).subscribe({
+          next: () => {
+            this.loadActiveTab(true);
+          },
+          error: (err) => {
+            console.error('Error al desactivar el producto:', err);
+          }
+        });
+      }
     } else if (type === 'sucursal') {
       this.branchService.deleteBranch(id).subscribe(() => {
         this.loadActiveTab(true);
