@@ -157,8 +157,8 @@ export class CatalogosComponent implements OnInit {
       this.isProductsLoaded = false;
       this.isProductsLoading = true;
       this.productService.getProducts(this.productosPage, this.productosLimit, this.productosSearch).subscribe(res => {
-        this.productos = res.data;
-        this.productosTotal = res.meta.itemCount;
+        this.productos = res.data || [];
+        this.productosTotal = res.meta?.itemCount || res.data?.length || 0;
         this.isProductsLoaded = true;
         this.isProductsLoading = false;
         this.cdr.detectChanges();
@@ -178,8 +178,8 @@ export class CatalogosComponent implements OnInit {
     this.isCategoriaLoading = true;
     this.categoryService.getCategories(this.categoriasPage, this.categoriasLimit, this.categoriasSearch).subscribe({
       next: (res) => {
-        this.categorias = res.data;
-        this.categoriasTotal = res.meta.itemCount;
+        this.categorias = res.data || [];
+        this.categoriasTotal = res.meta?.itemCount || res.data?.length || 0;
         this.isCategoriaLoaded = true;
         this.isCategoriaLoading = false;
         this.cdr.detectChanges();
@@ -197,8 +197,8 @@ export class CatalogosComponent implements OnInit {
     this.isBranchesLoading = true;
     this.branchService.getBranches(this.sucursalesPage, this.sucursalesLimit, this.sucursalesSearch).subscribe({
       next: (res) => {
-        this.sucursales = res.data;
-        this.sucursalesTotal = res.meta.itemCount;
+        this.sucursales = res.data || [];
+        this.sucursalesTotal = res.meta?.itemCount || res.data?.length || 0;
         this.isBranchesLoaded = true;
         this.isBranchesLoading = false;
         this.cdr.detectChanges();
@@ -227,8 +227,8 @@ export class CatalogosComponent implements OnInit {
     this.isGerentesLoading = true;
     this.staffService.getGerentes(this.gerentesPage, this.gerentesLimit, this.gerentesSearch).subscribe({
       next: (res: any) => {
-        this.gerentes = res.data;
-        this.gerentesTotal = res.meta.itemCount;
+        this.gerentes = res.data || [];
+        this.gerentesTotal = res.meta?.itemCount || res.data?.length || 0;
         this.isGerentesLoaded = true;
         this.isGerentesLoading = false;
         this.cdr.detectChanges();
@@ -245,8 +245,8 @@ export class CatalogosComponent implements OnInit {
     this.isCoordinadoresLoading = true;
     this.staffService.getCoordinadores(this.coordinadoresPage, this.coordinadoresLimit, this.coordinadoresSearch).subscribe({
       next: (res: any) => {
-        this.coordinadores = res.data;
-        this.coordinadoresTotal = res.meta.itemCount;
+        this.coordinadores = res.data || [];
+        this.coordinadoresTotal = res.meta?.itemCount || res.data?.length || 0;
         this.isCoordinadoresLoaded = true;
         this.isCoordinadoresLoading = false;
         this.cdr.detectChanges();
@@ -263,8 +263,8 @@ export class CatalogosComponent implements OnInit {
     this.isVerificadoresLoading = true;
     this.staffService.getVerificadores(this.verificadoresPage, this.verificadoresLimit, this.verificadoresSearch).subscribe({
       next: (res: any) => {
-        this.verificadores = res.data;
-        this.verificadoresTotal = res.meta.itemCount;
+        this.verificadores = res.data || [];
+        this.verificadoresTotal = res.meta?.itemCount || res.data?.length || 0;
         this.isVerificadoresLoaded = true;
         this.isVerificadoresLoading = false;
         this.cdr.detectChanges();
@@ -281,8 +281,8 @@ export class CatalogosComponent implements OnInit {
     this.isCajerosLoading = true;
     this.staffService.getCajeros(this.cajerosPage, this.cajerosLimit, this.cajerosSearch).subscribe({
       next: (res: any) => {
-        this.cajeros = res.data;
-        this.cajerosTotal = res.meta.itemCount;
+        this.cajeros = res.data || [];
+        this.cajerosTotal = res.meta?.itemCount || res.data?.length || 0;
         this.isCajerosLoaded = true;
         this.isCajerosLoading = false;
         this.cdr.detectChanges();
