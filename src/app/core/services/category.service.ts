@@ -94,7 +94,7 @@ export class CategoryService {
   }
 
   updateCategory(id: string, dto: UpdateCategoryDto): Observable<CreditCategory> {
-    return this.http.patch<{ message: string; data: CreditCategory }>(`${this.apiUrl}/${id}`, dto)
+    return this.http.put<{ message: string; data: CreditCategory }>(`${this.apiUrl}/${id}`, dto)
       .pipe(map(res => res.data));
   }
 
