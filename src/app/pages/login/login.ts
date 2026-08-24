@@ -50,31 +50,8 @@ export class Login {
           this.partialToken = loginData.mfaToken;
           this.step = 'mfa_verify';
           this.cdr.detectChanges();
-        } else if (loginData.user?.mfaEnabled === false) {
-          this.success = 'Credenciales correctas. Configura tu Autenticador.';
-          this.partialToken = loginData.accessToken;
-          this.authService.setupMfa(this.partialToken).subscribe({
-            next: (setupRes: any) => {
-              this.otpauthUrl = setupRes.data?.otpauthUrl || setupRes.otpauthUrl;
-              this.step = 'mfa_setup';
-              this.cdr.detectChanges();
-            },
-            error: (err) => {
-              this.error = 'Error generando código de configuración MFA.';
-              this.cdr.detectChanges();
-            }
-          });
         } else {
-          this.success = 'Inicio de sesión exitoso.';
-          this.cdr.detectChanges();
-          const user = loginData.user;
-          if (user.mustChangePassword) {
-            this.step = 'change_password';
-            this.currentPassword = this.password;
-            this.cdr.detectChanges();
-          } else {
-            this.navigateToRole(user.role);
-          }
+          this.evaluateUserState(loginData.user, loginData.accessToken);
         }
       },
       error: (err) => {
@@ -128,13 +105,7 @@ export class Login {
           this.success = 'TOTP correcto. Iniciando sesión...';
           const user = this.authService.currentUser();
           if (user) {
-            if (user.mustChangePassword) {
-              this.step = 'change_password';
-              this.currentPassword = this.password;
-              this.cdr.detectChanges();
-            } else {
-              this.navigateToRole(user.role);
-            }
+            this.evaluateUserState(user, sessionStorage.getItem('ACCESS_TOKEN') || '');
           } else {
             this.error = 'No se pudo obtener la información del usuario.';
             this.cdr.detectChanges();
@@ -167,13 +138,7 @@ export class Login {
           
           // Re-fetch me to get the updated role/user
           this.authService.getMe().subscribe(user => {
-            if (user.mustChangePassword) {
-              this.step = 'change_password';
-              this.currentPassword = this.password;
-              this.cdr.detectChanges();
-            } else {
-              this.navigateToRole(user.role);
-            }
+            this.evaluateUserState(user, sessionStorage.getItem('ACCESS_TOKEN') || '');
           });
         },
         error: (err) => {
@@ -229,7 +194,7 @@ export class Login {
         this.success = 'Contraseña actualizada. Redirigiendo...';
         const user = this.authService.currentUser();
         if (user) {
-          this.navigateToRole(user.role);
+          this.evaluateUserState(user, sessionStorage.getItem('ACCESS_TOKEN') || '');
         } else {
           this.error = 'No se pudo obtener información del usuario.';
           this.cdr.detectChanges();
@@ -241,6 +206,32 @@ export class Login {
         this.cdr.detectChanges();
       }
     });
+  }
+
+  private evaluateUserState(user: any, token: string) {
+    if (user.mustChangePassword) {
+      this.step = 'change_password';
+      this.currentPassword = this.password; // asumiendo que this.password aún tiene la contraseña del form
+      this.cdr.detectChanges();
+    } else if (user.mfaEnabled === false) {
+      this.success = 'Credenciales correctas. Configura tu Autenticador.';
+      this.partialToken = token || this.partialToken;
+      this.authService.setupMfa(this.partialToken).subscribe({
+        next: (setupRes: any) => {
+          this.otpauthUrl = setupRes.data?.otpauthUrl || setupRes.otpauthUrl;
+          this.step = 'mfa_setup';
+          this.cdr.detectChanges();
+        },
+        error: (err) => {
+          this.error = err.error?.message || err.error?.error?.message || 'Error generando código de configuración MFA.';
+          this.cdr.detectChanges();
+        }
+      });
+    } else {
+      this.success = 'Inicio de sesión exitoso.';
+      this.cdr.detectChanges();
+      this.navigateToRole(user.role);
+    }
   }
 
   goBack() {
