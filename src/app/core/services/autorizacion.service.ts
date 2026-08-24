@@ -12,6 +12,7 @@ export interface AutorizacionResponseDto {
   justification: string;
   status: string;
   createdAt: string;
+  resolvedNames?: any;
 }
 
 @Injectable({
@@ -47,6 +48,12 @@ export class AutorizacionService {
 
   rechazarAutorizacion(id: string, payload?: any): Observable<any> {
     return this.http.post(`${this.apiUrl}/${id}/rechazar`, payload || {}, {
+      headers: this.buildHeaders()
+    });
+  }
+
+  approveClientModification(id: string, payload: any): Observable<any> {
+    return this.http.post(`${this.apiUrl}/${id}/aprobar-modificacion-cliente`, payload, {
       headers: this.buildHeaders()
     });
   }

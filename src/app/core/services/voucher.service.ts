@@ -15,6 +15,8 @@ export interface VoucherDetails {
     clabe: string;
     banco: string;
   };
+  clientId?: string;
+  clientData?: any;
 }
 
 @Injectable({
@@ -49,13 +51,22 @@ export class VoucherService {
           montoPesos: d.voucher.amountCents / 100,
           status: d.voucher.status,
           requiresIdentityVerification: d.isPrevale,
-          bankAccount: d.client.bankAccount
+          bankAccount: d.client.bankAccount,
+          clientId: d.client.id,
+          clientData: d.client
         } as VoucherDetails;
       }));
   }
 
   confirmVoucher(folio: string, payload: { authorizationNumber: string, dataConfirmed: boolean, documents?: any[] }): Observable<any> {
     return this.http.post<{ message: string }>(`${this.apiUrl}/confirm/${folio}`, payload, {
+      headers: this.buildHeaders()
+    });
+  }
+
+  reportClientDiscrepancy(folio: string, payload: any): Observable<any> {
+    // Para enviar archivos via FormData no es necesario el Content-Type, el navegador lo inyecta con su boundary
+    return this.http.post<{ message: string; data: any }>(`${this.apiUrl}/${folio}/client-discrepancy`, payload, {
       headers: this.buildHeaders()
     });
   }

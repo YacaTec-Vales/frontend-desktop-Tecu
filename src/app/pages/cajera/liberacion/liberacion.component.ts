@@ -1,18 +1,20 @@
-import { Component, ChangeDetectorRef } from '@angular/core';
+import { Component, ChangeDetectorRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { firstValueFrom } from 'rxjs';
 import { CardComponent } from '../../../components/ui/card/card';
 import { InputComponent } from '../../../components/ui/input/input';
 import { ButtonComponent } from '../../../components/ui/button/button';
 import { ModalComponent } from '../../../components/ui/modal/modal';
 import { VpnOnlyDirective } from '../../../core/directives/vpn-only.directive';
+import { SafeUrlPipe } from '../../../core/pipes/safe-url.pipe';
 import { VoucherService, VoucherDetails } from '../../../core/services/voucher.service';
 import { DocumentService, DocumentResponse } from '../../../core/services/document.service';
 
 @Component({
   selector: 'app-liberacion',
   standalone: true,
-  imports: [CommonModule, FormsModule, CardComponent, InputComponent, ButtonComponent, ModalComponent, VpnOnlyDirective],
+  imports: [CommonModule, FormsModule, CardComponent, InputComponent, ButtonComponent, ModalComponent, VpnOnlyDirective, SafeUrlPipe],
   templateUrl: './liberacion.component.html'
 })
 export class LiberacionComponent {
@@ -34,10 +36,20 @@ export class LiberacionComponent {
   clientDocs: DocumentResponse[] = [];
   isClientDocsLoading = false;
 
-  // Modal Token (Disputa)
-  isModalTokenOpen = false;
-  tokenInput: string = '';
-  modoEdicionActivo = false;
+  // Modal Inconsistencia
+  isModalDiscrepancyOpen = false;
+  isSubmittingDiscrepancy = false;
+  discrepancyData = {
+    description: '',
+    fullName: '',
+    curp: '',
+    banco: '',
+    clabe: ''
+  };
+  discrepancyFiles: File[] = [];
+  discrepancyPreviews: string[] = [];
+  discrepancyError: string = '';
+  discrepancySuccess: string = '';
 
   constructor(
     private voucherService: VoucherService,
@@ -134,26 +146,90 @@ export class LiberacionComponent {
     }
   }
 
-  abrirDisputa() {
-    this.isModalTokenOpen = true;
-    this.tokenInput = '';
+  abrirModalInconsistencia() {
+    this.isModalDiscrepancyOpen = true;
+    const clientData = this.valeEncontrado?.clientData || {};
+    
+    this.discrepancyData = {
+      description: '',
+      fullName: clientData.fullName || '',
+      curp: clientData.curp || '',
+      banco: clientData.bankAccount?.banco || '',
+      clabe: clientData.bankAccount?.clabe || ''
+    };
+    this.discrepancyFiles = [];
   }
 
-  cerrarDisputa() {
-    this.isModalTokenOpen = false;
+  cerrarModalInconsistencia() {
+    this.isModalDiscrepancyOpen = false;
+    this.clearPreviews();
   }
 
-  validarToken() {
-    if (this.tokenInput.length === 6) {
-      this.modoEdicionActivo = true;
-      this.cerrarDisputa();
-    } else {
-      alert('Token inválido. Solicite el token de 6 dígitos al Gerente.');
+  clearPreviews() {
+    this.discrepancyPreviews.forEach(url => URL.revokeObjectURL(url));
+    this.discrepancyPreviews = [];
+  }
+
+  generatePreviews() {
+    this.clearPreviews();
+    this.discrepancyFiles.forEach(file => {
+      if (file.type.startsWith('image/')) {
+        this.discrepancyPreviews.push(URL.createObjectURL(file));
+      }
+    });
+  }
+
+  onFilesSelected(event: any) {
+    if (event.target.files) {
+      const newFiles = Array.from(event.target.files) as File[];
+      this.discrepancyFiles = [...this.discrepancyFiles, ...newFiles].slice(0, 3);
+      this.generatePreviews();
     }
   }
 
-  guardarEdicion() {
-    this.modoEdicionActivo = false;
+  async submitDiscrepancy() {
+    if (!this.valeEncontrado?.folio) return;
+    
+    this.isSubmittingDiscrepancy = true;
+    this.discrepancyError = '';
+    
+    const payload = {
+      discrepancyDescription: this.discrepancyData.description,
+      discrepancyData: {
+        fullName: this.discrepancyData.fullName.trim(),
+        bankAccount: {
+          banco: this.discrepancyData.banco,
+          clabe: this.discrepancyData.clabe
+        }
+      }
+    };
+
+    try {
+      // Subir las imágenes seleccionadas utilizando DocumentService
+      for (const file of this.discrepancyFiles) {
+        await firstValueFrom(this.documentService.uploadFile(
+          file, 
+          'voucher_evidence', 
+          { folio: this.valeEncontrado.folio, isDiscrepancyEvidence: true }
+        ));
+      }
+
+      // Enviar los datos estructurados para la discrepancia
+      await firstValueFrom(this.voucherService.reportClientDiscrepancy(this.valeEncontrado.folio, payload));
+      
+      this.isSubmittingDiscrepancy = false;
+      this.discrepancySuccess = 'Discrepancia reportada y enviada a autorización.';
+      
+      setTimeout(() => {
+        this.discrepancySuccess = '';
+        this.cerrarModalInconsistencia();
+        this.reset();
+      }, 3000);
+      
+    } catch (err: any) {
+      this.isSubmittingDiscrepancy = false;
+      this.discrepancyError = err.error?.message || err.message || 'Error al reportar discrepancia.';
+    }
   }
 
   reset() {
