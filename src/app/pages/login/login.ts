@@ -224,7 +224,7 @@ export class Login {
           this.cdr.detectChanges();
         }
       },
-      error: (err) => {
+      error: (err: any) => {
         this.isLoading = false;
         this.error = err.error?.message || 'Error al actualizar la contraseña.';
         this.cdr.detectChanges();
