@@ -100,6 +100,7 @@ export class CatalogosComponent implements OnInit {
   sucursalError: string | null = null;
   personalError: string | null = null;
   productoError: string | null = null;
+  productoSuccess: string | null = null;
   productoActivo: Product | null = null;
 
   constructor(
@@ -404,8 +405,10 @@ export class CatalogosComponent implements OnInit {
       
       this.productService.createProduct(dto).subscribe({
         next: () => {
+          this.productoSuccess = 'Producto creado exitosamente.';
           this.loadActiveTab(true);
           this.cerrarModalProducto();
+          setTimeout(() => { this.productoSuccess = null; this.cdr.detectChanges(); }, 4000);
         },
         error: (err) => {
           this.productoError = err.error?.message || 'Error al crear el producto. Revisa que el código no exista.';
@@ -462,7 +465,9 @@ export class CatalogosComponent implements OnInit {
       if (p) {
         this.productService.deleteProduct(p.id).subscribe({
           next: () => {
+            this.productoSuccess = 'Producto desactivado exitosamente.';
             this.loadActiveTab(true);
+            setTimeout(() => { this.productoSuccess = null; this.cdr.detectChanges(); }, 4000);
           },
           error: (err) => {
             console.error('Error al desactivar el producto:', err);
