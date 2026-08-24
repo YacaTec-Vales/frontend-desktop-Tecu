@@ -29,8 +29,13 @@ export interface CreateProductDto {
 
 export interface UpdateProductDto {
   code?: string;
+  variant?: 'NORMAL' | 'PLUS';
   costCents?: number;
   totalPeriods?: number;
+  commissionBps?: number;
+  insuranceCents?: number;
+  interestPerPeriodBps?: number;
+  penaltyCents?: number;
   isActive?: boolean;
 }
 
@@ -89,7 +94,7 @@ export class ProductService {
   }
 
   updateProduct(id: string, data: UpdateProductDto): Observable<Product> {
-    return this.http.put<{ message: string, data: Product }>(`${this.apiUrl}/${id}`, data)
+    return this.http.patch<{ message: string, data: Product }>(`${this.apiUrl}/${id}`, data)
       .pipe(map(res => res.data));
   }
 

@@ -395,7 +395,7 @@ export class CatalogosComponent implements OnInit {
     this.productoError = null;
     if (this.productoForm.valid) {
       const formValue = this.productoForm.value;
-      const dto: CreateProductDto = {
+      const dto = {
         code: formValue.code,
         variant: formValue.variant,
         costCents: Math.round(formValue.costPesos! * 100),
@@ -406,23 +406,45 @@ export class CatalogosComponent implements OnInit {
         penaltyCents: Math.round(formValue.penaltyPesos * 100)
       };
       
-      this.productService.createProduct(dto).subscribe({
-        next: () => {
-          this.productoSuccess = 'Producto creado exitosamente.';
-          this.loadActiveTab(true);
-          this.cerrarModalProducto();
-          setTimeout(() => { this.productoSuccess = null; this.cdr.detectChanges(); }, 4000);
-        },
-        error: (err) => {
-          this.productoError = err.error?.message || 'Error al crear el producto. Revisa que el código no exista.';
-          this.cdr.detectChanges();
-        }
-      });
+      if (this.isEditingMode && this.productoActivo) {
+        // Modo Edición
+        const updateDto: UpdateProductDto = {
+          ...dto,
+          isActive: this.productoActivo.isActive // Opcional, pero se envía por seguridad
+        };
+        this.productService.updateProduct(this.productoActivo.id, updateDto).subscribe({
+          next: () => {
+            this.productoSuccess = 'Producto actualizado exitosamente.';
+            this.loadActiveTab(true);
+            this.cerrarModalProducto();
+            setTimeout(() => { this.productoSuccess = null; this.cdr.detectChanges(); }, 4000);
+          },
+          error: (err) => {
+            this.productoError = err.error?.message || 'Error al actualizar el producto.';
+            this.cdr.detectChanges();
+          }
+        });
+      } else {
+        // Modo Creación
+        this.productService.createProduct(dto as CreateProductDto).subscribe({
+          next: () => {
+            this.productoSuccess = 'Producto creado exitosamente.';
+            this.loadActiveTab(true);
+            this.cerrarModalProducto();
+            setTimeout(() => { this.productoSuccess = null; this.cdr.detectChanges(); }, 4000);
+          },
+          error: (err) => {
+            this.productoError = err.error?.message || 'Error al crear el producto. Revisa que el código no exista.';
+            this.cdr.detectChanges();
+          }
+        });
+      }
     }
   }
 
   // Edit / Deactivate Product (UI Only for now as API lacks endpoints)
   abrirEditProducto(prod: Product) {
+    this.productoActivo = prod;
     this.isEditingMode = true;
     this.productoForm.patchValue({
       code: prod.code,
