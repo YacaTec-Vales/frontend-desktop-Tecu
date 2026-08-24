@@ -247,16 +247,30 @@ export class AprobacionesComponent implements OnInit {
           const apiPhotos = docs.map(d => d.publicUrl);
           const legacyPhotos = Array.isArray(item.originalData?.verificationPhotos) ? item.originalData.verificationPhotos : [];
           // Merge unique URLs
-          this.selectedItemPhotos = Array.from(new Set([...legacyPhotos, ...apiPhotos]));
+          this.selectedItemPhotos = Array.from(new Set([...this.selectedItemPhotos, ...legacyPhotos, ...apiPhotos]));
           this.cdr.detectChanges();
         },
         error: (err) => {
           console.error('Error fetching verification photos:', err);
           // Fallback to legacy photos on error
-          this.selectedItemPhotos = Array.isArray(item.originalData?.verificationPhotos) ? item.originalData.verificationPhotos : [];
+          const legacyPhotos = Array.isArray(item.originalData?.verificationPhotos) ? item.originalData.verificationPhotos : [];
+          this.selectedItemPhotos = Array.from(new Set([...this.selectedItemPhotos, ...legacyPhotos]));
           this.cdr.detectChanges();
         }
       });
+
+      // Also check if there's an explicit INE document ID in generalData
+      if (item.originalData?.generalData?.ine_document_id) {
+        this.documentService.getDocumentById(item.originalData.generalData.ine_document_id).subscribe({
+          next: (doc) => {
+            if (doc && doc.publicUrl && !this.selectedItemPhotos.includes(doc.publicUrl)) {
+              this.selectedItemPhotos.push(doc.publicUrl);
+              this.cdr.detectChanges();
+            }
+          },
+          error: (err) => console.error('Error fetching INE document:', err)
+        });
+      }
     }
 
     // Open modal after micro-task
