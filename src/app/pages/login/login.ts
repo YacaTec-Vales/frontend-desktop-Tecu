@@ -18,10 +18,13 @@ export class Login {
   error = '';
   success = '';
   isLoading = false;
-  step: 'login' | 'mfa_verify' | 'mfa_setup' = 'login';
+  step: 'login' | 'mfa_verify' | 'mfa_setup' | 'change_password' = 'login';
   mfaCode = '';
   partialToken = '';
   otpauthUrl = '';
+  currentPassword = '';
+  newPassword = '';
+  confirmPassword = '';
 
   private router = inject(Router);
   private authService = inject(AuthService);
@@ -66,9 +69,12 @@ export class Login {
           this.cdr.detectChanges();
           const user = loginData.user;
           if (user.mustChangePassword) {
-            console.warn('El usuario debe cambiar la contraseña');
+            this.step = 'change_password';
+            this.currentPassword = this.password;
+            this.cdr.detectChanges();
+          } else {
+            this.navigateToRole(user.role);
           }
-          this.navigateToRole(user.role);
         }
       },
       error: (err) => {
@@ -111,7 +117,13 @@ export class Login {
           this.success = 'TOTP correcto. Iniciando sesión...';
           const user = this.authService.currentUser();
           if (user) {
-            this.navigateToRole(user.role);
+            if (user.mustChangePassword) {
+              this.step = 'change_password';
+              this.currentPassword = this.password;
+              this.cdr.detectChanges();
+            } else {
+              this.navigateToRole(user.role);
+            }
           } else {
             this.error = 'No se pudo obtener la información del usuario.';
             this.cdr.detectChanges();
@@ -144,7 +156,13 @@ export class Login {
           
           // Re-fetch me to get the updated role/user
           this.authService.getMe().subscribe(user => {
-            this.navigateToRole(user.role);
+            if (user.mustChangePassword) {
+              this.step = 'change_password';
+              this.currentPassword = this.password;
+              this.cdr.detectChanges();
+            } else {
+              this.navigateToRole(user.role);
+            }
           });
         },
         error: (err) => {
@@ -168,6 +186,50 @@ export class Login {
     } else {
       this.error = 'Rol no autorizado para acceder al sistema.';
     }
+  }
+
+  onChangePasswordSubmit(event: Event) {
+    event.preventDefault();
+    this.error = '';
+    this.success = '';
+
+    if (!this.currentPassword || !this.newPassword || !this.confirmPassword) {
+      this.error = 'Todos los campos son obligatorios.';
+      return;
+    }
+
+    if (this.newPassword !== this.confirmPassword) {
+      this.error = 'La nueva contraseña y la confirmación no coinciden.';
+      return;
+    }
+
+    if (this.newPassword.length < 8) {
+      this.error = 'La nueva contraseña debe tener al menos 8 caracteres.';
+      return;
+    }
+
+    this.isLoading = true;
+    this.authService.changePassword({
+      currentPassword: this.currentPassword,
+      newPassword: this.newPassword
+    }).subscribe({
+      next: () => {
+        this.isLoading = false;
+        this.success = 'Contraseña actualizada. Redirigiendo...';
+        const user = this.authService.currentUser();
+        if (user) {
+          this.navigateToRole(user.role);
+        } else {
+          this.error = 'No se pudo obtener información del usuario.';
+          this.cdr.detectChanges();
+        }
+      },
+      error: (err) => {
+        this.isLoading = false;
+        this.error = err.error?.message || 'Error al actualizar la contraseña.';
+        this.cdr.detectChanges();
+      }
+    });
   }
 
   goBack() {
