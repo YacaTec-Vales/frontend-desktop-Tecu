@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { VoucherService, VoucherDetails } from '../../../core/services/voucher.service';
@@ -22,7 +22,7 @@ export class ValesDigitalesComponent implements OnInit {
   totalItems = 0;
   searchQuery = '';
 
-  constructor(private voucherService: VoucherService) {}
+  constructor(private voucherService: VoucherService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit() {
     this.loadVouchers();
@@ -32,21 +32,23 @@ export class ValesDigitalesComponent implements OnInit {
     this.isLoading = true;
     this.voucherService.getVouchers('ACTIVO', 'PREVALE', 50).subscribe({
       next: (res) => {
-        const vouchersArray = res.data?.vouchers || res.data?.data || res.data || [];
-        this.vales = Array.isArray(vouchersArray) ? vouchersArray.map((v: any) => ({
+        // VoucherService already parses res.data into an array
+        this.vales = (res.data || []).map((v: any) => ({
           folio: v.folio,
           cliente: v.distributor?.generalData ? `${v.distributor.generalData.nombre} ${v.distributor.generalData.apellido_paterno}` : (v.clientId || v.distributorId || 'Desconocido'),
           tipo: v.voucherType === 'PREVALE' ? 'Pre-Vale' : 'Digital',
           montoPesos: v.amountCents / 100,
           status: v.status,
           fecha: v.createdAt
-        })) : [];
+        }));
         this.totalItems = this.vales.length;
         this.isLoading = false;
+        this.cdr.detectChanges();
       },
       error: (err) => {
         console.error('Error fetching vouchers', err);
         this.isLoading = false;
+        this.cdr.detectChanges();
       }
     });
   }
