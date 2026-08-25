@@ -11,7 +11,7 @@ import { VpnOnlyDirective } from '../../../core/directives/vpn-only.directive';
 
 import { ReconciliationService, BankMovement, ReconciliationBatch } from '../../../core/services/reconciliation.service';
 import { RelationService, RelationDetails } from '../../../core/services/relation.service';
-
+import { fileTypeFromBlob } from 'file-type';
 
 @Component({
   selector: 'app-conciliacion',
@@ -76,10 +76,50 @@ export class ConciliacionComponent implements OnInit {
   }
 
   // --- AUTOMATICA ---
-  onFileSelected(event: any) {
+  async onFileSelected(event: any) {
     const file: File = event.target.files[0];
     if (file) {
-      this.selectedFile = file;
+      this.uploadErrorMessage = '';
+      this.uploadSuccessMessage = '';
+      this.selectedFile = null;
+
+      const isValid = await this.validateExcelMagicNumber(file);
+      if (isValid) {
+        this.selectedFile = file;
+      } else {
+        this.uploadErrorMessage = 'Por razones de seguridad, el sistema detectó que el archivo no es un documento de Excel genuino (Magic Number inválido). Asegúrate de subir un archivo .xlsx o .xls real.';
+        event.target.value = ''; // Reset the file input
+        this.cdr.detectChanges();
+      }
+    }
+  }
+
+  /**
+   * Valida la firma real del archivo usando la librería externa 'file-type'.
+   * Esto previene que se evada la seguridad simplemente cambiando la extensión.
+   */
+  private async validateExcelMagicNumber(file: File): Promise<boolean> {
+    try {
+      const type = await fileTypeFromBlob(file);
+      
+      // file-type detecta los .xlsx (ZIP archives) usualmente como:
+      // mime: 'application/zip' o 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      // los .xls antiguos como 'application/x-cfb' o 'application/vnd.ms-excel'
+      
+      if (!type) {
+        // Si no pudo identificarlo, lo rechazamos por seguridad
+        return false;
+      }
+      
+      const isZip = type.mime === 'application/zip';
+      const isXlsx = type.mime === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+      const isCfb = type.mime === 'application/x-cfb';
+      const isXls = type.mime === 'application/vnd.ms-excel';
+
+      return isZip || isXlsx || isCfb || isXls;
+    } catch (err) {
+      console.error('Error validando el magic number:', err);
+      return false;
     }
   }
 
