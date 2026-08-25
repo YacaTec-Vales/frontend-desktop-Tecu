@@ -1,6 +1,6 @@
 {
     "/api": {
-        "target": "https://api.taquizaschavez.com.mx",
+        "target": "https://yacatec.devas-projects.sbs",
         "secure": false,
         "changeOrigin": true,
         "logLevel": "debug"
