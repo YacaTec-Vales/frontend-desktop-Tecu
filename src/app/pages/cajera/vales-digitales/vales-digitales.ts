@@ -35,7 +35,9 @@ export class ValesDigitalesComponent implements OnInit {
         // VoucherService already parses res.data into an array
         this.vales = (res.data || []).map((v: any) => ({
           folio: v.folio,
-          cliente: v.distributor?.generalData ? `${v.distributor.generalData.nombre} ${v.distributor.generalData.apellido_paterno}` : (v.clientId || v.distributorId || 'Desconocido'),
+          cliente: v.client?.fullName || (v.distributor?.generalData ? `${v.distributor.generalData.nombre} ${v.distributor.generalData.apellido_paterno}` : (v.clientId || v.distributorId || 'Desconocido')),
+          curp: v.client?.curp,
+          bankAccount: v.client?.bankAccount,
           tipo: v.voucherType === 'PREVALE' ? 'Pre-Vale' : 'Digital',
           montoPesos: v.amountCents / 100,
           status: v.status,

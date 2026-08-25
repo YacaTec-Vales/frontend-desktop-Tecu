@@ -31,9 +31,10 @@
             
             <div>
               <p class="text-xl font-black text-gray-900">{{ valeEncontrado.cliente }}</p>
+              <p *ngIf="valeEncontrado.clientData?.curp" class="text-sm font-mono text-gray-600 mt-1 font-medium">CURP: {{ valeEncontrado.clientData.curp }}</p>
               
-              <div *ngIf="valeEncontrado.tipo !== 'Pre-Vale' && valeEncontrado.bankAccount" class="mt-3 text-sm bg-white border border-gray-200 p-3 rounded-md shadow-sm">
-                <p class="text-xs text-gray-500 uppercase tracking-wider font-bold mb-1">Datos Bancarios para Transferencia</p>
+              <div *ngIf="valeEncontrado.bankAccount" class="mt-3 text-sm bg-white border border-gray-200 p-3 rounded-md shadow-sm">
+                <p class="text-xs text-gray-500 uppercase tracking-wider font-bold mb-1">Datos Bancarios del Cliente</p>
                 <p><strong>Banco:</strong> {{ valeEncontrado.bankAccount.banco }}</p>
                 <p><strong>CLABE:</strong> <span class="font-mono text-brand font-bold">{{ valeEncontrado.bankAccount.clabe }}</span></p>
               </div>

@@ -1,6 +1,6 @@
 {
     "/api": {
-        "target": "https://yacatec.devas-projects.sbs",
+        "target": "https://yacatecc.devas-projects.sbs",
         "secure": false,
         "changeOrigin": true,
         "logLevel": "debug"
