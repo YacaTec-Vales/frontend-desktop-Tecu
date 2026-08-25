@@ -77,6 +77,65 @@ export class StaffService {
     );
   }
 
+  /**
+   * Crea un usuario con el `roleCode` indicado. Variante parametrizable que
+   * soporta todos los roles del sistema (GG, GS, ADMIN, etc.). Usada por el
+   * wizard de bootstrap del ADMINISTRADOR para crear al Gerente General.
+   *
+   * El `payload.roleCode` se sobreescribe (no se respeta lo que llegue en
+   * `data.roleCode`) para evitar que un caller inyecte un rol no deseado.
+   * `createGerente(data)` se conserva para compatibilidad con el call-site
+   * actual de `catalogos.component.ts` (que ya setea `roleCode='GERENTE_SUCURSAL'`
+   * en el payload antes de llamar).
+   */
+  createUser(data: any, roleCode: string): Observable<Gerente> {
+    return this.http.post<{data: Gerente}>(`${this.baseUrl}/users`, { ...data, roleCode }).pipe(
+      map(res => res.data)
+    );
+  }
+
+  /**
+   * Crea al unico Gerente General del sistema. Backend exige `branchId = null`
+   * (CHECK `chk_user_gerente_general_branch`) y el admin debe tener el
+   * permiso dedicado `user.create.general_manager`. El backend enforce la
+   * unicidad con `pg_advisory_xact_lock` + indice unico parcial
+   * `uq_user_single_active_general_manager`.
+   */
+  createGerenteGeneral(data: any): Observable<Gerente> {
+    return this.createUser({ ...data, branchId: null }, 'GERENTE_GENERAL');
+  }
+
+  /**
+   * Lista usuarios. Acepta `roleCode` opcional para filtrar (ej: buscar
+   * si ya existe un Gerente General activo en el sistema).
+   */
+  getUsers(
+    page: number = 1,
+    limit: number = 100,
+    roleCode?: string,
+    search?: string,
+  ): Observable<PaginatedResponse<Gerente>> {
+    let params = this.buildParams(page, limit, search);
+    if (roleCode) params = params.set('roleCode', roleCode);
+    return this.http.get<any>(`${this.baseUrl}/users`, { params }).pipe(
+      map(res => {
+        const dataArr = res?.data?.data || res?.data || [];
+        const rawMeta = res?.data?.meta || res?.meta;
+        const itemCount = rawMeta?.itemCount ?? rawMeta?.total ?? dataArr.length;
+        return {
+          data: dataArr,
+          meta: {
+            ...rawMeta,
+            page: rawMeta?.page || page,
+            limit: rawMeta?.limit || limit,
+            itemCount: itemCount,
+            pageCount: rawMeta?.pageCount || Math.ceil(itemCount / limit) || 1,
+          },
+        };
+      }),
+    );
+  }
+
   updateGerente(id: string, data: any): Observable<Gerente> {
     return this.http.patch<{data: Gerente}>(`${this.baseUrl}/users/${id}`, data).pipe(
       map(res => res.data)
