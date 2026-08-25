@@ -158,12 +158,19 @@ export class CatalogosComponent implements OnInit {
       if (this.isProductsLoaded && !forceRefresh) return;
       this.isProductsLoaded = false;
       this.isProductsLoading = true;
-      this.productService.getProducts(this.productosPage, this.productosLimit, this.productosSearch).subscribe(res => {
-        this.productos = res.data || [];
-        this.productosTotal = res.meta?.itemCount || res.data?.length || 0;
-        this.isProductsLoaded = true;
-        this.isProductsLoading = false;
-        this.cdr.detectChanges();
+      this.productService.getProducts(this.productosPage, this.productosLimit, this.productosSearch).subscribe({
+        next: (res) => {
+          this.productos = res.data || [];
+          this.productosTotal = res.meta?.itemCount || res.data?.length || 0;
+          this.isProductsLoaded = true;
+          this.isProductsLoading = false;
+          this.cdr.detectChanges();
+        },
+        error: (err) => {
+          console.error("Error loading products:", err);
+          this.isProductsLoading = false;
+          this.cdr.detectChanges();
+        }
       });
     } else if (this.activeTab === 'categorias') {
       this.loadCategorias(forceRefresh);

@@ -54,7 +54,7 @@
         <app-table title="Productos (Vales)" [dataTrigger]="productos" (onAction)="handleTableAction($event, 'producto')"
           [columns]="['Código', 'Variante', 'Costo', 'Quincenas', 'Comisión', 'Seguro', 'Interés/Q', 'Multa', 'Estado', 'Acciones']"
           [useServerPagination]="true" [currentPage]="productosPage" [totalItems]="productosTotal" [limit]="productosLimit"
-          [isLoading]="isProductsLoading"
+          [isLoading]="isProductsLoading" [isEmpty]="productos.length === 0 && !isProductsLoading"
           (pageChange)="onPageChange($event, 'productos')" (searchChange)="onSearch($event, 'productos')"
           (limitChange)="onLimitChange($event, 'productos')">
           
