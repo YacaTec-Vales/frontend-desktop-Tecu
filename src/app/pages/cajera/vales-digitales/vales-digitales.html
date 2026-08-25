@@ -9,7 +9,7 @@
       <app-table title="Lista de Vales Digitales" [dataTrigger]="vales"
         [columns]="['Folio', 'Cliente', 'Tipo', 'Monto', 'Estatus', 'Fecha']"
         [useServerPagination]="true" [currentPage]="page" [totalItems]="totalFilteredItems" [limit]="limit"
-        [isLoading]="isLoading"
+        [isLoading]="isLoading" [isEmpty]="vales.length === 0 && !isLoading"
         (pageChange)="onPageChange($event)" (searchChange)="onSearch($event)"
         (limitChange)="onLimitChange($event)">
         
