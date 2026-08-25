@@ -3,6 +3,7 @@
   "version": "0.0.0",
   "scripts": {
     "prepare": "husky",
+    "postinstall": "node -e \"const fs=require('fs');const p='node_modules/file-type/source/index.js';if(fs.existsSync(p)){let c=fs.readFileSync(p,'utf8');if(!c.includes('/* @vite-ignore */')){fs.writeFileSync(p,c.replace('return import(specifier);','return import(/* @vite-ignore */ specifier);'),'utf8');}}\"",
     "ng": "ng",
     "start": "ng serve --port 4200",
     "build": "ng build",
