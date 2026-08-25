@@ -32,14 +32,15 @@ export class ValesDigitalesComponent implements OnInit {
     this.isLoading = true;
     this.voucherService.getVouchers('ACTIVO', 'PREVALE', 50).subscribe({
       next: (res) => {
-        this.vales = res.data.map((v: any) => ({
+        const vouchersArray = res.data?.vouchers || res.data?.data || res.data || [];
+        this.vales = Array.isArray(vouchersArray) ? vouchersArray.map((v: any) => ({
           folio: v.folio,
           cliente: v.distributor?.generalData ? `${v.distributor.generalData.nombre} ${v.distributor.generalData.apellido_paterno}` : (v.clientId || v.distributorId || 'Desconocido'),
           tipo: v.voucherType === 'PREVALE' ? 'Pre-Vale' : 'Digital',
           montoPesos: v.amountCents / 100,
           status: v.status,
           fecha: v.createdAt
-        }));
+        })) : [];
         this.totalItems = this.vales.length;
         this.isLoading = false;
       },
