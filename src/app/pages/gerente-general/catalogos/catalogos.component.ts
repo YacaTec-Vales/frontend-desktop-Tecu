@@ -125,6 +125,7 @@ export class CatalogosComponent implements OnInit {
     this.sucursalForm = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(2)]],
       branchType: ['SUCURSAL', Validators.required],
+      managerUserId: [''],
       cutoffDay: [15, [Validators.required, Validators.min(1), Validators.max(31)]],
       paymentDay: [20, [Validators.required, Validators.min(1), Validators.max(31)]],
       earlyPaymentDays: [3, [Validators.required, Validators.min(0)]],
@@ -645,6 +646,7 @@ export class CatalogosComponent implements OnInit {
         name: suc.name, 
         branchType: suc.branchType,
         address: suc.address || '',
+        managerUserId: suc.managerUserId || '',
         cutoffDay: suc.cutoffDay || 15,
         paymentDay: suc.paymentDay || 20,
         earlyPaymentDays: suc.earlyPaymentDays || 3
@@ -680,6 +682,9 @@ export class CatalogosComponent implements OnInit {
     this.sucursalError = null;
     if (this.sucursalForm.valid) {
       const payload: any = { ...this.sucursalForm.value };
+      if (!payload.managerUserId || payload.managerUserId === '') {
+        delete payload.managerUserId;
+      }
 
       if (this.isEditingMode && this.entityToDeactivate) {
         this.branchService.updateBranch(this.entityToDeactivate.id, payload).subscribe({
