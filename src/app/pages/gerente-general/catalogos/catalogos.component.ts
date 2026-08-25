@@ -125,8 +125,6 @@ export class CatalogosComponent implements OnInit {
     this.sucursalForm = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(2)]],
       branchType: ['SUCURSAL', Validators.required],
-      esMatriz: [false],
-      managerUserId: [''],
       cutoffDay: [15, [Validators.required, Validators.min(1), Validators.max(31)]],
       paymentDay: [20, [Validators.required, Validators.min(1), Validators.max(31)]],
       earlyPaymentDays: [3, [Validators.required, Validators.min(0)]],
@@ -646,9 +644,7 @@ export class CatalogosComponent implements OnInit {
       this.sucursalForm.patchValue({ 
         name: suc.name, 
         branchType: suc.branchType,
-        esMatriz: suc.esMatriz,
         address: suc.address || '',
-        managerUserId: suc.managerUserId || '',
         cutoffDay: suc.cutoffDay || 15,
         paymentDay: suc.paymentDay || 20,
         earlyPaymentDays: suc.earlyPaymentDays || 3
@@ -662,7 +658,6 @@ export class CatalogosComponent implements OnInit {
       this.isEditingMode = false;
       this.sucursalForm.reset({ 
         branchType: 'SUCURSAL', 
-        esMatriz: false, 
         cutoffDay: 15,
         paymentDay: 20,
         earlyPaymentDays: 3
@@ -678,16 +673,13 @@ export class CatalogosComponent implements OnInit {
     this.isSucursalModalOpen = false; 
     this.isEditingMode = false; 
     this.sucursalError = null;
-    this.sucursalForm.reset({ branchType: 'SUCURSAL', esMatriz: false }); 
+    this.sucursalForm.reset({ branchType: 'SUCURSAL' }); 
     this.entityToDeactivate = null;
   }
   guardarSucursal() {
     this.sucursalError = null;
     if (this.sucursalForm.valid) {
       const payload: any = { ...this.sucursalForm.value };
-      if (!payload.managerUserId || payload.managerUserId === '') {
-        delete payload.managerUserId;
-      }
 
       if (this.isEditingMode && this.entityToDeactivate) {
         this.branchService.updateBranch(this.entityToDeactivate.id, payload).subscribe({
