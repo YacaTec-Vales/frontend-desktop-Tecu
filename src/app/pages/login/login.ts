@@ -185,6 +185,8 @@ export class Login implements OnInit, OnDestroy {
       this.router.navigate(['/gerente-sucursal/plantilla']);
     } else if (role === 'GERENTE_GENERAL') {
       this.router.navigate(['/gerente-general/catalogos']);
+    } else if (role === 'ADMINISTRADOR') {
+      this.router.navigate(['/admin/dashboard']);
     } else {
       this.error = 'Rol no autorizado para acceder al sistema.';
     }
