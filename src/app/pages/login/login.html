@@ -138,6 +138,54 @@
           </div>
         </div>
 
+        <!--
+          Secret TOTP en base32: visible para que el usuario pueda copiarlo
+          a un gestor (Keepass, Bitwarden, 1Password) sin necesidad de
+          escanear el QR. Se muestra con espacios cada 4 chars para que
+          sea facil de verificar visualmente. La fuente monoespaciada
+          ayuda a distinguir caracteres similares (0/O, 1/I).
+        -->
+        <div *ngIf="totpSecret" class="space-y-2">
+          <label for="totpSecret" class="block text-xs font-extrabold text-gray-900 text-center uppercase tracking-wider">
+            O ingresa este secret manualmente
+          </label>
+          <div class="flex items-stretch gap-2">
+            <input
+              id="totpSecret"
+              type="text"
+              [value]="totpSecret"
+              readonly
+              autocomplete="off"
+              spellcheck="false"
+              class="flex-1 bg-gray-100 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand focus:border-brand block w-full p-2.5 font-mono tracking-wider text-center select-all"
+              (focus)="$any($event.target).select()"
+              aria-label="Secret TOTP en base32" />
+            <button
+              type="button"
+              (click)="copySecretToClipboard()"
+              class="shrink-0 inline-flex items-center justify-center px-3 py-2 text-sm font-medium text-white bg-brand rounded-lg hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-brand-300 transition"
+              [attr.aria-label]="copyFeedback ? 'Secret copiado al portapapeles' : 'Copiar secret al portapapeles'">
+              <svg *ngIf="!copyFeedback" class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M8 5H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-2M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v2m0 0V7a2 2 0 012-2h2a2 2 0 012 2v5a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2">
+                </path>
+              </svg>
+              <svg *ngIf="copyFeedback === '¡Copiado!'" class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+              <svg *ngIf="copyFeedback === 'No se pudo copiar'" class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 9v2m0 4h.01M5.07 19h13.86c1.54 0 2.5-1.67 1.73-3L13.73 4a2 2 0 00-3.46 0L3.34 16c-.77 1.33.19 3 1.73 3z">
+                </path>
+              </svg>
+              <span>{{ copyFeedback || 'Copiar' }}</span>
+            </button>
+          </div>
+          <p class="text-xs text-gray-500 text-center">
+            Si no puedes escanear el QR, copia este codigo en tu app de autenticacion (Google Authenticator, Authy, Keepass, etc).
+          </p>
+        </div>
+
         <div>
             <label for="mfaCodeSetup" class="block mb-2 text-sm font-extrabold text-gray-900 text-center">Ingresa el código generado</label>
             <input type="text" name="mfaCode" id="mfaCodeSetup" [(ngModel)]="mfaCode" class="bg-gray-200 border-0 text-gray-900 text-2xl tracking-[0.5em] text-center rounded-xl focus:ring-4 focus:ring-brand-300 block w-full p-4 font-bold transition-all outline-none" placeholder="000000" maxlength="6" required>
