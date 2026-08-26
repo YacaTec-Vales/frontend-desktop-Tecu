@@ -1,18 +1,21 @@
-import { Component, inject, ChangeDetectorRef } from '@angular/core';
+import { Component, inject, ChangeDetectorRef, OnInit, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../core/services/auth.service';
 import { QRCodeComponent } from 'angularx-qrcode';
+import { LayoutModule, BreakpointObserver } from '@angular/cdk/layout';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [FormsModule, CommonModule, QRCodeComponent],
+  imports: [FormsModule, CommonModule, QRCodeComponent, LayoutModule],
   templateUrl: './login.html',
   styleUrl: './login.css'
 })
-export class Login {
+export class Login implements OnInit, OnDestroy {
   email = '';
   password = '';
   error = '';
@@ -25,10 +28,28 @@ export class Login {
   currentPassword = '';
   newPassword = '';
   confirmPassword = '';
+  isMobileOrTablet = false;
 
   private router = inject(Router);
   private authService = inject(AuthService);
   private cdr = inject(ChangeDetectorRef);
+  private breakpointObserver = inject(BreakpointObserver);
+  private destroyed = new Subject<void>();
+
+  ngOnInit() {
+    this.breakpointObserver
+      .observe(['(max-width: 1023px)']) // Mobile + Tablet (Tailwind < lg)
+      .pipe(takeUntil(this.destroyed))
+      .subscribe(result => {
+        this.isMobileOrTablet = result.matches;
+        this.cdr.detectChanges();
+      });
+  }
+
+  ngOnDestroy() {
+    this.destroyed.next();
+    this.destroyed.complete();
+  }
 
   onSubmit(event: Event) {
     event.preventDefault();
@@ -153,6 +174,11 @@ export class Login {
   }
 
   private navigateToRole(role: string) {
+    if (role === 'VERIFICADOR' || role === 'COORDINADOR' || role === 'DISTRIBUIDORA') {
+      this.error = 'No tienes acceso a este sitio. Tu nivel de acceso y las proporciones de este sistema son exclusivos de la plataforma web de escritorio.';
+      return;
+    }
+
     if (role === 'CAJERO' || role === 'CAJERA') {
       this.router.navigate(['/cajera/liberacion']);
     } else if (role === 'GERENTE_SUCURSAL') {

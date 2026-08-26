@@ -54,7 +54,7 @@
         <app-table title="Productos (Vales)" [dataTrigger]="productos" (onAction)="handleTableAction($event, 'producto')"
           [columns]="['Código', 'Variante', 'Costo', 'Quincenas', 'Comisión', 'Seguro', 'Interés/Q', 'Multa', 'Estado', 'Acciones']"
           [useServerPagination]="true" [currentPage]="productosPage" [totalItems]="productosTotal" [limit]="productosLimit"
-          [isLoading]="isProductsLoading"
+          [isLoading]="isProductsLoading" [isEmpty]="productos.length === 0 && !isProductsLoading"
           (pageChange)="onPageChange($event, 'productos')" (searchChange)="onSearch($event, 'productos')"
           (limitChange)="onLimitChange($event, 'productos')">
           
@@ -299,10 +299,6 @@
         <app-input label="Multa ($ MXN)" type="number" placeholder="50" formControlName="penaltyPesos"
           [maxlength]="6"></app-input>
       </div>
-      <div>
-        <app-input label="Multa ($ MXN)" type="number" placeholder="50" formControlName="penaltyPesos"
-          [maxlength]="6"></app-input>
-      </div>
     </div>
 
     <div class="mt-6 flex justify-end gap-2">
@@ -362,35 +358,20 @@
       <span class="font-medium">Error:</span> {{ sucursalError }}
     </div>
 
-    <app-input label="Nombre de la Sucursal" type="text" placeholder="Ej: Sucursal Centro" formControlName="name"></app-input>
-      
-    <div>
-      <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Tipo de Sucursal</label>
-      <select formControlName="branchType"
-        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand focus:border-brand block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-brand dark:focus:border-brand">
-        <option value="SUCURSAL">SUCURSAL</option>
-        <option value="MATRIZ">MATRIZ</option>
-      </select>
-    </div>
+      <app-input label="Nombre de la Sucursal" type="text" formControlName="name" placeholder="Ej. Sucursal Centro"></app-input>
 
-    <div class="flex items-center gap-2">
-      <input type="checkbox" id="esMatriz" formControlName="esMatriz"
-        class="w-4 h-4 text-brand bg-gray-100 border-gray-300 rounded focus:ring-brand dark:focus:ring-brand dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
-      <label for="esMatriz" class="text-sm font-medium text-gray-900 dark:text-gray-300">¿Es la Matriz Principal?</label>
-    </div>
-
-    <div>
-      <label class="block mb-2 text-sm font-extrabold text-gray-900 dark:text-white">Gerente de Sucursal</label>
-      <select formControlName="managerUserId"
-        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand focus:border-brand block w-full p-2.5">
-        <option value="" [disabled]="!isEditingMode">Seleccione un gerente (opcional)</option>
-        <option *ngFor="let gerente of availableGerentes" [value]="gerente.id">{{ gerente.firstName }} {{ gerente.lastNamePaternal }}</option>
-      </select>
-      <p *ngIf="availableGerentes.length === 0 && gerentes.length > 0"
-        class="mt-1 text-xs text-amber-600">Todos los gerentes estan asignados a una sucursal. Registra uno nuevo en la pestaña Personal.</p>
-      <p *ngIf="gerentes.length === 0"
-        class="mt-1 text-xs text-gray-500">Cargando gerentes o no hay gerentes registrados. Registra uno en la pestaña Personal.</p>
-    </div>
+      <div>
+        <label class="block mb-2 text-sm font-extrabold text-gray-900 dark:text-white">Gerente de Sucursal</label>
+        <select formControlName="managerUserId"
+          class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand focus:border-brand block w-full p-2.5">
+          <option value="" [disabled]="!isEditingMode">Seleccione un gerente (opcional)</option>
+          <option *ngFor="let gerente of availableGerentes" [value]="gerente.id">{{ gerente.firstName }} {{ gerente.lastNamePaternal }}</option>
+        </select>
+        <p *ngIf="availableGerentes.length === 0 && gerentes.length > 0"
+          class="mt-1 text-xs text-amber-600">Todos los gerentes están asignados a una sucursal. Registra uno nuevo en la pestaña Personal.</p>
+        <p *ngIf="gerentes.length === 0"
+          class="mt-1 text-xs text-gray-500">Cargando gerentes o no hay gerentes registrados. Registra uno en la pestaña Personal.</p>
+      </div>
 
     <div class="grid grid-cols-3 gap-4">
       <div>

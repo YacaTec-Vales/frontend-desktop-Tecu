@@ -125,7 +125,6 @@ export class CatalogosComponent implements OnInit {
     this.sucursalForm = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(2)]],
       branchType: ['SUCURSAL', Validators.required],
-      esMatriz: [false],
       managerUserId: [''],
       cutoffDay: [15, [Validators.required, Validators.min(1), Validators.max(31)]],
       paymentDay: [20, [Validators.required, Validators.min(1), Validators.max(31)]],
@@ -158,12 +157,19 @@ export class CatalogosComponent implements OnInit {
       if (this.isProductsLoaded && !forceRefresh) return;
       this.isProductsLoaded = false;
       this.isProductsLoading = true;
-      this.productService.getProducts(this.productosPage, this.productosLimit, this.productosSearch).subscribe(res => {
-        this.productos = res.data || [];
-        this.productosTotal = res.meta?.itemCount || res.data?.length || 0;
-        this.isProductsLoaded = true;
-        this.isProductsLoading = false;
-        this.cdr.detectChanges();
+      this.productService.getProducts(this.productosPage, this.productosLimit, this.productosSearch).subscribe({
+        next: (res) => {
+          this.productos = res.data || [];
+          this.productosTotal = res.meta?.itemCount || res.data?.length || 0;
+          this.isProductsLoaded = true;
+          this.isProductsLoading = false;
+          this.cdr.detectChanges();
+        },
+        error: (err) => {
+          console.error("Error loading products:", err);
+          this.isProductsLoading = false;
+          this.cdr.detectChanges();
+        }
       });
     } else if (this.activeTab === 'categorias') {
       this.loadCategorias(forceRefresh);
@@ -639,7 +645,6 @@ export class CatalogosComponent implements OnInit {
       this.sucursalForm.patchValue({ 
         name: suc.name, 
         branchType: suc.branchType,
-        esMatriz: suc.esMatriz,
         address: suc.address || '',
         managerUserId: suc.managerUserId || '',
         cutoffDay: suc.cutoffDay || 15,
@@ -655,7 +660,6 @@ export class CatalogosComponent implements OnInit {
       this.isEditingMode = false;
       this.sucursalForm.reset({ 
         branchType: 'SUCURSAL', 
-        esMatriz: false, 
         cutoffDay: 15,
         paymentDay: 20,
         earlyPaymentDays: 3
@@ -671,7 +675,7 @@ export class CatalogosComponent implements OnInit {
     this.isSucursalModalOpen = false; 
     this.isEditingMode = false; 
     this.sucursalError = null;
-    this.sucursalForm.reset({ branchType: 'SUCURSAL', esMatriz: false }); 
+    this.sucursalForm.reset({ branchType: 'SUCURSAL' }); 
     this.entityToDeactivate = null;
   }
   guardarSucursal() {

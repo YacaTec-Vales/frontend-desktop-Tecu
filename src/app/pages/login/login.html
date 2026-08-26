@@ -18,6 +18,18 @@
         <h1 class="text-xl font-bold mt-2 text-gray-900">YacaTec, Control de Asistencia</h1>
       </div>
 
+      <!-- Alerta de Dispositivo No Compatible -->
+      <div *ngIf="isMobileOrTablet" class="p-4 mt-4 text-sm text-amber-800 rounded-lg bg-amber-50 border border-amber-200 shadow-sm" role="alert">
+        <div class="flex items-start">
+          <svg class="w-5 h-5 mr-2 text-amber-600 flex-shrink-0 mt-0.5" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5ZM10 15a1 1 0 1 1 0-2 1 1 0 0 1 0 2Zm1-4a1 1 0 0 1-2 0V6a1 1 0 0 1 2 0v5Z"/>
+          </svg>
+          <p class="font-medium">
+            Atención: <span class="font-normal">Esta plataforma administrativa está diseñada exclusivamente para uso en escritorio (computadoras). Por favor, ingresa desde una computadora para tener una experiencia óptima y poder acceder.</span>
+          </p>
+        </div>
+      </div>
+
       <div *ngIf="error"
         class="flex items-center p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400"
         role="alert">

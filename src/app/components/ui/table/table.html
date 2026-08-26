@@ -59,8 +59,18 @@
         </tr>
       </thead>
 
-      <tbody *ngIf="!isEmpty">
+      <!-- Data Body -->
+      <tbody *ngIf="!isEmpty && (!isLoading || totalItems > 0)">
         <ng-content></ng-content>
+      </tbody>
+
+      <!-- Skeleton Loading State (Only on initial load when empty) -->
+      <tbody *ngIf="isLoading && totalItems === 0">
+        <tr *ngFor="let i of [1,2,3,4,5]" class="border-b border-gray-100 dark:border-gray-700">
+          <td *ngFor="let col of columns" class="px-6 py-4">
+            <div class="h-4 bg-gray-200 rounded animate-pulse dark:bg-gray-700 w-3/4"></div>
+          </td>
+        </tr>
       </tbody>
     </table>
   </div>
