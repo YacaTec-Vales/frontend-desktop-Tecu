@@ -58,8 +58,9 @@
         </div>
       </div>
 
-      <!-- Form -->
-      <form *ngIf="step === 'login'" class="space-y-6" (submit)="onSubmit($event)">
+      <div *ngIf="!isMobileOrTablet" class="w-full">
+        <!-- Form -->
+        <form *ngIf="step === 'login'" class="space-y-6" (submit)="onSubmit($event)">
         <div>
           <label for="email" class="block mb-2 text-sm font-extrabold"
             [ngClass]="error ? 'text-red-700' : 'text-gray-900'">Email</label>
@@ -185,7 +186,8 @@
         <div class="text-center mt-4">
           <button type="button" class="text-sm text-gray-500 hover:text-brand-600 font-bold underline" (click)="goBack()">← Cancelar y volver</button>
         </div>
-      </form>
+        </form>
+      </div>
     </div>
   </div>
 </section>
