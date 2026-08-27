@@ -76,12 +76,19 @@ export class BootstrapService {
    * concreto al intentar crear).
    */
   getSystemStatus(): Observable<BootstrapStatus> {
+    // Cache-busting: el dashboard del admin se debe refrescar en cada
+    // visita. Sin esto, el HttpClient o el navegador pueden reusar
+    // una respuesta cacheada de una sesion anterior en la que SI
+    // existia la MATRIZ o el GG, mostrando datos fantasma.
+    const cacheBust = Date.now().toString();
     const branchesParams = new HttpParams()
       .set('esMatriz', 'true')
-      .set('limit', '1');
+      .set('limit', '1')
+      .set('_', cacheBust);
     const usersParams = new HttpParams()
       .set('roleCode', 'GERENTE_GENERAL')
-      .set('limit', '1');
+      .set('limit', '1')
+      .set('_', cacheBust);
 
     const branches$ = this.http
       .get<any>(`${this.apiUrl}/branches`, {
