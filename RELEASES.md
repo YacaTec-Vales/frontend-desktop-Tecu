@@ -116,6 +116,7 @@ infra puede desplegar en staging con esa versión.
 ## Convenciones de título de PR (para los PRs de este repo)
 
 - Máximo 72 caracteres.
-- Formato: `tipo(scope): descripcion` (ej. `feat(auth): agregar login`).
+- Formato principal: `tipo(scope): descripcion` (ej. `feat(auth): agregar login`).
+- También se acepta `tipo/descripcion` para títulos autogenerados por GitHub desde ramas como `feat/mi-cambio`.
 - Tipos permitidos: `feat, fix, docs, refactor, chore, style, test, ci`.
 - Scope obligatorio salvo `chore`; minúsculas, sin punto final, sin emojis.

@@ -31,6 +31,7 @@ export class InputComponent implements ControlValueAccessor {
   @Input() maxlength?: number;
   @Input() min?: string | number;
   @Input() max?: string | number;
+  @Input() step?: string | number;
   @Input() title?: string;
 
   value: any = '';

@@ -4,6 +4,7 @@ import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/
 import { authInterceptor } from './core/interceptors/auth.interceptor';
 import { errorInterceptor } from './core/interceptors/error.interceptor';
 import { recaptchaInterceptor } from './core/interceptors/recaptcha.interceptor';
+import { rateLimitInterceptor } from './core/interceptors/rate-limit.interceptor';
 
 import { routes } from './app.routes';
 
@@ -13,7 +14,7 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes),
     provideHttpClient(
       withFetch(),
-      withInterceptors([authInterceptor, recaptchaInterceptor, errorInterceptor])
+      withInterceptors([rateLimitInterceptor, authInterceptor, recaptchaInterceptor, errorInterceptor])
     )
   ],
 };

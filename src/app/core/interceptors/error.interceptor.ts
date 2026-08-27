@@ -33,6 +33,8 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
         userFriendlyMessage = 'No tiene permisos para realizar esta acción.';
       } else if (error.status === 404) {
         userFriendlyMessage = 'El recurso solicitado no fue encontrado.';
+      } else if (error.status === 429) {
+        userFriendlyMessage = 'Demasiadas peticiones. Por favor, espera un momento antes de volver a intentar.';
       } else if (error.status >= 500) {
         userFriendlyMessage = 'Error, estamos revisando el error.';
       }
