@@ -1,8 +1,10 @@
 export const environment = {
   production: false,
-  // Dev: Apunta directamente al servidor para no usar el proxy de Angular
-  apiUrl: 'https://yacatecc.devas-projects.sbs/api/v1',
-  // Vacía = captcha apagado en local. Pegar aquí la site key (o la
+  // Dev: usa el proxy de Angular (proxy.conf.local.json apunta a
+  // http://localhost:56473). Path relativo = sin CORS, sin typo en
+  // dominio de produccion.
+  apiUrl: '/api/v1',
+  // Vacia = captcha apagado en local. Pegar aqui la site key (o la
   // clave de prueba de Google) para probar contra un backend con
   // RECAPTCHA_ENABLED=true.
   recaptchaSiteKey: ''
