@@ -278,22 +278,22 @@
 
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
       <div>
-        <app-input label="Comisión (%)" type="number" placeholder="0" formControlName="commissionPorc"
-          [maxlength]="4"></app-input>
-        <p class="mt-1 text-[10px] text-gray-500">Ej: 10 para 10%</p>
+        <app-input label="Comisión (Decimal)" type="number" placeholder="0.10" formControlName="commissionPorc"
+          step="0.01"></app-input>
+        <p class="mt-1 text-[10px] text-gray-500">Ej: 0.1 para 10% o 0.05 para 5%</p>
         <p *ngIf="productoForm.get('commissionPorc')?.errors?.['max'] && productoForm.get('commissionPorc')?.touched"
-          class="mt-1 text-xs text-red-600">No puede superar el 100%.</p>
+          class="mt-1 text-xs text-red-600">No puede superar 1 (100%).</p>
       </div>
       <div>
         <app-input label="Seguro ($ MXN)" type="number" placeholder="0" formControlName="insurancePesos"
           [maxlength]="6"></app-input>
       </div>
       <div>
-        <app-input label="Interés/Q (%)" type="number" placeholder="5" formControlName="interestPorc"
-          [maxlength]="4"></app-input>
-        <p class="mt-1 text-[10px] text-gray-500">Ej: 3 para 3%</p>
+        <app-input label="Interés/Q (Decimal)" type="number" placeholder="0.05" formControlName="interestPorc"
+          step="0.01"></app-input>
+        <p class="mt-1 text-[10px] text-gray-500">Ej: 0.03 para 3%</p>
         <p *ngIf="productoForm.get('interestPorc')?.errors?.['max'] && productoForm.get('interestPorc')?.touched"
-          class="mt-1 text-xs text-red-600">No puede superar el 100%.</p>
+          class="mt-1 text-xs text-red-600">No puede superar 1 (100%).</p>
       </div>
       <div>
         <app-input label="Multa ($ MXN)" type="number" placeholder="50" formControlName="penaltyPesos"
@@ -339,10 +339,10 @@
     <p *ngIf="categoriaForm.get('name')?.invalid && categoriaForm.get('name')?.touched"
       class="-mt-3 text-xs text-red-600">Requerido (mín. 2 caracteres).</p>
 
-    <app-input label="Porcentaje de Ganancia (%)" type="number" placeholder="Ej: 12" formControlName="ganancia"
-      hint="Valor entre 0 y 100. Ejemplo: 6.5 = 6.5%"></app-input>
+    <app-input label="Porcentaje de Ganancia (Decimal)" type="number" placeholder="Ej: 0.12" formControlName="ganancia" step="0.01"
+      hint="Valor entre 0 y 1. Ejemplo: 0.065 = 6.5%"></app-input>
     <p *ngIf="categoriaForm.get('ganancia')?.invalid && categoriaForm.get('ganancia')?.touched"
-      class="-mt-3 text-xs text-red-600">Debe ser un número entre 0 y 100.</p>
+      class="-mt-3 text-xs text-red-600">Debe ser un número entre 0 y 1.</p>
 
     <div class="mt-6 flex justify-end gap-2">
       <app-button variant="text" type="button" (onClick)="cerrarModalCategoria()">Cancelar</app-button>
