@@ -76,19 +76,20 @@ export class BootstrapService {
    * concreto al intentar crear).
    */
   getSystemStatus(): Observable<BootstrapStatus> {
-    // Cache-busting: el dashboard del admin se debe refrescar en cada
-    // visita. Sin esto, el HttpClient o el navegador pueden reusar
-    // una respuesta cacheada de una sesion anterior en la que SI
-    // existia la MATRIZ o el GG, mostrando datos fantasma.
-    const cacheBust = Date.now().toString();
+    // Sin cache-busting via query param: el backend envia
+    // `Cache-Control: no-store` en TODA respuesta JSON, asi que
+    // el navegador no debe cachear respuestas viejas.
+    //
+    // NOTA historica: se intento agregar `_=${Date.now()}` al
+    // query string para forzar invalidacion, pero el backend tiene
+    // `forbidNonWhitelisted: true` en el ValidationPipe y rechaza
+    // cualquier query param no whitelisted con 400 BAD_REQUEST.
     const branchesParams = new HttpParams()
       .set('esMatriz', 'true')
-      .set('limit', '1')
-      .set('_', cacheBust);
+      .set('limit', '1');
     const usersParams = new HttpParams()
       .set('roleCode', 'GERENTE_GENERAL')
-      .set('limit', '1')
-      .set('_', cacheBust);
+      .set('limit', '1');
 
     const branches$ = this.http
       .get<any>(`${this.apiUrl}/branches`, {

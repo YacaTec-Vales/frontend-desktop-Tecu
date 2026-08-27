@@ -117,11 +117,9 @@ export class StaffService {
   ): Observable<PaginatedResponse<Gerente>> {
     let params = this.buildParams(page, limit, search);
     if (roleCode) params = params.set('roleCode', roleCode);
-    // Cache-busting: el dashboard del admin no debe mostrar datos
-    // cacheados de GGs que ya no existen. El param _ cambia en cada
-    // llamada para que HttpClient y el navegador invaliden cualquier
-    // cache previa.
-    params = params.set('_', Date.now().toString());
+    // Sin cache-busting via query param: el backend envia
+    // `Cache-Control: no-store`. El `_=${Date.now()}` causa 400
+    // porque el ValidationPipe rechaza params no whitelisted.
     return this.http.get<any>(`${this.baseUrl}/users`, { params }).pipe(
       map(res => {
         const dataArr = res?.data?.data || res?.data || [];
