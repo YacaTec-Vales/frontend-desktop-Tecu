@@ -30,6 +30,17 @@ export class Login implements OnInit, OnDestroy {
   confirmPassword = '';
   isMobileOrTablet = false;
 
+  /**
+   * Secret TOTP en base32 extraido del `otpauthUrl`. El backend lo embebe
+   * como query param `secret=...` segun RFC 6238 / Google Authenticator
+   * key URI format. Se muestra al usuario para que pueda copiarlo a su
+   * gestor de TOTP preferido (Keepass, Bitwarden, 1Password, etc.) sin
+   * necesidad de escanear el QR.
+   */
+  totpSecret = '';
+  /** Texto de feedback del boton "Copiar" (vacio = estado normal). */
+  copyFeedback = '';
+
   private router = inject(Router);
   private authService = inject(AuthService);
   private cdr = inject(ChangeDetectorRef);
@@ -246,20 +257,21 @@ export class Login implements OnInit, OnDestroy {
       this.step = 'change_password';
       this.currentPassword = this.password; // asumiendo que this.password aún tiene la contraseña del form
       this.cdr.detectChanges();
-    } else if (user.mfaEnabled === false) {
-      this.success = 'Credenciales correctas. Configura tu Autenticador.';
-      this.partialToken = token || this.partialToken;
-      this.authService.setupMfa(this.partialToken).subscribe({
-        next: (setupRes: any) => {
-          this.otpauthUrl = setupRes.data?.otpauthUrl || setupRes.otpauthUrl;
-          this.step = 'mfa_setup';
-          this.cdr.detectChanges();
-        },
-        error: (err) => {
-          this.error = err.error?.message || err.error?.error?.message || 'Error generando código de configuración MFA.';
-          this.cdr.detectChanges();
-        }
-      });
+        } else if (user.mfaEnabled === false) {
+          this.success = 'Credenciales correctas. Configura tu Autenticador.';
+          this.partialToken = token || this.partialToken;
+          this.authService.setupMfa(this.partialToken).subscribe({
+            next: (setupRes: any) => {
+              this.otpauthUrl = setupRes.data?.otpauthUrl || setupRes.otpauthUrl;
+              this.totpSecret = this.extractTotpSecret(this.otpauthUrl);
+              this.step = 'mfa_setup';
+              this.cdr.detectChanges();
+            },
+            error: (err) => {
+              this.error = err.error?.message || err.error?.error?.message || 'Error generando código de configuración MFA.';
+              this.cdr.detectChanges();
+            }
+          });
     } else {
       this.success = 'Inicio de sesión exitoso.';
       this.cdr.detectChanges();
@@ -274,6 +286,109 @@ export class Login implements OnInit, OnDestroy {
     this.success = '';
     this.partialToken = '';
     this.otpauthUrl = '';
+    this.totpSecret = '';
+    this.copyFeedback = '';
 }
 
+  /**
+   * Extrae el secret TOTP (base32) del `otpauth://totp/...` URI.
+   *
+   * Formato esperado (RFC 6238 / Google Authenticator key URI):
+   *   otpauth://totp/<issuer>:<account>?secret=<BASE32>&issuer=<issuer>&algorithm=SHA1&digits=6&period=30
+   *
+   * Devuelve una cadena vacia si el formato no es el esperado (en cuyo
+   * caso la UI sigue mostrando solo el QR).
+   */
+  private extractTotpSecret(otpauthUrl: string): string {
+    if (!otpauthUrl) return '';
+    try {
+      // El valor puede venir URL-encoded; usar el constructor URL
+      // garantiza el manejo correcto.
+      const url = new URL(otpauthUrl);
+      const secret = url.searchParams.get('secret');
+      return (secret ?? '').trim();
+    } catch {
+      // Fallback: parseo manual si URL() falla (caso edge con esquema no
+      // reconocido por algunos browsers viejos).
+      const idx = otpauthUrl.indexOf('secret=');
+      if (idx === -1) return '';
+      const tail = otpauthUrl.substring(idx + 'secret='.length);
+      const ampIdx = tail.indexOf('&');
+      return decodeURIComponent(ampIdx === -1 ? tail : tail.substring(0, ampIdx));
+    }
+  }
+
+  /**
+   * Copia el secret TOTP al portapapeles. Usa la Clipboard API moderna
+   * (`navigator.clipboard.writeText`) con fallback al metodo legacy
+   * `document.execCommand('copy')` para entornos sin HTTPS o sin
+   * soporte de la Clipboard API.
+   */
+  async copySecretToClipboard(): Promise<void> {
+    if (!this.totpSecret) return;
+    const ok = await copyTextToClipboard(this.totpSecret);
+    this.copyFeedback = ok ? '¡Copiado!' : 'No se pudo copiar';
+    this.cdr.detectChanges();
+    if (ok) {
+      setTimeout(() => {
+        this.copyFeedback = '';
+        this.cdr.detectChanges();
+      }, 2000);
+    }
+  }
+}
+
+/**
+ * Helper aislado para copiar texto al portapapeles. Se expone a nivel
+ * de modulo (no como metodo de la clase) para que sea trivialmente
+ * testeable sin instanciar el componente Login.
+ *
+ * Estrategia:
+ *   1. Si el navegador expone `navigator.clipboard.writeText` en un
+ *      contexto seguro (HTTPS o localhost), usarlo.
+ *   2. Si falla o no esta disponible, fallback a un `<textarea>`
+ *      invisible + `document.execCommand('copy')`. Esto cubre
+ *      navegadores viejos o contextos sin HTTPS.
+ *
+ * @returns `true` si el texto quedo en el portapapeles; `false` si
+ *   ambos metodos fallaron.
+ */
+export async function copyTextToClipboard(text: string): Promise<boolean> {
+  if (typeof text !== 'string' || text.length === 0) return false;
+
+  // Camino 1: Clipboard API moderna.
+  try {
+    if (
+      typeof navigator !== 'undefined' &&
+      navigator.clipboard &&
+      typeof navigator.clipboard.writeText === 'function' &&
+      typeof window !== 'undefined' &&
+      window.isSecureContext
+    ) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  } catch {
+    // cae al fallback
+  }
+
+  // Camino 2: fallback legacy (deprecated pero sigue funcionando en
+  // navegadores sin HTTPS / contextos sin Clipboard API).
+  if (typeof document === 'undefined') return false;
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.setAttribute('readonly', '');
+  ta.style.position = 'fixed';
+  ta.style.top = '0';
+  ta.style.left = '0';
+  ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.select();
+  try {
+    return document.execCommand('copy') === true;
+  } catch {
+    return false;
+  } finally {
+    document.body.removeChild(ta);
+  }
 }
