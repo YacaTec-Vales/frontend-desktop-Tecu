@@ -21,10 +21,14 @@ import { StaffService } from './staff.service';
  */
 export interface BootstrapStatus {
   hasMatriz: boolean;
+  matrizId?: string | null;
+  matrizName?: string | null;
+  matrizFolioPrefix?: string | null;
   hasGeneralManager: boolean;
+  generalManagerId?: string | null;
+  generalManagerName?: string | null;
+  generalManagerEmail?: string | null;
   bootstrapComplete: boolean;
-  matrizId?: string;
-  generalManagerId?: string;
 }
 
 /**
@@ -184,5 +188,24 @@ export class BootstrapService {
     phone?: string;
   }): Observable<unknown> {
     return this.staffService.createGerenteGeneral(payload);
+  }
+
+  /**
+   * Transfiere la cualidad de MATRIZ a otra sucursal del sistema.
+   *
+   * Solo disponible para ADMINISTRADOR (permiso `branch.transfer.matriz`).
+   * La sucursal destino pierde su gerente (si lo tenia) porque el GG
+   * pertenece unicamente a la MATRIZ.
+   *
+   * @param branchId - UUID de la sucursal que sera la nueva matriz.
+   * @returns Observable con la respuesta del backend (BranchResponse).
+   */
+  transferMatriz(branchId: string): Observable<unknown> {
+    return this.http
+      .post<unknown>(
+        `${this.apiUrl}/branches/${branchId}/transfer-matriz`,
+        {},
+        { headers: this.buildHeaders() },
+      );
   }
 }
