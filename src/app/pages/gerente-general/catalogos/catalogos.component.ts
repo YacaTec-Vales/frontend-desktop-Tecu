@@ -125,7 +125,6 @@ export class CatalogosComponent implements OnInit {
     this.sucursalForm = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(2)]],
       branchType: ['SUCURSAL', Validators.required],
-      managerUserId: [''],
       cutoffDay: [15, [Validators.required, Validators.min(1), Validators.max(31)]],
       paymentDay: [20, [Validators.required, Validators.min(1), Validators.max(31)]],
       address: ['']
@@ -305,19 +304,6 @@ export class CatalogosComponent implements OnInit {
     if (!branchId) return 'N/A';
     const sucursal = this.sucursales.find(s => s.id === branchId);
     return sucursal ? sucursal.name : 'Desconocida';
-  }
-
-  get availableGerentes(): any[] {
-    const assignedGerenteIds = new Set(
-      this.sucursales
-        .map(s => s.managerUserId)
-        .filter((id): id is string => !!id)
-    );
-    const currentSelected = this.sucursalForm.get('managerUserId')?.value;
-    return this.gerentes.filter(g => {
-      const isCurrent = currentSelected && g.id === currentSelected;
-      return isCurrent || !assignedGerenteIds.has(g.id);
-    });
   }
 
   setTab(tab: Tab) {
@@ -518,6 +504,12 @@ export class CatalogosComponent implements OnInit {
 
       deleteAction.subscribe(() => {
         this.loadActivePersonalTab(true);
+        // Si se desactiva un gerente, refrescar sucursales para reflejar
+        // que la sucursal queda sin gerente asignado.
+        if (type === 'gerente') {
+          this.isBranchesLoaded = false;
+          this.loadSucursales(true);
+        }
       });
     }
 
@@ -628,30 +620,29 @@ export class CatalogosComponent implements OnInit {
   }
 
   // Sucursales
-  abrirModalSucursal(suc?: Branch) { 
+  abrirModalSucursal(suc?: Branch) {
     this.sucursalError = null;
     const now = new Date();
-    
+
     if (suc) {
       this.isEditingMode = true;
-      this.sucursalForm.patchValue({ 
-        name: suc.name, 
+      this.sucursalForm.patchValue({
+        name: suc.name,
         branchType: suc.branchType,
         address: suc.address || '',
-        managerUserId: suc.managerUserId || '',
-        cutoffDay: suc.cutoffDay || 15,
-        paymentDay: suc.paymentDay || 20
+        cutoffDay: suc.cutoffDay,
+        paymentDay: suc.paymentDay
       });
-      this.entityToDeactivate = { type: 'sucursal', id: suc.id }; 
+      this.entityToDeactivate = { type: 'sucursal', id: suc.id };
     } else {
       this.isEditingMode = false;
-      this.sucursalForm.reset({ 
-        branchType: 'SUCURSAL', 
+      this.sucursalForm.reset({
+        branchType: 'SUCURSAL',
         cutoffDay: 15,
         paymentDay: 20
       });
     }
-    this.isSucursalModalOpen = true; 
+    this.isSucursalModalOpen = true;
   }
   cerrarModalSucursal() { 
     this.isSucursalModalOpen = false; 
@@ -671,7 +662,14 @@ export class CatalogosComponent implements OnInit {
         prefix = 'SUC';
       }
 
-      const payload: any = { 
+      if (formVal.cutoffDay === null || formVal.cutoffDay === undefined ||
+          formVal.paymentDay === null || formVal.paymentDay === undefined) {
+        this.sucursalError = 'Debes especificar dia de corte y dia de pago.';
+        this.cdr.detectChanges();
+        return;
+      }
+
+      const payload: any = {
         name: formVal.name,
         branchType: formVal.branchType,
         esMatriz: formVal.branchType === 'MATRIZ',
@@ -679,8 +677,6 @@ export class CatalogosComponent implements OnInit {
         folioPrefix: prefix,
         cutoffDay: formVal.cutoffDay,
         paymentDay: formVal.paymentDay,
-        cutoffTime: "14:30",
-        paymentTime: "18:00",
         cutoffs: [
           {
             position: 1,
@@ -698,10 +694,6 @@ export class CatalogosComponent implements OnInit {
           }
         ]
       };
-      
-      if (formVal.managerUserId) {
-        payload.managerUserId = formVal.managerUserId;
-      }
 
       if (this.isEditingMode && this.entityToDeactivate) {
         this.branchService.updateBranch(this.entityToDeactivate.id, payload).subscribe({
@@ -726,6 +718,10 @@ export class CatalogosComponent implements OnInit {
           }
         });
       }
+    } else {
+      this.sucursalForm.markAllAsTouched();
+      this.sucursalError = 'Completa todos los campos requeridos.';
+      this.cdr.detectChanges();
     }
   }
 
@@ -789,6 +785,13 @@ export class CatalogosComponent implements OnInit {
       saveAction.subscribe({
         next: () => {
           this.loadActivePersonalTab(true);
+          // Si el cambio involucra un gerente (crear/editar/reasignar),
+          // refrescamos la tabla de sucursales para que se vea reflejado
+          // el gerente asignado a cada sucursal.
+          if (this.activePersonalTab === 'gerentes') {
+            this.isBranchesLoaded = false;
+            this.loadSucursales(true);
+          }
           this.cerrarModalPersonal();
         },
         error: (err: any) => {

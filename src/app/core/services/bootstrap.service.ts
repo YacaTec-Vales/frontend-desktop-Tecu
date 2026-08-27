@@ -76,6 +76,14 @@ export class BootstrapService {
    * concreto al intentar crear).
    */
   getSystemStatus(): Observable<BootstrapStatus> {
+    // Sin cache-busting via query param: el backend envia
+    // `Cache-Control: no-store` en TODA respuesta JSON, asi que
+    // el navegador no debe cachear respuestas viejas.
+    //
+    // NOTA historica: se intento agregar `_=${Date.now()}` al
+    // query string para forzar invalidacion, pero el backend tiene
+    // `forbidNonWhitelisted: true` en el ValidationPipe y rechaza
+    // cualquier query param no whitelisted con 400 BAD_REQUEST.
     const branchesParams = new HttpParams()
       .set('esMatriz', 'true')
       .set('limit', '1');
