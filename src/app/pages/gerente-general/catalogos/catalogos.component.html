@@ -360,11 +360,11 @@
 
       <app-input label="Nombre de la Sucursal" type="text" formControlName="name" placeholder="Ej. Sucursal Centro"></app-input>
 
-      <div>
+      <div *ngIf="isEditingMode">
         <label class="block mb-2 text-sm font-extrabold text-gray-900 dark:text-white">Gerente de Sucursal</label>
         <select formControlName="managerUserId"
           class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand focus:border-brand block w-full p-2.5">
-          <option value="" [disabled]="!isEditingMode">Seleccione un gerente (opcional)</option>
+          <option value="">Seleccione un gerente (opcional)</option>
           <option *ngFor="let gerente of availableGerentes" [value]="gerente.id">{{ gerente.firstName }} {{ gerente.lastNamePaternal }}</option>
         </select>
         <p *ngIf="availableGerentes.length === 0 && gerentes.length > 0"
