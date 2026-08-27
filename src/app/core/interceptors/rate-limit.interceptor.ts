@@ -4,8 +4,8 @@ import { throwError } from 'rxjs';
 // Mapa para guardar la última vez que se hizo una petición a una URL
 const requestTimestamps = new Map<string, number>();
 
-// Límite de tiempo entre peticiones en milisegundos (30 segundos)
-const RATE_LIMIT_MS = 30000;
+// Límite de tiempo entre peticiones en milisegundos (10 segundos)
+const RATE_LIMIT_MS = 10000;
 
 /**
  * Interceptor funcional para limitar la cantidad de peticiones repetitivas.
