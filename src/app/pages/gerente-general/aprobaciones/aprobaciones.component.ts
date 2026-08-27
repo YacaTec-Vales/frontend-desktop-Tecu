@@ -19,6 +19,7 @@ import { catchError, map } from 'rxjs/operators';
 import { BranchService } from '../../../core/services/branch.service';
 import { Branch } from '../../../core/models/branch.model';
 import { DocumentService } from '../../../core/services/document.service';
+import { CategoryService, CreditCategory } from '../../../core/services/category.service';
 
 export interface UnifiedRequest {
   id: string;
@@ -45,6 +46,7 @@ export class AprobacionesComponent implements OnInit {
   
   dictamenes: Solicitud[] = [];
   incrementos: CreditRaiseRequest[] = [];
+  categories: CreditCategory[] = [];
   
   unifiedList: UnifiedRequest[] = [];
   filteredList: UnifiedRequest[] = [];
@@ -123,6 +125,7 @@ export class AprobacionesComponent implements OnInit {
   // Rejection Mode
   isRejectingMode = false;
   motivoRechazo = '';
+  selectedCategoryId: string = '';
 
   constructor(
     private solicitudService: SolicitudService,
@@ -132,11 +135,22 @@ export class AprobacionesComponent implements OnInit {
     private alertService: AlertService,
     private branchService: BranchService,
     private documentService: DocumentService,
+    private categoryService: CategoryService,
     private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit() {
     this.loadBranches();
+    this.loadCategories();
+  }
+
+  loadCategories() {
+    this.categoryService.getCategories().subscribe({
+      next: (res) => {
+        this.categories = res.data || [];
+      },
+      error: (err) => console.error('Error cargando categorías', err)
+    });
   }
 
   loadBranches() {
@@ -386,9 +400,16 @@ export class AprobacionesComponent implements OnInit {
     this.isLoading = true;
 
     if (this.selectedItem.type === 'ALTA') {
+      if (!this.selectedCategoryId) {
+        this.isLoading = false;
+        this.alertService.warning('Debes seleccionar una categoría para autorizar la distribuidora.');
+        return;
+      }
+
       const payload = {
         limite_credito_centavos: (this.montoAprobacion || 0) * 100,
-        comentarios_decision: this.notasGerencia
+        comentarios_decision: this.notasGerencia,
+        categoryId: this.selectedCategoryId
       };
 
       this.solicitudService.autorizarSolicitud(this.selectedItem.id, payload).subscribe({

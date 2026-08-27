@@ -1,14 +1,14 @@
 import { HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
-import { AuthService } from '../services/auth.service';
 
 /**
  * Interceptor funcional de autenticación.
  * Adjunta el token JWT y cabeceras personalizadas a cada petición saliente.
  */
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
-  const authService = inject(AuthService);
-  const token = authService.getToken();
+  // Leemos el token directamente de sessionStorage para evitar dependencia circular (NG0200)
+  // con el AuthService cuando este hace peticiones HTTP en su constructor.
+  const token = sessionStorage.getItem('ACCESS_TOKEN');
 
   // Clonamos la petición para añadir las cabeceras necesarias
   let clonedRequest = req.clone({

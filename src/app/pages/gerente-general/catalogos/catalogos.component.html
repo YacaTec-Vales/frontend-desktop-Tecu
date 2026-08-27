@@ -375,24 +375,16 @@
 
     <div class="grid grid-cols-3 gap-4">
       <div>
-        <app-input label="Fecha de Corte" type="date" 
-                   hint="Fecha de pago elegida: {{ tempPaymentDateFull }}"
-                   title="Fecha Corte"
-                   [ngModel]="tempCutoffDateFull" 
-                   (ngModelChange)="onCutoffDateChange($event)"
-                   [ngModelOptions]="{standalone: true}"></app-input>
+        <app-input label="Día de Corte" type="number" 
+                   hint="Ej: 15 (Día del mes)"
+                   placeholder="15"
+                   formControlName="cutoffDay"></app-input>
       </div>
       <div>
-        <app-input label="Fecha de Pago" type="date" 
-                   hint="Fecha de corte elegida: {{ tempCutoffDateFull }}"
-                   title="Fecha Pago"
-                   [ngModel]="tempPaymentDateFull" 
-                   (ngModelChange)="onPaymentDateChange($event)"
-                   [ngModelOptions]="{standalone: true}"></app-input>
-      </div>
-      <div>
-        <app-input label="Días Anticipo" type="number" placeholder="Ej: 3" hint="Ej: 3 (Periodo de gracia)."
-                   formControlName="earlyPaymentDays"></app-input>
+        <app-input label="Día de Pago" type="number" 
+                   hint="Ej: 20 (Día del mes)"
+                   placeholder="20"
+                   formControlName="paymentDay"></app-input>
       </div>
     </div>
 

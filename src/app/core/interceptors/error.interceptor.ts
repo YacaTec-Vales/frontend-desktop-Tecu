@@ -2,7 +2,6 @@ import { HttpInterceptorFn, HttpErrorResponse } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { catchError } from 'rxjs/operators';
 import { throwError } from 'rxjs';
-import { AuthService } from '../services/auth.service';
 import { Router } from '@angular/router';
 
 /**
@@ -11,7 +10,6 @@ import { Router } from '@angular/router';
  * y fuerza el cierre de sesión redirigiendo al login.
  */
 export const errorInterceptor: HttpInterceptorFn = (req, next) => {
-  const authService = inject(AuthService);
   const router = inject(Router);
 
   return next(req).pipe(
@@ -25,7 +23,11 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
           userFriendlyMessage = 'Credenciales incorrectas. Verifique su usuario y contraseña.';
         } else {
           userFriendlyMessage = 'Su sesión ha expirado o no es válida. Por favor, inicie sesión nuevamente.';
-          authService.forceLogout();
+          // Para evitar NG0200 (Circular Dependency con AuthService), limpiamos el storage y navegamos
+          // directamente en lugar de usar authService.forceLogout().
+          sessionStorage.removeItem('ACCESS_TOKEN');
+          sessionStorage.removeItem('REFRESH_TOKEN');
+          router.navigate(['/login']);
         }
       } else if (error.status === 403) {
         userFriendlyMessage = 'No tiene permisos para realizar esta acción.';

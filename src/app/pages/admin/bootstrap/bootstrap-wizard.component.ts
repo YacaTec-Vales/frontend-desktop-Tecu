@@ -57,7 +57,6 @@ export class BootstrapWizardComponent implements OnInit {
     address: [''],
     cutoffDay: [15, [Validators.min(1), Validators.max(31)]],
     paymentDay: [20, [Validators.min(1), Validators.max(31)]],
-    earlyPaymentDays: [3, [Validators.min(0), Validators.max(31)]],
   });
 
   ggForm: FormGroup = this.fb.group({
