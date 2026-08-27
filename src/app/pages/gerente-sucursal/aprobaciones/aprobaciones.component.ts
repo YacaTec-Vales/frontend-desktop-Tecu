@@ -17,6 +17,7 @@ import { AlertService } from '../../../core/services/alert.service';
 import { forkJoin, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { DocumentService } from '../../../core/services/document.service';
+import { CategoryService, CreditCategory } from '../../../core/services/category.service';
 
 export interface UnifiedRequest {
   id: string;
@@ -69,6 +70,8 @@ export class AprobacionesComponent implements OnInit {
   // Form Variables
   montoAprobacion: number | null = null;
   notasGerencia: string = '';
+  selectedCategoryId: string = '';
+  categories: CreditCategory[] = [];
 
   trackById(index: number, item: UnifiedRequest): string {
     return item.id;
@@ -124,12 +127,23 @@ export class AprobacionesComponent implements OnInit {
     private photoService: SolicitudPhotosService,
     private alertService: AlertService,
     private documentService: DocumentService,
+    private categoryService: CategoryService,
     private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit() {
+    this.loadCategories();
     this.loadDictamenes();
     this.loadIncrementos();
+  }
+
+  loadCategories() {
+    this.categoryService.getCategories().subscribe({
+      next: (res) => {
+        this.categories = res.data || [];
+      },
+      error: (err) => console.error('Error cargando categorías', err)
+    });
   }
 
   setFilter(type: FilterType) {
@@ -358,9 +372,16 @@ export class AprobacionesComponent implements OnInit {
     this.isLoading = true;
 
     if (this.selectedItem.type === 'ALTA') {
+      if (!this.selectedCategoryId) {
+        this.alertService.error('Debe seleccionar una categoría para asignar al distribuidor.');
+        this.isLoading = false;
+        return;
+      }
+
       const payload = {
         limite_credito_centavos: (this.montoAprobacion || 0) * 100,
-        comentarios_decision: this.notasGerencia
+        comentarios_decision: this.notasGerencia,
+        categoryId: this.selectedCategoryId
       };
 
       this.solicitudService.autorizarSolicitud(this.selectedItem.id, payload).subscribe({
