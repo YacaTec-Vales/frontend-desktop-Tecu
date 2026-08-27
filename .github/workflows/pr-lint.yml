@@ -27,14 +27,26 @@ jobs:
             exit 1
           fi
 
-          # Formato: <tipo>(<scope>): <descripcion>  |  <chore>: <descripcion>
-          if ! [[ "$title" =~ ^[a-z]+(\([a-z0-9-]+\))?: ]]; then
-            echo "::error::El titulo debe seguir 'tipo(scope): descripcion'. Ej: feat(auth): agregar autenticacion de dos factores"
+          scope=""
+          desc=""
+          title_format=""
+
+          # Formatos validos:
+          # 1) tipo(scope): descripcion | chore: descripcion
+          # 2) Tipo/descripcion (titulo sugerido por GitHub cuando se crea PR desde rama tipo/descripcion)
+          if [[ "$title" =~ ^([a-z]+)(\([a-z0-9-]+\))?:[[:space:]]+(.+)$ ]]; then
+            tipo="${BASH_REMATCH[1]}"
+            scope="${BASH_REMATCH[2]}"
+            desc="${BASH_REMATCH[3]}"
+            title_format="conventional"
+          elif [[ "$title" =~ ^([A-Za-z]+)/(.+)$ ]]; then
+            tipo="${BASH_REMATCH[1],,}"
+            desc="${BASH_REMATCH[2]}"
+            title_format="slash"
+          else
+            echo "::error::El titulo debe seguir 'tipo(scope): descripcion' o 'tipo/descripcion'. Ej: feat(auth): agregar autenticacion de dos factores"
             exit 1
           fi
-
-          tipo="${title%%:*}"
-          tipo="${tipo%%(*}"
 
           # Tipos permitidos (seccion 2 del documento de convenciones)
           case "$tipo" in
@@ -43,19 +55,16 @@ jobs:
           esac
 
           # Regla 8: scope obligatorio salvo chore
-          if [[ "$tipo" != "chore" ]] && ! [[ "$title" =~ ^[a-z]+\([a-z0-9-]+\): ]]; then
+          if [[ "$title_format" == "conventional" && "$tipo" != "chore" && -z "$scope" ]]; then
             echo "::error::Falta el scope. Formato: tipo(scope): descripcion. (Salvo chore)."
             exit 1
           fi
 
           # Regla 2: scope en minusculas, sin acentos, sin caracteres raros
-          if [[ "$title" =~ ^[a-z]+\([^a-z0-9-] ]]; then
+          if [[ -n "$scope" && ! "$scope" =~ ^\([a-z0-9-]+\)$ ]]; then
             echo "::error::El scope debe ir en minusculas, sin acentos ni caracteres especiales. Ej: feat(auth): ..."
             exit 1
           fi
-
-          # Descripcion
-          desc="${title#*: }"
 
           # Regla 2: descripcion en minusculas (sin mayuscula inicial)
           if [[ "$desc" =~ ^[A-ZÁÉÍÓÚÜÑ] ]]; then
