@@ -116,9 +116,9 @@ export class CatalogosComponent implements OnInit {
       variant: ['NORMAL', Validators.required],
       costPesos: [null, [Validators.required, Validators.min(1)]],
       totalPeriods: [null, [Validators.required, Validators.min(1), Validators.max(60)]],
-      commissionPorc: [0, [Validators.required, Validators.min(0), Validators.max(100)]],
+      commissionPorc: [0, [Validators.required, Validators.min(0), Validators.max(1)]],
       insurancePesos: [0, [Validators.required, Validators.min(0)]],
-      interestPorc: [0, [Validators.required, Validators.min(0), Validators.max(100)]],
+      interestPorc: [0, [Validators.required, Validators.min(0), Validators.max(1)]],
       penaltyPesos: [0, [Validators.required, Validators.min(0)]]
     });
 
@@ -142,7 +142,7 @@ export class CatalogosComponent implements OnInit {
 
     this.categoriaForm = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(2)]],
-      ganancia: [null, [Validators.required, Validators.min(0), Validators.max(100)]]
+      ganancia: [null, [Validators.required, Validators.min(0), Validators.max(1)]]
     });
   }
 
@@ -391,9 +391,9 @@ export class CatalogosComponent implements OnInit {
         variant: formValue.variant,
         costCents: Math.round(formValue.costPesos! * 100),
         totalPeriods: formValue.totalPeriods!,
-        commissionBps: Math.round(formValue.commissionPorc * 100),
+        commissionBps: Math.round(formValue.commissionPorc * 10000),
         insuranceCents: Math.round(formValue.insurancePesos * 100),
-        interestPerPeriodBps: Math.round(formValue.interestPorc * 100),
+        interestPerPeriodBps: Math.round(formValue.interestPorc * 10000),
         penaltyCents: Math.round(formValue.penaltyPesos * 100)
       };
       
@@ -442,9 +442,9 @@ export class CatalogosComponent implements OnInit {
       variant: prod.variant as 'NORMAL' | 'PLUS',
       costPesos: prod.costCents / 100,
       totalPeriods: prod.totalPeriods,
-      commissionPorc: prod.commissionBps / 100,
+      commissionPorc: prod.commissionBps / 10000,
       insurancePesos: prod.insuranceCents / 100,
-      interestPorc: prod.interestPerPeriodBps / 100,
+      interestPorc: prod.interestPerPeriodBps / 10000,
       penaltyPesos: (prod.penaltyCents || 0) / 100
     });
     this.isProductoModalOpen = true;
@@ -527,7 +527,7 @@ export class CatalogosComponent implements OnInit {
       // Convertimos bps => porcentaje para mostrarlo en el campo del formulario
       this.categoriaForm.patchValue({
         name: cat.name,
-        ganancia: cat.commissionBps / 100
+        ganancia: cat.commissionBps / 10000
       });
     } else {
       this.isEditingMode = false;
@@ -549,8 +549,8 @@ export class CatalogosComponent implements OnInit {
     if (!this.categoriaForm.valid) return;
 
     const formValue = this.categoriaForm.value;
-    // El usuario ingresa porcentaje (Ej: 6.5%), lo convertimos a bps (650)
-    const commissionBps = Math.round(formValue.ganancia * 100);
+    // El usuario ingresa decimal (Ej: 0.065), lo convertimos a bps (650)
+    const commissionBps = Math.round(formValue.ganancia * 10000);
 
     if (this.isEditingMode && this.selectedCategoriaId) {
       // EDITAR — PATCH /api/v1/categories/:id
