@@ -1,28 +1,33 @@
 import { Component, OnInit, inject, ChangeDetectorRef, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
-import { BootstrapService } from '../../../core/services/bootstrap.service';
+import { ActivatedRoute, Router } from '@angular/router';
+import { BootstrapService, BootstrapStatus } from '../../../core/services/bootstrap.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { BranchService } from '../../../core/services/branch.service';
+import type { Branch } from '../../../core/models/branch.model';
 
-type Step = 'matriz' | 'gerente-general' | 'done';
+type Step = 'matriz' | 'gerente-general' | 'done' | 'transfer-matriz' | 'transfer-done';
 
 /**
  * Wizard de bootstrap inicial del sistema.
  *
  * Solo el ADMINISTRADOR llega aqui (ruta `/admin/bootstrap` protegida por
- * `roleGuard(['ADMINISTRADOR'])`). El wizard tiene 2 pasos porque el admin
- * es el unico con los permisos `branch.create.matriz` y
- * `user.create.general_manager` (los demas roles no pueden crear ni MATRIZ
- * ni GG por API).
+ * `roleGuard(['ADMINISTRADOR'])`). El wizard tiene 2 modos:
  *
- * Flujo:
- *   1. Step 1: crea la sucursal MATRIZ.
- *   2. Step 2: crea al unico Gerente General (branchId=null enforced).
- *   3. Step 3: resumen + CTA "Cerrar sesion e iniciar como GG".
+ *  1. **Creacion inicial** (pasos matriz -> gerente-general -> done):
+ *     el admin es el unico con los permisos `branch.create.matriz` y
+ *     `user.create.general_manager`. Si el sistema NO esta inicializado,
+ *     este es el flujo.
  *
- * Si el sistema ya fue inicializado por otro admin, el wizard se autoredirige
- * al dashboard al detectar `hasGeneralManager`.
+ *  2. **Transferir matriz** (pasos transfer-matriz -> transfer-done):
+ *     cuando el sistema YA esta inicializado pero el admin quiere rotar
+ *     la cualidad de matriz a otra sucursal existente. Se accede desde
+ *     el dashboard con `?mode=transfer-matriz`. Requiere permiso
+ *     `branch.transfer.matriz`.
+ *
+ * Si el sistema ya esta inicializado y NO se pidio modo transfer, el
+ * wizard se autoredirige al dashboard.
  */
 @Component({
   selector: 'app-bootstrap-wizard',
@@ -34,21 +39,38 @@ export class BootstrapWizardComponent implements OnInit {
   private bootstrapService = inject(BootstrapService);
   private authService = inject(AuthService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
+  private branchService = inject(BranchService);
   private cdr = inject(ChangeDetectorRef);
+
+  /** Modo del wizard detectado al cargar. */
+  readonly mode = signal<'create' | 'transfer'>('create');
 
   /** Paso actual del wizard. */
   currentStep = signal<Step>('matriz');
-  /** IDs devueltos por backend para el resumen final. */
+
+  /** Datos del bootstrap en curso. */
   matrizId = signal<string | null>(null);
+  matrizName = signal<string | null>(null);
   generalManagerId = signal<string | null>(null);
   generalManagerEmail = signal<string | null>(null);
+  transferredFromId = signal<string | null>(null);
+  transferredToId = signal<string | null>(null);
+  transferredToName = signal<string | null>(null);
+
+  /** Sucursales disponibles para transferir la matriz. */
+  availableBranches = signal<Branch[]>([]);
+  isLoadingBranches = signal(false);
 
   /** Errores por paso. */
   matrizError = signal<string | null>(null);
   ggError = signal<string | null>(null);
+  transferError = signal<string | null>(null);
+
   /** Loading por paso. */
   isLoadingMatriz = signal(false);
   isLoadingGg = signal(false);
+  isLoadingTransfer = signal(false);
 
   /** Forms reactivos con validaciones alineadas al backend. */
   matrizForm: FormGroup = this.fb.group({
@@ -68,7 +90,12 @@ export class BootstrapWizardComponent implements OnInit {
     phone: [''],
   });
 
-  /** Numero del paso actual (1, 2 o 3) para mostrar progreso. */
+  transferForm: FormGroup = this.fb.group({
+    branchId: ['', [Validators.required]],
+    confirm: [false, [Validators.requiredTrue]],
+  });
+
+  /** Numero del paso actual (1..N) para mostrar progreso. */
   readonly stepNumber = computed(() => {
     switch (this.currentStep()) {
       case 'matriz':
@@ -77,20 +104,50 @@ export class BootstrapWizardComponent implements OnInit {
         return 2;
       case 'done':
         return 3;
+      case 'transfer-matriz':
+        return 1;
+      case 'transfer-done':
+        return 2;
     }
   });
 
+  readonly totalSteps = computed(() => (this.mode() === 'transfer' ? 2 : 3));
+
   ngOnInit(): void {
-    // Si el sistema ya esta inicializado, redirigir al dashboard.
+    const requestedMode = this.route.snapshot.queryParamMap.get('mode');
+    if (requestedMode === 'transfer-matriz') {
+      this.mode.set('transfer');
+      this.currentStep.set('transfer-matriz');
+      void this.loadBranches();
+      return;
+    }
+    // Modo creacion: redirigir al dashboard si ya esta inicializado.
     this.bootstrapService.getSystemStatus().subscribe({
       next: (s) => {
         if (s.bootstrapComplete) {
           this.router.navigate(['/admin/dashboard']);
         } else if (s.matrizId) {
           this.matrizId.set(s.matrizId);
-          // Si solo existe la matriz, salta al step 2.
+          this.matrizName.set(s.matrizName ?? null);
           this.currentStep.set('gerente-general');
         }
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  /** Carga las sucursales disponibles para transferir la matriz. */
+  async loadBranches(): Promise<void> {
+    this.isLoadingBranches.set(true);
+    this.branchService.listBranches({ page: 1, limit: 100, esMatriz: false }).subscribe({
+      next: (res) => {
+        this.availableBranches.set(res.data ?? []);
+        this.isLoadingBranches.set(false);
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.isLoadingBranches.set(false);
+        this.transferError.set('No se pudieron cargar las sucursales.');
         this.cdr.detectChanges();
       },
     });
@@ -108,6 +165,7 @@ export class BootstrapWizardComponent implements OnInit {
       next: (res: any) => {
         this.isLoadingMatriz.set(false);
         this.matrizId.set(res?.id ?? null);
+        this.matrizName.set(res?.name ?? null);
         this.currentStep.set('gerente-general');
         this.cdr.detectChanges();
       },
@@ -167,8 +225,55 @@ export class BootstrapWizardComponent implements OnInit {
     });
   }
 
+  /**
+   * Ejecuta la transferencia de la cualidad de matriz a la sucursal
+   * seleccionada.
+   */
+  submitTransfer(): void {
+    this.transferError.set(null);
+    if (this.transferForm.invalid) {
+      this.transferForm.markAllAsTouched();
+      return;
+    }
+    this.isLoadingTransfer.set(true);
+    const branchId: string = this.transferForm.value.branchId;
+    const selected = this.availableBranches().find((b) => b.id === branchId);
+    this.bootstrapService.transferMatriz(branchId).subscribe({
+      next: (res: any) => {
+        this.isLoadingTransfer.set(false);
+        this.transferredFromId.set(res?.oldId ?? null);
+        this.transferredToId.set(res?.id ?? branchId);
+        this.transferredToName.set(res?.name ?? selected?.name ?? null);
+        this.currentStep.set('transfer-done');
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.isLoadingTransfer.set(false);
+        const code = err?.error?.code;
+        if (code === 'BRANCH.ALREADY_MATRIZ') {
+          this.transferError.set('Esa sucursal ya es la matriz activa.');
+        } else if (code === 'BRANCH.NOT_FOUND') {
+          this.transferError.set('La sucursal seleccionada ya no existe.');
+        } else if (code === 'AUTH.PERMISSION_DENIED') {
+          this.transferError.set('No tienes permisos para transferir la matriz.');
+        } else {
+          this.transferError.set(
+            err?.error?.message ||
+              'Error al transferir la matriz. Intente nuevamente.',
+          );
+        }
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
   /** Cierra la sesion del admin para que el siguiente login sea como GG. */
   logoutAndRestartAsGg(): void {
     this.authService.logout();
+  }
+
+  /** Vuelve al dashboard despues de la transferencia. */
+  backToDashboard(): void {
+    this.router.navigate(['/admin/dashboard']);
   }
 }

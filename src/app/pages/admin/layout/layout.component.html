@@ -1,7 +1,7 @@
 <div class="antialiased bg-gray-50 dark:bg-gray-900 h-screen font-sans flex overflow-hidden">
 
   <!-- Sidebar -->
-  <aside [class.w-64]="isSidebarOpen" [class.w-20]="!isSidebarOpen"
+  <aside [class]="isSidebarOpen ? 'w-64' : 'w-20'"
     class="flex-shrink-0 h-screen bg-white border-r border-gray-200 dark:bg-gray-800 dark:border-gray-700 flex flex-col z-40 transition-all duration-300 ease-in-out">
     <div class="flex flex-col h-full py-5 px-3">
 
@@ -12,8 +12,12 @@
             class="w-10 h-10 bg-brand rounded-lg flex items-center justify-center text-white shrink-0 font-bold text-xl">
             A
           </div>
-          <span *ngIf="isSidebarOpen"
-            class="text-xl font-black text-brand tracking-tight whitespace-nowrap">Administrador</span>
+          @if (isSidebarOpen) {
+            <span
+              class="text-xl font-black text-brand tracking-tight whitespace-nowrap">
+              {{ brandLabel() }}
+            </span>
+          }
         </div>
       </div>
 
@@ -29,7 +33,9 @@
                 d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0h6">
               </path>
             </svg>
-            <span *ngIf="isSidebarOpen" class="ml-4 whitespace-nowrap">Dashboard</span>
+            @if (isSidebarOpen) {
+              <span class="ml-4 whitespace-nowrap">Dashboard</span>
+            }
           </a>
         </li>
         <li>
@@ -41,7 +47,9 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M13 10V3L4 14h7v7l9-11h-7z"></path>
             </svg>
-            <span *ngIf="isSidebarOpen" class="ml-4 whitespace-nowrap">Bootstrap Inicial</span>
+            @if (isSidebarOpen) {
+              <span class="ml-4 whitespace-nowrap">Bootstrap Inicial</span>
+            }
           </a>
         </li>
         <li>
@@ -54,20 +62,9 @@
                 d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
               </path>
             </svg>
-            <span *ngIf="isSidebarOpen" class="ml-4 whitespace-nowrap">Logs de Auditoria</span>
-          </a>
-        </li>
-        <li>
-          <a routerLink="/admin/panel-corporativo"
-            routerLinkActive="bg-brand-50 text-brand font-bold dark:bg-gray-700 dark:text-white"
-            class="flex items-center p-3 text-base font-medium text-gray-700 rounded-lg hover:bg-gray-100 transition-colors group overflow-hidden">
-            <svg class="w-6 h-6 shrink-0 transition-colors group-hover:text-brand" fill="none" stroke="currentColor"
-              viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4">
-              </path>
-            </svg>
-            <span *ngIf="isSidebarOpen" class="ml-4 whitespace-nowrap">Panel Corporativo</span>
+            @if (isSidebarOpen) {
+              <span class="ml-4 whitespace-nowrap">Logs de Auditoria</span>
+            }
           </a>
         </li>
       </ul>
@@ -78,9 +75,11 @@
           class="cursor-pointer flex items-center p-3 text-base font-medium text-red-600 rounded-lg hover:bg-red-50 transition-colors overflow-hidden">
           <svg class="w-6 h-6 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+              d="M17 16l4-4m0 0l4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
           </svg>
-          <span *ngIf="isSidebarOpen" class="ml-4 font-bold">Cerrar Sesion</span>
+          @if (isSidebarOpen) {
+            <span class="ml-4 font-bold">Cerrar Sesion</span>
+          }
         </a>
       </div>
     </div>
@@ -88,6 +87,10 @@
 
   <!-- Main Content -->
   <main class="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-900 w-full relative h-screen">
+    <!-- VPN indicator (top-right corner) -->
+    <div class="absolute top-4 right-6 z-30">
+      <app-vpn-indicator></app-vpn-indicator>
+    </div>
     <div class="p-8">
       <router-outlet></router-outlet>
     </div>

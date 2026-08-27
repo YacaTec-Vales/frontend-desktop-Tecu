@@ -1,260 +1,397 @@
 <div class="max-w-3xl mx-auto py-8 space-y-6">
 
-  <!-- Header + Stepper -->
-  <div>
-    <h1 class="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight">
-      Bootstrap Inicial del Sistema
-    </h1>
-    <p class="text-gray-500 dark:text-gray-400 mt-2">
-      Como administrador, vas a configurar el sistema paso a paso. El unico Gerente
-      General recibe una contrasena temporal por correo que tendra que cambiar
-      en el primer inicio de sesion.
-    </p>
-  </div>
+  @if (mode() === 'create') {
+    <!-- Header + Stepper (modo creacion) -->
+    <div>
+      <h1 class="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight">
+        Bootstrap Inicial del Sistema
+      </h1>
+      <p class="text-gray-500 dark:text-gray-400 mt-2">
+        Como administrador, vas a configurar el sistema paso a paso. El unico Gerente
+        General recibe una contrasena temporal por correo que tendra que cambiar
+        en el primer inicio de sesion.
+      </p>
+    </div>
 
-  <!-- Stepper visual -->
-  <ol class="flex items-center w-full text-sm font-medium text-center text-gray-500 sm:text-base">
-    <li class="flex items-center"
-      [class.text-brand]="stepNumber() >= 1"
-      [class.text-gray-500]="stepNumber() < 1">
-      <span class="flex items-center justify-center w-8 h-8 mr-2 border rounded-full shrink-0"
-        [class.border-brand]="stepNumber() >= 1"
-        [class.bg-brand]="stepNumber() >= 1"
-        [class.text-white]="stepNumber() >= 1"
-        [class.border-gray-300]="stepNumber() < 1">
-        1
-      </span>
-      Sucursal MATRIZ
-      <svg class="w-4 h-4 ml-2 sm:ml-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-      </svg>
-    </li>
-    <li class="flex items-center"
-      [class.text-brand]="stepNumber() >= 2"
-      [class.text-gray-500]="stepNumber() < 2">
-      <span class="flex items-center justify-center w-8 h-8 mr-2 border rounded-full shrink-0"
-        [class.border-brand]="stepNumber() >= 2"
-        [class.bg-brand]="stepNumber() >= 2"
-        [class.text-white]="stepNumber() >= 2"
-        [class.border-gray-300]="stepNumber() < 2">
-        2
-      </span>
-      Gerente General
-      <svg class="w-4 h-4 ml-2 sm:ml-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-      </svg>
-    </li>
-    <li class="flex items-center"
-      [class.text-brand]="stepNumber() >= 3"
-      [class.text-gray-500]="stepNumber() < 3">
-      <span class="flex items-center justify-center w-8 h-8 mr-2 border rounded-full shrink-0"
-        [class.border-brand]="stepNumber() >= 3"
-        [class.bg-brand]="stepNumber() >= 3"
-        [class.text-white]="stepNumber() >= 3"
-        [class.border-gray-300]="stepNumber() < 3">
-        3
-      </span>
-      Listo
-    </li>
-  </ol>
+    <ol class="flex items-center w-full text-sm font-medium text-center text-gray-500 sm:text-base">
+      <li class="flex items-center"
+        [class]="stepNumber() >= 1 ? 'text-brand' : 'text-gray-500'">
+        <span class="flex items-center justify-center w-8 h-8 mr-2 border rounded-full shrink-0"
+          [class]="stepNumber() >= 1 ? 'border-brand bg-brand text-white' : 'border-gray-300'">
+          1
+        </span>
+        Sucursal MATRIZ
+        <svg class="w-4 h-4 ml-2 sm:ml-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+        </svg>
+      </li>
+      <li class="flex items-center"
+        [class]="stepNumber() >= 2 ? 'text-brand' : 'text-gray-500'">
+        <span class="flex items-center justify-center w-8 h-8 mr-2 border rounded-full shrink-0"
+          [class]="stepNumber() >= 2 ? 'border-brand bg-brand text-white' : 'border-gray-300'">
+          2
+        </span>
+        Gerente General
+        <svg class="w-4 h-4 ml-2 sm:ml-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+        </svg>
+      </li>
+      <li class="flex items-center"
+        [class]="stepNumber() >= 3 ? 'text-brand' : 'text-gray-500'">
+        <span class="flex items-center justify-center w-8 h-8 mr-2 border rounded-full shrink-0"
+          [class]="stepNumber() >= 3 ? 'border-brand bg-brand text-white' : 'border-gray-300'">
+          3
+        </span>
+        Listo
+      </li>
+    </ol>
+  } @else {
+    <!-- Header (modo transferir) -->
+    <div>
+      <h1 class="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight">
+        Transferir la cualidad de MATRIZ
+      </h1>
+      <p class="text-gray-500 dark:text-gray-400 mt-2">
+        Promueve otra sucursal a MATRIZ. La matriz actual dejara de serlo y
+        perdera su gerente. Operacion irreversible desde la UI.
+      </p>
+    </div>
 
-  <!-- ===================== STEP 1: MATRIZ ===================== -->
-  <div *ngIf="currentStep() === 'matriz'"
-    class="bg-white rounded-xl shadow-sm border border-gray-200 dark:bg-gray-800 dark:border-gray-700 p-8">
-    <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-2">Paso 1 de 2. Crear la sucursal MATRIZ</h2>
-    <p class="text-sm text-gray-500 mb-6">
-      Es la unica sucursal con el rol de MATRIZ en todo el sistema. El backend
-      enforce la unicidad via indice unico parcial.
-    </p>
+    <ol class="flex items-center w-full text-sm font-medium text-center text-gray-500 sm:text-base">
+      <li class="flex items-center"
+        [class]="stepNumber() >= 1 ? 'text-brand' : 'text-gray-500'">
+        <span class="flex items-center justify-center w-8 h-8 mr-2 border rounded-full shrink-0"
+          [class]="stepNumber() >= 1 ? 'border-brand bg-brand text-white' : 'border-gray-300'">
+          1
+        </span>
+        Seleccionar destino
+        <svg class="w-4 h-4 ml-2 sm:ml-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+        </svg>
+      </li>
+      <li class="flex items-center"
+        [class]="stepNumber() >= 2 ? 'text-brand' : 'text-gray-500'">
+        <span class="flex items-center justify-center w-8 h-8 mr-2 border rounded-full shrink-0"
+          [class]="stepNumber() >= 2 ? 'border-brand bg-brand text-white' : 'border-gray-300'">
+          2
+        </span>
+        Confirmacion
+      </li>
+    </ol>
+  }
 
-    <form [formGroup]="matrizForm" (ngSubmit)="submitMatriz()" class="space-y-5">
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+  <!-- ===================== STEP 1: MATRIZ (create) ===================== -->
+  @if (currentStep() === 'matriz') {
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 dark:bg-gray-800 dark:border-gray-700 p-8">
+      <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-2">Paso 1 de 2. Crear la sucursal MATRIZ</h2>
+      <p class="text-sm text-gray-500 mb-6">
+        Es la unica sucursal con el rol de MATRIZ en todo el sistema. El backend
+        enforce la unicidad via indice unico parcial.
+      </p>
+
+      <form [formGroup]="matrizForm" (ngSubmit)="submitMatriz()" class="space-y-5">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Nombre de la matriz *</label>
+            <input type="text" formControlName="name" maxlength="100" minlength="3"
+              class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand focus:border-brand block w-full p-2.5"
+              placeholder="Ej. Matriz Yacatec" />
+            @if (matrizForm.controls['name'].invalid && matrizForm.controls['name'].touched) {
+              <p class="text-xs text-red-600 mt-1">Requerido, 3-100 caracteres.</p>
+            }
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Prefijo de folio *</label>
+            <input type="text" formControlName="folioPrefix" maxlength="3" pattern="[A-Z]{3}"
+              class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand focus:border-brand block w-full p-2.5 font-mono uppercase"
+              placeholder="MAT" />
+            @if (matrizForm.controls['folioPrefix'].invalid && matrizForm.controls['folioPrefix'].touched) {
+              <p class="text-xs text-red-600 mt-1">3 letras mayusculas (ej. MAT).</p>
+            }
+          </div>
+        </div>
+
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Nombre de la matriz *</label>
-          <input type="text" formControlName="name" maxlength="100" minlength="3"
+          <label class="block text-sm font-medium text-gray-700 mb-1">Direccion (opcional)</label>
+          <input type="text" formControlName="address" maxlength="255"
             class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand focus:border-brand block w-full p-2.5"
-            placeholder="Ej. Matriz Yacatec" />
-          <p *ngIf="matrizForm.controls['name'].invalid && matrizForm.controls['name'].touched"
-            class="text-xs text-red-600 mt-1">Requerido, 3-100 caracteres.</p>
+            placeholder="Av. Norte 123, Col. Centro" />
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Dia de corte</label>
+            <input type="number" formControlName="cutoffDay" min="1" max="31"
+              class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand focus:border-brand block w-full p-2.5" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Dia de pago</label>
+            <input type="number" formControlName="paymentDay" min="1" max="31"
+              class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand focus:border-brand block w-full p-2.5" />
+          </div>
+        </div>
+
+        @if (matrizError()) {
+          <div class="bg-red-50 border border-red-200 text-red-800 rounded-lg p-3 text-sm">
+            {{ matrizError() }}
+          </div>
+        }
+
+        <div class="flex justify-end">
+          <button type="submit" [disabled]="isLoadingMatriz()"
+            class="inline-flex items-center px-5 py-2.5 text-sm font-medium text-white bg-brand rounded-lg hover:opacity-90 disabled:opacity-50 transition">
+            @if (!isLoadingMatriz()) {
+              <span>Crear MATRIZ y continuar</span>
+              <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+              </svg>
+            } @else {
+              <span>Creando...</span>
+            }
+          </button>
+        </div>
+      </form>
+    </div>
+  }
+
+  <!-- ===================== STEP 2: GERENTE GENERAL (create) ===================== -->
+  @if (currentStep() === 'gerente-general') {
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 dark:bg-gray-800 dark:border-gray-700 p-8">
+      <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-2">Paso 2 de 2. Crear al Gerente General</h2>
+      <p class="text-sm text-gray-500 mb-6">
+        Es el unico usuario con este rol. El sistema le enviara una contrasena temporal
+        por correo (debe cambiarla en el primer login).
+      </p>
+
+      <form [formGroup]="ggForm" (ngSubmit)="submitGerenteGeneral()" class="space-y-5">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Nombre(s) *</label>
+            <input type="text" formControlName="firstName" maxlength="100"
+              class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand focus:border-brand block w-full p-2.5"
+              placeholder="Juan" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Apellido paterno *</label>
+            <input type="text" formControlName="lastNamePaternal" maxlength="100"
+              class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand focus:border-brand block w-full p-2.5"
+              placeholder="Perez" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Apellido materno *</label>
+            <input type="text" formControlName="lastNameMaternal" maxlength="100"
+              class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand focus:border-brand block w-full p-2.5"
+              placeholder="Lopez" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <div class="md:col-span-2">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Correo electronico *</label>
+            <input type="email" formControlName="email" maxlength="255"
+              class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand focus:border-brand block w-full p-2.5"
+              placeholder="gerente.general@yacatec.demo" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Username *</label>
+            <input type="text" formControlName="username" minlength="3" maxlength="50" pattern="[a-z0-9._\-]+"
+              class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand focus:border-brand block w-full p-2.5 lowercase"
+              placeholder="gerente_general" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Telefono (opcional)</label>
+          <input type="text" formControlName="phone" maxlength="20"
+            class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand focus:border-brand block w-full p-2.5"
+            placeholder="+52 871 000 0000" />
+        </div>
+
+        @if (ggError()) {
+          <div class="bg-red-50 border border-red-200 text-red-800 rounded-lg p-3 text-sm">
+            {{ ggError() }}
+          </div>
+        }
+
+        <div class="flex justify-between">
+          <p class="text-xs text-gray-500 italic">
+            La contrasena temporal se enviara al correo indicado.
+          </p>
+          <button type="submit" [disabled]="isLoadingGg()"
+            class="inline-flex items-center px-5 py-2.5 text-sm font-medium text-white bg-brand rounded-lg hover:opacity-90 disabled:opacity-50 transition">
+            @if (!isLoadingGg()) {
+              <span>Crear Gerente General y finalizar</span>
+            } @else {
+              <span>Creando...</span>
+            }
+          </button>
+        </div>
+      </form>
+    </div>
+  }
+
+  <!-- ===================== STEP 3: DONE (create) ===================== -->
+  @if (currentStep() === 'done') {
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 dark:bg-gray-800 dark:border-gray-700 p-8">
+      <div class="flex items-start mb-6">
+        <div class="w-14 h-14 rounded-full bg-green-100 flex items-center justify-center mr-4 shrink-0">
+          <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+          </svg>
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Prefijo de folio *</label>
-          <input type="text" formControlName="folioPrefix" maxlength="3" pattern="[A-Z]{3}"
-            class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand focus:border-brand block w-full p-2.5 font-mono uppercase"
-            placeholder="MAT" />
-          <p *ngIf="matrizForm.controls['folioPrefix'].invalid && matrizForm.controls['folioPrefix'].touched"
-            class="text-xs text-red-600 mt-1">3 letras mayusculas (ej. MAT).</p>
+          <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Bootstrap completo</h2>
+          <p class="text-sm text-gray-500 mt-1">
+            El sistema esta listo. Lo siguiente es iniciar sesion con las credenciales del
+            Gerente General.
+          </p>
         </div>
       </div>
 
-      <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">Direccion (opcional)</label>
-        <input type="text" formControlName="address" maxlength="255"
-          class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand focus:border-brand block w-full p-2.5"
-          placeholder="Av. Norte 123, Col. Centro" />
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+      <dl class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Dia de corte</label>
-          <input type="number" formControlName="cutoffDay" min="1" max="31"
-            class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand focus:border-brand block w-full p-2.5" />
+          <dt class="font-medium text-gray-500">MATRIZ creada</dt>
+          <dd class="font-mono text-gray-900 dark:text-white mt-1 break-all">
+            {{ matrizId() || '(ya existia)' }}
+          </dd>
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Dia de pago</label>
-          <input type="number" formControlName="paymentDay" min="1" max="31"
-            class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand focus:border-brand block w-full p-2.5" />
+          <dt class="font-medium text-gray-500">Gerente General creado</dt>
+          <dd class="font-mono text-gray-900 dark:text-white mt-1 break-all">
+            {{ generalManagerId() || '(ya existia)' }}
+          </dd>
         </div>
-      </div>
-
-      <div class="mt-4">
-        <!-- Error -->
-        <div *ngIf="matrizError()"
-          class="bg-red-50 border border-red-200 text-red-800 rounded-lg p-3 text-sm">
-          {{ matrizError() }}
+        <div class="md:col-span-2">
+          <dt class="font-medium text-gray-500">Correo del Gerente General</dt>
+          <dd class="font-mono text-gray-900 dark:text-white mt-1 break-all">
+            {{ generalManagerEmail() || '(no disponible)' }}
+          </dd>
+          <dd class="text-xs text-gray-500 mt-1">
+            La contrasena temporal se envio a este correo (o ya estaba configurada).
+          </dd>
         </div>
-      </div>
+      </dl>
 
-      <div class="flex justify-end">
-        <button type="submit" [disabled]="isLoadingMatriz()"
-          class="inline-flex items-center px-5 py-2.5 text-sm font-medium text-white bg-brand rounded-lg hover:opacity-90 disabled:opacity-50 transition">
-          <span *ngIf="!isLoadingMatriz()">Crear MATRIZ y continuar</span>
-          <span *ngIf="isLoadingMatriz()">Creando...</span>
-          <svg *ngIf="!isLoadingMatriz()" class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+      <div class="mt-8 flex flex-col sm:flex-row gap-3 sm:justify-end">
+        <a routerLink="/admin/dashboard"
+          class="inline-flex items-center justify-center px-5 py-2.5 text-sm font-medium text-gray-900 bg-white rounded-lg border border-gray-200 hover:bg-gray-100 transition">
+          Volver al dashboard
+        </a>
+        <button type="button" (click)="logoutAndRestartAsGg()"
+          class="inline-flex items-center justify-center px-5 py-2.5 text-sm font-medium text-white bg-brand rounded-lg hover:opacity-90 transition">
+          Cerrar sesion e iniciar como GG
+          <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
           </svg>
         </button>
       </div>
-    </form>
-  </div>
+    </div>
+  }
 
-  <!-- ===================== STEP 2: GERENTE GENERAL ===================== -->
-  <div *ngIf="currentStep() === 'gerente-general'"
-    class="bg-white rounded-xl shadow-sm border border-gray-200 dark:bg-gray-800 dark:border-gray-700 p-8">
-    <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-2">Paso 2 de 2. Crear al Gerente General</h2>
-    <p class="text-sm text-gray-500 mb-6">
-      Es el unico usuario con este rol. El sistema le enviara una contrasena temporal
-      por correo (debe cambiarla en el primer login).
-    </p>
+  <!-- ===================== STEP 1: TRANSFERIR MATRIZ ===================== -->
+  @if (currentStep() === 'transfer-matriz') {
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 dark:bg-gray-800 dark:border-gray-700 p-8">
+      <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-2">Selecciona la nueva MATRIZ</h2>
+      <p class="text-sm text-gray-500 mb-6">
+        Elige una sucursal existente. Pasara a ser MATRIZ (la actual dejara
+        de serlo). La sucursal seleccionada perdera su gerente (si lo tenia)
+        porque el GG pertenece unicamente a la MATRIZ.
+      </p>
 
-    <form [formGroup]="ggForm" (ngSubmit)="submitGerenteGeneral()" class="space-y-5">
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Nombre(s) *</label>
-          <input type="text" formControlName="firstName" maxlength="100"
-            class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand focus:border-brand block w-full p-2.5"
-            placeholder="Juan" />
+      @if (isLoadingBranches()) {
+        <div class="text-gray-500 dark:text-gray-400 italic">
+          Cargando sucursales disponibles...
+        </div>
+      } @else if (availableBranches().length === 0) {
+        <div class="bg-amber-50 border border-amber-200 text-amber-900 rounded-lg p-3 text-sm">
+          No hay sucursales candidatas. Crea primero al menos una SUCURSAL y vuelve aqui.
+        </div>
+      } @else {
+        <form [formGroup]="transferForm" (ngSubmit)="submitTransfer()" class="space-y-5">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Sucursal destino *</label>
+            <select formControlName="branchId"
+              class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand focus:border-brand block w-full p-2.5">
+              <option value="">Selecciona...</option>
+              @for (b of availableBranches(); track b.id) {
+                <option [value]="b.id">{{ b.name }} ({{ b.folioPrefix }})</option>
+              }
+            </select>
+          </div>
+
+          <div class="bg-red-50 border border-red-200 rounded-lg p-3 text-sm">
+            <label class="flex items-start gap-2">
+              <input type="checkbox" formControlName="confirm"
+                class="mt-1 w-4 h-4 text-brand border-gray-300 rounded focus:ring-brand" />
+              <span class="text-red-900">
+                Confirmo que la sucursal actual dejara de ser MATRIZ y que la
+                sucursal seleccionada (incluyendo su gerente, si lo tenia) sera
+                reconfigurada. Esta operacion es irreversible desde la UI.
+              </span>
+            </label>
+          </div>
+
+          @if (transferError()) {
+            <div class="bg-red-50 border border-red-200 text-red-800 rounded-lg p-3 text-sm">
+              {{ transferError() }}
+            </div>
+          }
+
+          <div class="flex justify-between">
+            <button type="button" (click)="backToDashboard()"
+              class="inline-flex items-center px-5 py-2.5 text-sm font-medium text-gray-900 bg-white rounded-lg border border-gray-200 hover:bg-gray-100 transition">
+              Cancelar
+            </button>
+            <button type="submit" [disabled]="isLoadingTransfer()"
+              class="inline-flex items-center px-5 py-2.5 text-sm font-medium text-white bg-brand rounded-lg hover:opacity-90 disabled:opacity-50 transition">
+              @if (!isLoadingTransfer()) {
+                <span>Transferir MATRIZ</span>
+              } @else {
+                <span>Transfiriendo...</span>
+              }
+            </button>
+          </div>
+        </form>
+      }
+    </div>
+  }
+
+  <!-- ===================== STEP 2: TRANSFER DONE ===================== -->
+  @if (currentStep() === 'transfer-done') {
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 dark:bg-gray-800 dark:border-gray-700 p-8">
+      <div class="flex items-start mb-6">
+        <div class="w-14 h-14 rounded-full bg-green-100 flex items-center justify-center mr-4 shrink-0">
+          <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+          </svg>
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Apellido paterno *</label>
-          <input type="text" formControlName="lastNamePaternal" maxlength="100"
-            class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand focus:border-brand block w-full p-2.5"
-            placeholder="Perez" />
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Apellido materno *</label>
-          <input type="text" formControlName="lastNameMaternal" maxlength="100"
-            class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand focus:border-brand block w-full p-2.5"
-            placeholder="Lopez" />
+          <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Transferencia completa</h2>
+          <p class="text-sm text-gray-500 mt-1">
+            La nueva MATRIZ ya esta activa. El Gerente General sigue siendo el mismo.
+          </p>
         </div>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-        <div class="md:col-span-2">
-          <label class="block text-sm font-medium text-gray-700 mb-1">Correo electronico *</label>
-          <input type="email" formControlName="email" maxlength="255"
-            class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand focus:border-brand block w-full p-2.5"
-            placeholder="gerente.general@yacatec.demo" />
-        </div>
+      <dl class="grid grid-cols-1 gap-6 text-sm">
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Username *</label>
-          <input type="text" formControlName="username" minlength="3" maxlength="50" pattern="[a-z0-9._\-]+"
-            class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand focus:border-brand block w-full p-2.5 lowercase"
-            placeholder="gerente_general" />
+          <dt class="font-medium text-gray-500">Nueva MATRIZ</dt>
+          <dd class="font-mono text-gray-900 dark:text-white mt-1 break-all">
+            {{ transferredToName() }}
+          </dd>
+          <dd class="text-xs text-gray-500 mt-1 font-mono break-all">
+            ID: {{ transferredToId() }}
+          </dd>
         </div>
-      </div>
+      </dl>
 
-      <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">Telefono (opcional)</label>
-        <input type="text" formControlName="phone" maxlength="20"
-          class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand focus:border-brand block w-full p-2.5"
-          placeholder="+52 871 000 0000" />
-      </div>
-
-      <!-- Error -->
-      <div *ngIf="ggError()"
-        class="bg-red-50 border border-red-200 text-red-800 rounded-lg p-3 text-sm">
-        {{ ggError() }}
-      </div>
-
-      <div class="flex justify-between">
-        <p class="text-xs text-gray-500 italic">
-          La contrasena temporal se enviara al correo indicado.
-        </p>
-        <button type="submit" [disabled]="isLoadingGg()"
-          class="inline-flex items-center px-5 py-2.5 text-sm font-medium text-white bg-brand rounded-lg hover:opacity-90 disabled:opacity-50 transition">
-          <span *ngIf="!isLoadingGg()">Crear Gerente General y finalizar</span>
-          <span *ngIf="isLoadingGg()">Creando...</span>
+      <div class="mt-8 flex justify-end">
+        <button type="button" (click)="backToDashboard()"
+          class="inline-flex items-center px-5 py-2.5 text-sm font-medium text-white bg-brand rounded-lg hover:opacity-90 transition">
+          Volver al dashboard
         </button>
       </div>
-    </form>
-  </div>
-
-  <!-- ===================== STEP 3: DONE ===================== -->
-  <div *ngIf="currentStep() === 'done'"
-    class="bg-white rounded-xl shadow-sm border border-gray-200 dark:bg-gray-800 dark:border-gray-700 p-8">
-    <div class="flex items-start mb-6">
-      <div class="w-14 h-14 rounded-full bg-green-100 flex items-center justify-center mr-4 shrink-0">
-        <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-        </svg>
-      </div>
-      <div>
-        <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Bootstrap completo</h2>
-        <p class="text-sm text-gray-500 mt-1">
-          El sistema esta listo. Lo siguiente es iniciar sesion con las credenciales del
-          Gerente General.
-        </p>
-      </div>
     </div>
-
-    <dl class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
-      <div>
-        <dt class="font-medium text-gray-500">MATRIZ creada</dt>
-        <dd class="font-mono text-gray-900 dark:text-white mt-1 break-all">
-          {{ matrizId() || '(ya existia)' }}
-        </dd>
-      </div>
-      <div>
-        <dt class="font-medium text-gray-500">Gerente General creado</dt>
-        <dd class="font-mono text-gray-900 dark:text-white mt-1 break-all">
-          {{ generalManagerId() || '(ya existia)' }}
-        </dd>
-      </div>
-      <div class="md:col-span-2">
-        <dt class="font-medium text-gray-500">Correo del Gerente General</dt>
-        <dd class="font-mono text-gray-900 dark:text-white mt-1 break-all">
-          {{ generalManagerEmail() || '(no disponible)' }}
-        </dd>
-        <dd class="text-xs text-gray-500 mt-1">
-          La contrasena temporal se envio a este correo (o ya estaba configurada).
-        </dd>
-      </div>
-    </dl>
-
-    <div class="mt-8 flex flex-col sm:flex-row gap-3 sm:justify-end">
-      <a routerLink="/admin/dashboard"
-        class="inline-flex items-center justify-center px-5 py-2.5 text-sm font-medium text-gray-900 bg-white rounded-lg border border-gray-200 hover:bg-gray-100 transition">
-        Volver al dashboard
-      </a>
-      <button type="button" (click)="logoutAndRestartAsGg()"
-        class="inline-flex items-center justify-center px-5 py-2.5 text-sm font-medium text-white bg-brand rounded-lg hover:opacity-90 transition">
-        Cerrar sesion e iniciar como GG
-        <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
-        </svg>
-      </button>
-    </div>
-  </div>
+  }
 
 </div>

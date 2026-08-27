@@ -27,6 +27,8 @@ export interface Branch {
   address: string | null;
   managerUserId: string | null;
   manager: BranchManager | null;
+  /** Prefijo de 3 letras mayusculas usado en folios de vouchers. */
+  folioPrefix: string | null;
   cutoffDay: number;
   paymentDay: number;
   earlyPaymentDays: number;
@@ -52,6 +54,8 @@ export interface CreateBranchDto {
   esMatriz?: boolean;
   address?: string;
   managerUserId?: string | null;
+  /** Prefijo de 3 letras mayusculas (opcional, el backend lo genera). */
+  folioPrefix?: string;
   cutoffDay?: number;
   paymentDay?: number;
 }
@@ -68,6 +72,7 @@ export interface UpdateBranchDto {
   esMatriz?: boolean;
   address?: string;
   managerUserId?: string | null;
+  folioPrefix?: string;
   cutoffDay?: number;
   paymentDay?: number;
 }
