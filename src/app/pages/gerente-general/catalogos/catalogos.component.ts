@@ -128,7 +128,6 @@ export class CatalogosComponent implements OnInit {
       managerUserId: [''],
       cutoffDay: [15, [Validators.required, Validators.min(1), Validators.max(31)]],
       paymentDay: [20, [Validators.required, Validators.min(1), Validators.max(31)]],
-      earlyPaymentDays: [3, [Validators.required, Validators.min(0)]],
       address: ['']
     });
 
@@ -609,27 +608,20 @@ export class CatalogosComponent implements OnInit {
     });
   }
 
-  tempCutoffDateFull: string = '';
-  tempPaymentDateFull: string = '';
-
   getTodayDateStr(): string {
-    const d = new Date();
-    // We adjust timezone offset if needed, or simply build the YYYY-MM-DD
-    const month = '' + (d.getMonth() + 1);
-    const day = '' + d.getDate();
-    const year = d.getFullYear();
-    return [year, month.padStart(2, '0'), day.padStart(2, '0')].join('-');
+    const today = new Date();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    return `${today.getFullYear()}-${mm}-${dd}`;
   }
 
   onCutoffDateChange(val: string) {
-    this.tempCutoffDateFull = val;
     if (val) {
       this.sucursalForm.patchValue({ cutoffDay: parseInt(val.split('-')[2], 10) });
     }
   }
 
   onPaymentDateChange(val: string) {
-    this.tempPaymentDateFull = val;
     if (val) {
       this.sucursalForm.patchValue({ paymentDay: parseInt(val.split('-')[2], 10) });
     }
@@ -648,26 +640,16 @@ export class CatalogosComponent implements OnInit {
         address: suc.address || '',
         managerUserId: suc.managerUserId || '',
         cutoffDay: suc.cutoffDay || 15,
-        paymentDay: suc.paymentDay || 20,
-        earlyPaymentDays: suc.earlyPaymentDays || 3
+        paymentDay: suc.paymentDay || 20
       });
-      now.setDate(suc.cutoffDay || 15);
-      this.tempCutoffDateFull = [now.getFullYear(), (now.getMonth() + 1).toString().padStart(2, '0'), now.getDate().toString().padStart(2, '0')].join('-');
-      now.setDate(suc.paymentDay || 20);
-      this.tempPaymentDateFull = [now.getFullYear(), (now.getMonth() + 1).toString().padStart(2, '0'), now.getDate().toString().padStart(2, '0')].join('-');
       this.entityToDeactivate = { type: 'sucursal', id: suc.id }; 
     } else {
       this.isEditingMode = false;
       this.sucursalForm.reset({ 
         branchType: 'SUCURSAL', 
         cutoffDay: 15,
-        paymentDay: 20,
-        earlyPaymentDays: 3
+        paymentDay: 20
       });
-      now.setDate(15);
-      this.tempCutoffDateFull = [now.getFullYear(), (now.getMonth() + 1).toString().padStart(2, '0'), now.getDate().toString().padStart(2, '0')].join('-');
-      now.setDate(20);
-      this.tempPaymentDateFull = [now.getFullYear(), (now.getMonth() + 1).toString().padStart(2, '0'), now.getDate().toString().padStart(2, '0')].join('-');
     }
     this.isSucursalModalOpen = true; 
   }
@@ -681,9 +663,44 @@ export class CatalogosComponent implements OnInit {
   guardarSucursal() {
     this.sucursalError = null;
     if (this.sucursalForm.valid) {
-      const payload: any = { ...this.sucursalForm.value };
-      if (!payload.managerUserId || payload.managerUserId === '') {
-        delete payload.managerUserId;
+      const formVal = this.sucursalForm.value;
+      let prefix = '';
+      if (formVal.name && formVal.name.length >= 3) {
+        prefix = formVal.name.substring(0, 3).toUpperCase();
+      } else {
+        prefix = 'SUC';
+      }
+
+      const payload: any = { 
+        name: formVal.name,
+        branchType: formVal.branchType,
+        esMatriz: formVal.branchType === 'MATRIZ',
+        address: formVal.address || "",
+        folioPrefix: prefix,
+        cutoffDay: formVal.cutoffDay,
+        paymentDay: formVal.paymentDay,
+        cutoffTime: "14:30",
+        paymentTime: "18:00",
+        cutoffs: [
+          {
+            position: 1,
+            cutoffDay: formVal.cutoffDay,
+            paymentDay: formVal.paymentDay,
+            cutoffTime: "14:30",
+            paymentTime: "18:00"
+          },
+          {
+            position: 2,
+            cutoffDay: formVal.cutoffDay === 15 ? 28 : (formVal.cutoffDay + 14) % 30 || 30,
+            paymentDay: formVal.paymentDay === 20 ? 5 : (formVal.paymentDay + 14) % 30 || 30,
+            cutoffTime: "14:30",
+            paymentTime: "18:00"
+          }
+        ]
+      };
+      
+      if (formVal.managerUserId) {
+        payload.managerUserId = formVal.managerUserId;
       }
 
       if (this.isEditingMode && this.entityToDeactivate) {

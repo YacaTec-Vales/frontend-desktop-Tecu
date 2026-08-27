@@ -105,17 +105,14 @@
           <input type="number" formControlName="paymentDay" min="1" max="31"
             class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand focus:border-brand block w-full p-2.5" />
         </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Dias pago anticipado</label>
-          <input type="number" formControlName="earlyPaymentDays" min="0" max="31"
-            class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand focus:border-brand block w-full p-2.5" />
-        </div>
       </div>
 
-      <!-- Error -->
-      <div *ngIf="matrizError()"
-        class="bg-red-50 border border-red-200 text-red-800 rounded-lg p-3 text-sm">
-        {{ matrizError() }}
+      <div class="mt-4">
+        <!-- Error -->
+        <div *ngIf="matrizError()"
+          class="bg-red-50 border border-red-200 text-red-800 rounded-lg p-3 text-sm">
+          {{ matrizError() }}
+        </div>
       </div>
 
       <div class="flex justify-end">

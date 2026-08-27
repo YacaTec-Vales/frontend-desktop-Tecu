@@ -9,6 +9,7 @@ import { Login } from './pages/login/login';
 import { LayoutComponent as CajeraLayout } from './pages/cajera/layout/layout.component';
 import { LiberacionComponent } from './pages/cajera/liberacion/liberacion.component';
 import { ConciliacionComponent } from './pages/cajera/conciliacion/conciliacion.component';
+import { ValesDigitalesComponent } from './pages/cajera/vales-digitales/vales-digitales';
 
 // Gerente Sucursal Layout & Pages
 import { LayoutComponent as GerenteSucursalLayout } from './pages/gerente-sucursal/layout/layout.component';
@@ -17,6 +18,9 @@ import { ConfiguracionComponent as SucursalConfiguracion } from './pages/gerente
 import { AprobacionesComponent as SucursalAprobaciones } from './pages/gerente-sucursal/aprobaciones/aprobaciones.component';
 import { ReportesComponent as SucursalReportes } from './pages/gerente-sucursal/reportes/reportes.component';
 import { ReasignacionComponent } from './pages/gerente-sucursal/reasignacion/reasignacion.component';
+import { Autorizaciones as SucursalAutorizaciones } from './pages/gerente-sucursal/autorizaciones/autorizaciones';
+import { Distribuidoras as SucursalDistribuidoras } from './pages/gerente-sucursal/distribuidoras/distribuidoras';
+import { Relaciones as SucursalRelaciones } from './pages/gerente-sucursal/relaciones/relaciones';
 
 // Gerente General Layout & Pages
 import { LayoutComponent as GerenteGeneralLayout } from './pages/gerente-general/layout/layout.component';
@@ -25,6 +29,9 @@ import { ConfiguracionComponent } from './pages/gerente-general/configuracion/co
 import { AprobacionesComponent as GerenteGeneralAprobaciones } from './pages/gerente-general/aprobaciones/aprobaciones.component';
 import { ReportesComponent } from './pages/gerente-general/reportes/reportes.component';
 import { CorteQuincenaComponent } from './pages/gerente-general/corte-quincena/corte-quincena.component';
+import { Autorizaciones } from './pages/gerente-general/autorizaciones/autorizaciones';
+import { Distribuidoras } from './pages/gerente-general/distribuidoras/distribuidoras';
+import { Relaciones as GerenteGeneralRelaciones } from './pages/gerente-general/relaciones/relaciones';
 
 // Administrador Layout & Pages
 import { LayoutComponent as AdminLayout } from './pages/admin/layout/layout.component';
@@ -54,6 +61,7 @@ export const routes: Routes = [
       { path: '', redirectTo: 'liberacion', pathMatch: 'full' },
       { path: 'liberacion', component: LiberacionComponent },
       { path: 'conciliacion', component: ConciliacionComponent },
+      { path: 'vales-digitales', component: ValesDigitalesComponent },
     ],
   },
 
@@ -69,6 +77,9 @@ export const routes: Routes = [
       { path: 'aprobaciones', component: SucursalAprobaciones },
       { path: 'reportes', component: SucursalReportes },
       { path: 'reasignacion', component: ReasignacionComponent },
+      { path: 'autorizaciones', component: SucursalAutorizaciones },
+      { path: 'distribuidoras', component: SucursalDistribuidoras },
+      { path: 'relaciones', component: SucursalRelaciones },
     ],
   },
 
@@ -84,6 +95,9 @@ export const routes: Routes = [
       { path: 'aprobaciones', component: GerenteGeneralAprobaciones },
       { path: 'reportes', component: ReportesComponent },
       { path: 'corte-quincena', component: CorteQuincenaComponent },
+      { path: 'autorizaciones', component: Autorizaciones },
+      { path: 'distribuidoras', component: Distribuidoras },
+      { path: 'relaciones', component: GerenteGeneralRelaciones },
     ],
   },
 

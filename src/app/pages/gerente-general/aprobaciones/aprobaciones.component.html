@@ -188,11 +188,22 @@
         </div>
       </div>
 
-      <!-- Asignación de Crédito -->
-      <div class="p-4 bg-brand-50 rounded-lg border border-brand-200">
-        <label class="block text-sm font-semibold text-brand-strong mb-1">Límite de Crédito Inicial (MXN) *</label>
-        <p class="text-xs text-brand-600 mb-2">Asigna el monto autorizado para crear el perfil de este distribuidor.</p>
-        <input type="number" [(ngModel)]="montoAprobacion" class="w-full rounded-md border-brand-300 shadow-sm focus:border-brand focus:ring-brand sm:text-sm p-2 border" placeholder="Ej. 10000">
+      <!-- Asignación de Crédito y Categoría -->
+      <div class="p-4 bg-brand-50 rounded-lg border border-brand-200 space-y-4">
+        <div>
+          <label class="block text-sm font-semibold text-brand-strong mb-1">Categoría Asignada *</label>
+          <p class="text-xs text-brand-600 mb-2">Selecciona la categoría (ej. Plata, Cobre) para el nuevo distribuidor.</p>
+          <select [(ngModel)]="selectedCategoryId" class="w-full rounded-md border-brand-300 shadow-sm focus:border-brand focus:ring-brand sm:text-sm p-2 border bg-white">
+            <option value="" disabled selected>Seleccione una categoría</option>
+            <option *ngFor="let cat of categories" [value]="cat.id">{{ cat.name }} ({{ cat.commissionBps / 100 }}% comisión)</option>
+          </select>
+        </div>
+        
+        <div>
+          <label class="block text-sm font-semibold text-brand-strong mb-1">Límite de Crédito Inicial (MXN) *</label>
+          <p class="text-xs text-brand-600 mb-2">Asigna el monto autorizado para crear el perfil de este distribuidor.</p>
+          <input type="number" [(ngModel)]="montoAprobacion" class="w-full rounded-md border-brand-300 shadow-sm focus:border-brand focus:ring-brand sm:text-sm p-2 border" placeholder="Ej. 10000">
+        </div>
       </div>
     </div>
 
