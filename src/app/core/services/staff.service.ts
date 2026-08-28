@@ -177,7 +177,7 @@ export class StaffService {
   }
 
   updateCoordinador(id: string, data: any): Observable<Coordinador> {
-    return this.http.patch<{data: Coordinador}>(`${this.baseUrl}/coordinadores/${id}`, data).pipe(
+    return this.http.patch<{data: Coordinador}>(`${this.baseUrl}/users/${id}`, data).pipe(
       map(res => res.data)
     );
   }
@@ -214,7 +214,7 @@ export class StaffService {
   }
 
   updateVerificador(id: string, data: any): Observable<Verificador> {
-    return this.http.patch<{data: Verificador}>(`${this.baseUrl}/verificadores/${id}`, data).pipe(
+    return this.http.patch<{data: Verificador}>(`${this.baseUrl}/users/${id}`, data).pipe(
       map(res => res.data)
     );
   }
@@ -251,7 +251,7 @@ export class StaffService {
   }
 
   updateCajero(id: string, data: any): Observable<Cajero> {
-    return this.http.patch<{data: Cajero}>(`${this.baseUrl}/cajeros/${id}`, data).pipe(
+    return this.http.patch<{data: Cajero}>(`${this.baseUrl}/users/${id}`, data).pipe(
       map(res => res.data)
     );
   }
