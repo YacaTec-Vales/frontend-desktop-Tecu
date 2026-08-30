@@ -101,26 +101,26 @@
     <form [formGroup]="personalForm" (ngSubmit)="guardarPersonal()">
       <div class="mb-4">
         <app-input label="Nombre(s)" type="text" placeholder="Juan" formControlName="firstName"></app-input>
-        <span *ngIf="personalForm.get('firstName')?.invalid && personalForm.get('firstName')?.touched" class="text-xs text-red-600 mt-1">El nombre es requerido y mínimo 2 caracteres.</span>
+        <span *ngIf="personalForm.get('firstName')?.invalid && personalForm.get('firstName')?.touched" class="text-xs text-red-600 mt-1" role="alert">{{ personalForm.get('firstName')?.errors?.['name']?.message || 'El nombre es requerido (minimo 2 caracteres).' }}</span>
       </div>
       <div class="grid grid-cols-2 gap-4">
         <div>
-          <app-input label="Apellido Paterno" type="text" placeholder="Pérez" formControlName="lastNamePaternal"></app-input>
-          <span *ngIf="personalForm.get('lastNamePaternal')?.invalid && personalForm.get('lastNamePaternal')?.touched" class="text-xs text-red-600 mt-1">Obligatorio (min. 2).</span>
+          <app-input label="Apellido Paterno" type="text" placeholder="Perez" formControlName="lastNamePaternal"></app-input>
+          <span *ngIf="personalForm.get('lastNamePaternal')?.invalid && personalForm.get('lastNamePaternal')?.touched" class="text-xs text-red-600 mt-1" role="alert">{{ personalForm.get('lastNamePaternal')?.errors?.['name']?.message || 'El apellido paterno es requerido (minimo 2 caracteres).' }}</span>
         </div>
         <div>
-          <app-input label="Apellido Materno" type="text" placeholder="López" formControlName="lastNameMaternal"></app-input>
-          <span *ngIf="personalForm.get('lastNameMaternal')?.invalid && personalForm.get('lastNameMaternal')?.touched" class="text-xs text-red-600 mt-1">Obligatorio (min. 2).</span>
+          <app-input label="Apellido Materno" type="text" placeholder="Lopez" formControlName="lastNameMaternal"></app-input>
+          <span *ngIf="personalForm.get('lastNameMaternal')?.invalid && personalForm.get('lastNameMaternal')?.touched" class="text-xs text-red-600 mt-1" role="alert">{{ personalForm.get('lastNameMaternal')?.errors?.['name']?.message || 'El apellido materno es requerido (minimo 2 caracteres).' }}</span>
         </div>
       </div>
       <div class="grid grid-cols-2 gap-4 mt-4">
         <div>
-          <app-input label="Correo Electrónico" type="email" placeholder="juan@yacatec.test" formControlName="email"></app-input>
-          <span *ngIf="personalForm.get('email')?.invalid && personalForm.get('email')?.touched" class="text-xs text-red-600 mt-1">Ingrese un correo válido.</span>
+          <app-input label="Correo Electronico" type="email" placeholder="juan@yacatec.test" formControlName="email"></app-input>
+          <span *ngIf="personalForm.get('email')?.invalid && personalForm.get('email')?.touched" class="text-xs text-red-600 mt-1" role="alert">{{ personalForm.get('email')?.errors?.['email']?.message || 'Ingresa un correo electronico valido.' }}</span>
         </div>
         <div>
-          <app-input label="Teléfono" type="text" placeholder="8712345678" formControlName="phone"></app-input>
-          <span *ngIf="personalForm.get('phone')?.invalid && personalForm.get('phone')?.touched" class="text-xs text-red-600 mt-1">Debe contener 10 dígitos.</span>
+          <app-input label="Telefono" type="text" placeholder="8712345678" formControlName="phone"></app-input>
+          <span *ngIf="personalForm.get('phone')?.invalid && personalForm.get('phone')?.touched" class="text-xs text-red-600 mt-1" role="alert">{{ personalForm.get('phone')?.errors?.['phone']?.message || 'El telefono debe tener 10 digitos.' }}</span>
         </div>
       </div>
 

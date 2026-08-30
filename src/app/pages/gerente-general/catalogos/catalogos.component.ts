@@ -15,6 +15,36 @@ import { ProductService, Product, CreateProductDto, UpdateProductDto } from '../
 import { CategoryService, CreditCategory, CreateCategoryDto, UpdateCategoryDto } from '../../../core/services/category.service';
 import { Branch, CreateBranchDto, UpdateBranchDto } from '../../../core/models/branch.model';
 import { Coordinador, Verificador, Cajero, CreateStaffDto } from '../../../core/models/staff.model';
+import {
+  validateName,
+  validateEmail,
+  validatePhone,
+  validateUsername,
+} from '../../../core/validators/form-validators';
+
+/**
+ * Custom Validators para Reactive Forms que envuelven las funciones
+ * puras del helper. Se usan igual que cualquier `Validators.*`.
+ */
+const nameValidator = (fieldName: string) => (control: { value: string | null | undefined }) => {
+  const err = validateName(control.value, fieldName);
+  return err ? { name: { message: err } } : null;
+};
+
+const emailValidator = () => (control: { value: string | null | undefined }) => {
+  const err = validateEmail(control.value);
+  return err ? { email: { message: err } } : null;
+};
+
+const phoneValidator = () => (control: { value: string | null | undefined }) => {
+  const err = validatePhone(control.value);
+  return err ? { phone: { message: err } } : null;
+};
+
+const usernameValidator = () => (control: { value: string | null | undefined }) => {
+  const err = validateUsername(control.value);
+  return err ? { username: { message: err } } : null;
+};
 
 type Tab = 'productos' | 'categorias' | 'sucursales' | 'personal';
 type PersonalTab = 'gerentes' | 'coordinadores' | 'verificadores' | 'cajeros';
@@ -123,7 +153,7 @@ export class CatalogosComponent implements OnInit {
     });
 
     this.sucursalForm = this.fb.group({
-      name: ['', [Validators.required, Validators.minLength(2)]],
+      name: ['', [Validators.required, Validators.minLength(2), nameValidator('nombre de sucursal')]],
       branchType: ['SUCURSAL', Validators.required],
       cutoffDay: [15, [Validators.required, Validators.min(1), Validators.max(31)]],
       paymentDay: [20, [Validators.required, Validators.min(1), Validators.max(31)]],
@@ -131,17 +161,17 @@ export class CatalogosComponent implements OnInit {
     });
 
     this.personalForm = this.fb.group({
-      username: [''],
-      firstName: ['', [Validators.required, Validators.minLength(2)]],
-      lastNamePaternal: ['', [Validators.required, Validators.minLength(2)]],
-      lastNameMaternal: ['', [Validators.required, Validators.minLength(2)]],
-      email: ['', [Validators.required, Validators.email]],
-      phone: ['', [Validators.required, Validators.pattern('^[0-9]{10}$')]],
+      username: ['', [Validators.required, Validators.minLength(3), usernameValidator()]],
+      firstName: ['', [Validators.required, Validators.minLength(2), nameValidator('nombre')]],
+      lastNamePaternal: ['', [Validators.required, Validators.minLength(2), nameValidator('apellido paterno')]],
+      lastNameMaternal: ['', [Validators.required, Validators.minLength(2), nameValidator('apellido materno')]],
+      email: ['', [Validators.required, emailValidator()]],
+      phone: ['', [Validators.required, phoneValidator()]],
       branchId: ['']
     });
 
     this.categoriaForm = this.fb.group({
-      name: ['', [Validators.required, Validators.minLength(2)]],
+      name: ['', [Validators.required, Validators.minLength(2), nameValidator('nombre de categoria')]],
       ganancia: [null, [Validators.required, Validators.min(0), Validators.max(1)]]
     });
   }
