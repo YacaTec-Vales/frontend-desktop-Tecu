@@ -8,6 +8,7 @@ import { ModalComponent } from '../../../components/ui/modal/modal';
 import { InputComponent } from '../../../components/ui/input/input';
 import { BadgeComponent } from '../../../components/ui/badge/badge';
 import { TableActionsComponent } from '../../../components/ui/table/table-actions';
+import { VpnOnlyDirective } from '../../../core/directives/vpn-only.directive';
 
 import { BranchService } from '../../../core/services/branch.service';
 import { StaffService } from '../../../core/services/staff.service';
@@ -22,7 +23,7 @@ type PersonalTab = 'gerentes' | 'coordinadores' | 'verificadores' | 'cajeros';
 @Component({
   selector: 'app-catalogos',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, CardComponent, TableComponent, ButtonComponent, ModalComponent, InputComponent, BadgeComponent, TableActionsComponent],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, CardComponent, TableComponent, ButtonComponent, ModalComponent, InputComponent, BadgeComponent, TableActionsComponent, VpnOnlyDirective],
   templateUrl: './catalogos.component.html'
 })
 export class CatalogosComponent implements OnInit {

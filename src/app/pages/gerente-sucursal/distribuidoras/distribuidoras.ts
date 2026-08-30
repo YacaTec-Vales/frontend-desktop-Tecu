@@ -9,11 +9,12 @@ import { Branch } from '../../../core/models/branch.model';
 import { Coordinador } from '../../../core/models/staff.model';
 import { CardComponent } from '../../../components/ui/card/card';
 import { TableComponent } from '../../../components/ui/table/table';
+import { VpnOnlyDirective } from '../../../core/directives/vpn-only.directive';
 
 @Component({
   selector: 'app-distribuidoras',
   standalone: true,
-  imports: [CommonModule, FormsModule, CardComponent, TableComponent],
+  imports: [CommonModule, FormsModule, CardComponent, TableComponent, VpnOnlyDirective],
   templateUrl: './distribuidoras.html',
 })
 export class Distribuidoras implements OnInit {

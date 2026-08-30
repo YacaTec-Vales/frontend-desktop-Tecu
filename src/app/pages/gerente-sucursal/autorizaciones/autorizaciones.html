@@ -39,9 +39,9 @@
           {{ auth.justification || 'Sin justificación' }}
         </td>
         <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium space-x-2">
-          <app-button *ngIf="auth.authorizationType !== 'MODIFICACION_CLIENTE'" variant="success" size="sm" (click)="aprobar(auth)">Aprobar</app-button>
-          <app-button *ngIf="auth.authorizationType === 'MODIFICACION_CLIENTE'" variant="primary" size="sm" (click)="openResolveModal(auth)">Resolver</app-button>
-          <app-button variant="error" size="sm" (click)="rechazar(auth)">Rechazar</app-button>
+          <ng-container *vpnOnly><app-button *ngIf="auth.authorizationType !== 'MODIFICACION_CLIENTE'" variant="success" size="sm" (click)="aprobar(auth)">Aprobar</app-button></ng-container>
+          <ng-container *vpnOnly><app-button *ngIf="auth.authorizationType === 'MODIFICACION_CLIENTE'" variant="primary" size="sm" (click)="openResolveModal(auth)">Resolver</app-button></ng-container>
+          <app-button *vpnOnly variant="error" size="sm" (click)="rechazar(auth)">Rechazar</app-button>
         </td>
         </tr>
       </ng-container>
@@ -120,9 +120,11 @@
 
     <div class="pt-4 border-t flex justify-end gap-2">
       <app-button variant="text" (onClick)="cerrarResolveModal()" [disabled]="isSubmitting">Cancelar</app-button>
-      <app-button *ngIf="selectedAuth.authorizationType === 'MODIFICACION_CLIENTE'" variant="primary" (onClick)="aprobarModificacionCliente()" [disabled]="isSubmitting">
-        {{ isSubmitting ? 'Aprobando...' : 'Aprobar Modificación' }}
-      </app-button>
+      <ng-container *vpnOnly>
+        <app-button *ngIf="selectedAuth.authorizationType === 'MODIFICACION_CLIENTE'" variant="primary" (onClick)="aprobarModificacionCliente()" [disabled]="isSubmitting">
+          {{ isSubmitting ? 'Aprobando...' : 'Aprobar Modificación' }}
+        </app-button>
+      </ng-container>
     </div>
   </div>
 </app-modal>

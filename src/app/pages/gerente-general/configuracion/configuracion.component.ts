@@ -4,13 +4,14 @@ import { FormsModule } from '@angular/forms';
 import { CardComponent } from '../../../components/ui/card/card';
 import { InputComponent } from '../../../components/ui/input/input';
 import { ButtonComponent } from '../../../components/ui/button/button';
+import { VpnOnlyDirective } from '../../../core/directives/vpn-only.directive';
 import { BusinessConfigService } from '../../../core/services/business-config.service';
 import { BusinessConfigItem, BusinessConfigPatchDto, BusinessConfigPatchItem } from '../../../core/models/business-config.model';
 
 @Component({
   selector: 'app-configuracion',
   standalone: true,
-  imports: [CommonModule, FormsModule, CardComponent, InputComponent, ButtonComponent],
+  imports: [CommonModule, FormsModule, CardComponent, InputComponent, ButtonComponent, VpnOnlyDirective],
   templateUrl: './configuracion.component.html'
 })
 export class ConfiguracionComponent implements OnInit {

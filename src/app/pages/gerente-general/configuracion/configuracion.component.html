@@ -74,8 +74,8 @@
     <app-button variant="outline" (click)="loadConfig()">
       Descartar Cambios
     </app-button>
-    <app-button 
-      variant="primary" 
+    <app-button *vpnOnly
+      variant="primary"
       (click)="guardarConfiguracion()"
       [disabled]="isSaving">
       {{ isSaving ? 'Guardando...' : 'Guardar Configuración' }}

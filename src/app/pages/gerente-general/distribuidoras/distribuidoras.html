@@ -46,7 +46,7 @@
             {{ getCategoryName(dist.categoryId) }}
           </td>
           <td class="px-6 py-4 whitespace-nowrap">
-            <div class="relative">
+            <div class="relative" *vpnOnly>
               <button (click)="toggleDropdown(dist.id)" class="text-gray-900 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm px-4 py-2 inline-flex items-center dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-600 dark:focus:ring-gray-700" type="button">
                 Modificar Categoría
                 <svg class="w-2.5 h-2.5 ms-2.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">

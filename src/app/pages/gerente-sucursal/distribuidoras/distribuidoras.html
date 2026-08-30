@@ -35,7 +35,7 @@
           {{ getCategoryName(dist.categoryId) }}
         </td>
         <td class="px-6 py-4 whitespace-nowrap">
-          <div class="relative">
+          <div class="relative" *vpnOnly>
             <button (click)="toggleDropdown(dist.id)" class="text-gray-900 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm px-4 py-2 inline-flex items-center dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-600 dark:focus:ring-gray-700" type="button">
               Modificar Categoría
               <svg class="w-2.5 h-2.5 ms-2.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
@@ -43,14 +43,14 @@
               </svg>
             </button>
             <div *ngIf="openDropdownId === dist.id" class="absolute z-10 right-0 bg-white divide-y divide-gray-100 rounded-lg shadow w-44 dark:bg-gray-700 mt-2">
-                <ul class="py-2 text-sm text-gray-700 dark:text-gray-200">
-                  <li *ngIf="categories.length === 0" class="px-4 py-2 text-xs text-gray-500">No hay categorías</li>
-                  <li *ngFor="let c of categories">
-                    <a href="javascript:void(0)" (click)="changeCategoryInline(dist, c.id); toggleDropdown(dist.id)" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
-                      {{ c.name }} ({{ c.commissionBps / 100 }}%)
-                    </a>
-                  </li>
-                </ul>
+              <ul class="py-2 text-sm text-gray-700 dark:text-gray-200">
+                <li *ngIf="categories.length === 0" class="px-4 py-2 text-xs text-gray-500">No hay categorías</li>
+                <li *ngFor="let c of categories">
+                  <a href="javascript:void(0)" (click)="changeCategoryInline(dist, c.id); toggleDropdown(dist.id)" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
+                    {{ c.name }} ({{ c.commissionBps / 100 }}%)
+                  </a>
+                </li>
+              </ul>
             </div>
           </div>
         </td>
@@ -58,5 +58,3 @@
     </app-table>
   </app-card>
 </div>
-
-

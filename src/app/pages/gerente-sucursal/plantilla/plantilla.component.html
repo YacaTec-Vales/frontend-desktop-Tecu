@@ -43,7 +43,7 @@
         (searchChange)="onSearch($event, activePersonalTab)"
         (limitChange)="onLimitChange($event, activePersonalTab)"
         (onAction)="handleTableAction($event, activePersonalTab)">
-        <app-button table-actions variant="primary" (onClick)="abrirModalPersonal()">
+        <app-button *vpnOnly table-actions variant="primary" (onClick)="abrirModalPersonal()">
           + Registrar {{ activePersonalTab === 'coordinadores' ? 'Coordinador' : activePersonalTab === 'verificadores' ? 'Verificador' : 'Cajero' }}
         </app-button>
 
@@ -126,7 +126,7 @@
 
       <div class="mt-6 flex justify-end gap-2 pt-4 border-t border-gray-100 dark:border-gray-700">
         <app-button variant="text" type="button" (onClick)="cerrarModalPersonal()" [disabled]="isSaving">Cancelar</app-button>
-        <app-button variant="primary" type="submit" [disabled]="personalForm.invalid || isSaving">
+        <app-button *vpnOnly variant="primary" type="submit" [disabled]="personalForm.invalid || isSaving">
           {{ isSaving ? 'Guardando...' : (isEditingMode ? 'Guardar Cambios' : 'Registrar') }}
         </app-button>
       </div>
