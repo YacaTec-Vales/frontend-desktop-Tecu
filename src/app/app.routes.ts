@@ -38,6 +38,7 @@ import { LayoutComponent as AdminLayout } from './pages/admin/layout/layout.comp
 import { DashboardComponent as AdminDashboard } from './pages/admin/dashboard/dashboard.component';
 import { BootstrapWizardComponent } from './pages/admin/bootstrap/bootstrap-wizard.component';
 import { AuditoriaComponent } from './pages/admin/auditoria/auditoria.component';
+import { SucursalesAdminComponent } from './pages/admin/sucursales/sucursales.component';
 
 /**
  * Rutas de la aplicacion.
@@ -112,6 +113,7 @@ export const routes: Routes = [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
       { path: 'dashboard', component: AdminDashboard },
       { path: 'bootstrap', component: BootstrapWizardComponent },
+      { path: 'sucursales', component: SucursalesAdminComponent },
       { path: 'auditoria', component: AuditoriaComponent },
     ],
   },

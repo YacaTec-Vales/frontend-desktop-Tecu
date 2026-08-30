@@ -53,6 +53,20 @@
           </a>
         </li>
         <li>
+          <a routerLink="/admin/sucursales"
+            routerLinkActive="bg-brand-50 text-brand font-bold dark:bg-gray-700 dark:text-white"
+            class="flex items-center p-3 text-base font-medium text-gray-700 rounded-lg hover:bg-gray-100 transition-colors group overflow-hidden">
+            <svg class="w-6 h-6 shrink-0 transition-colors group-hover:text-brand" fill="none" stroke="currentColor"
+              viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+            </svg>
+            @if (isSidebarOpen) {
+              <span class="ml-4 whitespace-nowrap">Sucursales</span>
+            }
+          </a>
+        </li>
+        <li>
           <a routerLink="/admin/auditoria"
             routerLinkActive="bg-brand-50 text-brand font-bold dark:bg-gray-700 dark:text-white"
             class="flex items-center p-3 text-base font-medium text-gray-700 rounded-lg hover:bg-gray-100 transition-colors group overflow-hidden">

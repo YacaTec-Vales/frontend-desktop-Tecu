@@ -1,0 +1,205 @@
+<div class="max-w-7xl mx-auto space-y-6 pb-12">
+
+  <div class="flex justify-between items-end mb-8">
+    <div>
+      <h1 class="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight">
+        Sucursales y MATRIZ
+      </h1>
+      <p class="text-gray-500 dark:text-gray-400 mt-2 text-lg">
+        Lista de sucursales del sistema. Promueve una existente a MATRIZ o crea una nueva.
+      </p>
+    </div>
+    <div class="flex gap-3">
+      @if (view() === 'list') {
+        <button type="button" (click)="load()" [disabled]="isLoading()"
+          class="px-5 py-2.5 text-sm font-medium text-gray-900 bg-white rounded-lg border border-gray-200 hover:bg-gray-100 disabled:opacity-50">
+          Refrescar
+        </button>
+        <button type="button" (click)="goCreate()"
+          class="px-5 py-2.5 text-sm font-medium text-white bg-brand rounded-lg hover:opacity-90 transition">
+          + Nueva sucursal
+        </button>
+      } @else {
+        <button type="button" (click)="goList()"
+          class="px-5 py-2.5 text-sm font-medium text-gray-900 bg-white rounded-lg border border-gray-200 hover:bg-gray-100">
+          Cancelar
+        </button>
+      }
+    </div>
+  </div>
+
+  @if (error()) {
+    <div class="bg-red-50 border border-red-200 text-red-800 rounded-xl p-4 text-sm" role="alert">
+      {{ error() }}
+    </div>
+  }
+
+  @if (view() === 'list') {
+
+    @if (matriz(); as m) {
+      <div class="bg-white rounded-xl shadow-sm border-2 border-brand p-6">
+        <div class="flex items-center justify-between flex-wrap gap-4">
+          <div>
+            <div class="flex items-center gap-2 mb-1">
+              <span class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-brand text-white">MATRIZ</span>
+              <span class="text-sm text-gray-500">Sucursal principal</span>
+            </div>
+            <p class="text-2xl font-extrabold text-gray-900 dark:text-white">{{ m.name }}</p>
+            <p class="text-sm text-gray-500 mt-1">
+              Folio: <span class="font-mono font-bold">{{ m.folioPrefix }}</span>
+              @if (m.address) { · {{ m.address }} }
+            </p>
+            <p class="text-xs text-gray-400 mt-1 font-mono break-all">ID: {{ m.id }}</p>
+          </div>
+          <p class="text-xs text-gray-500 italic max-w-sm text-right">
+            La cualidad de MATRIZ no se puede quitar sin reasignarla a otra sucursal.
+          </p>
+        </div>
+      </div>
+    }
+
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 dark:bg-gray-800 dark:border-gray-700 overflow-hidden">
+      <div class="p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+        <h2 class="text-sm font-medium text-gray-700">Sucursales ({{ otras().length }})</h2>
+      </div>
+      @if (isLoading() && branches().length === 0) {
+        <div class="p-6 text-gray-400 italic text-sm">Cargando sucursales...</div>
+      } @else if (otras().length === 0) {
+        <div class="p-6 text-gray-400 italic text-sm">
+          No hay sucursales adicionales. Crea una para poder transferir la MATRIZ.
+        </div>
+      } @else {
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+            <thead class="text-xs text-gray-700 uppercase bg-gray-100 dark:bg-gray-700 dark:text-gray-400">
+              <tr>
+                <th class="px-6 py-3">Nombre</th>
+                <th class="px-6 py-3">Folio</th>
+                <th class="px-6 py-3">Direccion</th>
+                <th class="px-6 py-3">Estado</th>
+                <th class="px-6 py-3"></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (b of otras(); track trackById(0, b)) {
+                <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50">
+                  <td class="px-6 py-3 font-medium text-gray-900 dark:text-white">{{ b.name }}</td>
+                  <td class="px-6 py-3 font-mono">{{ b.folioPrefix }}</td>
+                  <td class="px-6 py-3">{{ b.address || '-' }}</td>
+                  <td class="px-6 py-3">
+                    @if (b.isActive) {
+                      <span class="px-2 py-0.5 rounded text-xs bg-green-100 text-green-800">Activa</span>
+                    } @else {
+                      <span class="px-2 py-0.5 rounded text-xs bg-gray-200 text-gray-700">Inactiva</span>
+                    }
+                  </td>
+                  <td class="px-6 py-3 text-right">
+                    <button type="button" (click)="transferTo(b)"
+                      class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-white bg-brand rounded hover:opacity-90">
+                      Transferir MATRIZ
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+
+  } @else {
+
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 dark:bg-gray-800 dark:border-gray-700 p-8">
+      <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-2">Nueva sucursal</h2>
+      <p class="text-sm text-gray-500 mb-6">
+        La nueva sucursal entra como SUCURSAL. Si quieres, luego puedes promoverla a MATRIZ.
+      </p>
+
+      <form [formGroup]="createForm" (ngSubmit)="submitCreate()" novalidate class="space-y-5">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div>
+            <label for="s-name" class="block text-sm font-medium text-gray-700 mb-1">Nombre *</label>
+            <input id="s-name" type="text" formControlName="name" maxlength="100"
+              appOnlyLetters [maxLength]="100"
+              aria-describedby="s-name-error"
+              class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand focus:border-brand block w-full p-2.5"
+              [class.border-red-500]="createForm.controls['name'].invalid && createForm.controls['name'].touched"
+              [attr.aria-invalid]="createForm.controls['name'].invalid && createForm.controls['name'].touched"
+              placeholder="Sucursal Norte" />
+            @if (createForm.controls['name'].invalid && createForm.controls['name'].touched) {
+              <p id="s-name-error" class="text-xs text-red-600 mt-1" role="alert">
+                Solo letras y espacios (puede incluir numeros), 3-100 caracteres.
+              </p>
+            }
+          </div>
+          <div>
+            <label for="s-folio" class="block text-sm font-medium text-gray-700 mb-1">Prefijo de folio *</label>
+            <input id="s-folio" type="text" formControlName="folioPrefix" maxlength="3"
+              appUppercase [maxLength]="3"
+              aria-describedby="s-folio-error"
+              class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand focus:border-brand block w-full p-2.5 font-mono"
+              [class.border-red-500]="createForm.controls['folioPrefix'].invalid && createForm.controls['folioPrefix'].touched"
+              [attr.aria-invalid]="createForm.controls['folioPrefix'].invalid && createForm.controls['folioPrefix'].touched"
+              placeholder="NOR" />
+            @if (createForm.controls['folioPrefix'].invalid && createForm.controls['folioPrefix'].touched) {
+              <p id="s-folio-error" class="text-xs text-red-600 mt-1" role="alert">3 letras (A-Z).</p>
+            }
+          </div>
+        </div>
+
+        <div>
+          <label for="s-address" class="block text-sm font-medium text-gray-700 mb-1">Direccion (opcional)</label>
+          <input id="s-address" type="text" formControlName="address" maxlength="255"
+            class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand focus:border-brand block w-full p-2.5"
+            placeholder="Av. Norte 123, Col. Centro" />
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div>
+            <label for="s-cutoff" class="block text-sm font-medium text-gray-700 mb-1">Dia de corte *</label>
+            <input id="s-cutoff" type="number" formControlName="cutoffDay" min="1" max="31"
+              aria-describedby="s-cutoff-error"
+              class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand focus:border-brand block w-full p-2.5"
+              [class.border-red-500]="createForm.controls['cutoffDay'].invalid && createForm.controls['cutoffDay'].touched" />
+            @if (createForm.controls['cutoffDay'].invalid && createForm.controls['cutoffDay'].touched) {
+              <p id="s-cutoff-error" class="text-xs text-red-600 mt-1" role="alert">Entre 1 y 31.</p>
+            }
+          </div>
+          <div>
+            <label for="s-payment" class="block text-sm font-medium text-gray-700 mb-1">Dia de pago *</label>
+            <input id="s-payment" type="number" formControlName="paymentDay" min="1" max="31"
+              aria-describedby="s-payment-error"
+              class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand focus:border-brand block w-full p-2.5"
+              [class.border-red-500]="createForm.controls['paymentDay'].invalid && createForm.controls['paymentDay'].touched" />
+            @if (createForm.controls['paymentDay'].invalid && createForm.controls['paymentDay'].touched) {
+              <p id="s-payment-error" class="text-xs text-red-600 mt-1" role="alert">Entre 1 y 31.</p>
+            }
+          </div>
+        </div>
+
+        @if (createForm.errors?.['paymentDayAfterCutoff'] && (createForm.controls['cutoffDay'].touched || createForm.controls['paymentDay'].touched)) {
+          <div class="bg-red-50 border border-red-200 text-red-800 rounded-lg p-3 text-sm" role="alert">
+            El dia de pago debe ser al menos 5 dias despues del dia de corte.
+          </div>
+        }
+
+        <div class="flex justify-end gap-3">
+          <button type="button" (click)="goList()"
+            class="inline-flex items-center px-5 py-2.5 text-sm font-medium text-gray-900 bg-white rounded-lg border border-gray-200 hover:bg-gray-100 transition">
+            Cancelar
+          </button>
+          <button type="submit" [disabled]="isSubmitting()"
+            class="inline-flex items-center px-5 py-2.5 text-sm font-medium text-white bg-brand rounded-lg hover:opacity-90 disabled:opacity-50 transition">
+            @if (!isSubmitting()) {
+              <span>Crear sucursal</span>
+            } @else {
+              <span>Creando...</span>
+            }
+          </button>
+        </div>
+      </form>
+    </div>
+
+  }
+
+</div>
