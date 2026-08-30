@@ -7,6 +7,13 @@ import { QRCodeComponent } from 'angularx-qrcode';
 import { LayoutModule, BreakpointObserver } from '@angular/cdk/layout';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
+import {
+  validateEmail,
+  validateUsername,
+  validatePassword,
+  validatePasswordsMatch,
+  validateMfaCode,
+} from '../../core/validators/form-validators';
 
 @Component({
   selector: 'app-login',
@@ -29,6 +36,14 @@ export class Login implements OnInit, OnDestroy {
   newPassword = '';
   confirmPassword = '';
   isMobileOrTablet = false;
+
+  /** Errores por campo (se muestran inline tras el primer submit). */
+  emailError = '';
+  passwordError = '';
+  mfaCodeError = '';
+  currentPasswordError = '';
+  newPasswordError = '';
+  confirmPasswordError = '';
 
   /**
    * Secret TOTP en base32 extraido del `otpauthUrl`. El backend lo embebe
@@ -62,25 +77,81 @@ export class Login implements OnInit, OnDestroy {
     this.destroyed.complete();
   }
 
+  /**
+   * Detecta si el campo email acepta formato email o username y valida.
+   * Si contiene @ se trata como email; si no, como username Mis Vales.
+   */
+  private validateEmailField(): string {
+    const v = (this.email || '').trim();
+    if (!v) return 'Por favor, ingrese su correo electronico o usuario.';
+    if (v.length > 254) return 'El correo electronico es demasiado largo.';
+    if (v.includes('@')) return validateEmail(v);
+    return validateUsername(v);
+  }
+
+  private validatePasswordField(): string {
+    if (!this.password) return 'Por favor, ingrese su contrasena.';
+    if (this.password.length < 8) {
+      return 'La contrasena debe tener al menos 8 caracteres.';
+    }
+    return '';
+  }
+
+  private validateMfaCodeField(): string {
+    return validateMfaCode(this.mfaCode);
+  }
+
+  private validateCurrentPasswordField(): string {
+    if (!this.currentPassword) return 'Ingresa tu contrasena actual.';
+    return '';
+  }
+
+  private validateNewPasswordField(): string {
+    if (!this.newPassword) return 'Ingresa la nueva contrasena.';
+    if (this.newPassword === this.currentPassword && !!this.currentPassword) {
+      return 'La nueva contrasena debe ser diferente a la actual.';
+    }
+    return validatePassword(this.newPassword);
+  }
+
+  private validateConfirmPasswordField(): string {
+    if (!this.confirmPassword) return 'Confirma la nueva contrasena.';
+    return validatePasswordsMatch(this.newPassword, this.confirmPassword);
+  }
+
+  /** Limpia todos los errores por campo. Llamado al cambiar de step. */
+  private clearFieldErrors(): void {
+    this.emailError = '';
+    this.passwordError = '';
+    this.mfaCodeError = '';
+    this.currentPasswordError = '';
+    this.newPasswordError = '';
+    this.confirmPasswordError = '';
+  }
+
   onSubmit(event: Event) {
     event.preventDefault();
     this.error = '';
-    
-    if (!this.email || !this.password) {
-      this.error = 'Por favor, ingrese sus credenciales.';
+
+    this.emailError = this.validateEmailField();
+    this.passwordError = this.validatePasswordField();
+
+    if (this.emailError || this.passwordError) {
+      this.cdr.detectChanges();
       return;
     }
 
     this.isLoading = true;
-    this.authService.login({ usernameOrEmail: this.email, password: this.password }).subscribe({
+    this.authService.login({ usernameOrEmail: this.email.trim(), password: this.password }).subscribe({
       next: (response: any) => {
         this.isLoading = false;
         const loginData = response.data;
-        
+
         if (loginData.mfaRequired) {
-          this.success = 'Credenciales correctas. Por favor ingresa tu código TOTP.';
+          this.success = 'Credenciales correctas. Por favor ingresa tu codigo TOTP.';
           this.partialToken = loginData.mfaToken;
           this.step = 'mfa_verify';
+          this.clearFieldErrors();
           this.cdr.detectChanges();
         } else {
           this.evaluateUserState(loginData.user, loginData.accessToken);
@@ -88,7 +159,7 @@ export class Login implements OnInit, OnDestroy {
       },
       error: (err) => {
         this.isLoading = false;
-        
+
         if (err.status === 401 && err.error?.code === 'AUTH.MFA_REQUIRED') {
             this.step = 'mfa_verify';
             this.partialToken = err.error.data?.accessToken || '';
@@ -99,10 +170,10 @@ export class Login implements OnInit, OnDestroy {
         if (err.error?.error?.code === 'AUTH.MUST_CHANGE_PASSWORD' || err.error?.code === 'AUTH.MUST_CHANGE_PASSWORD') {
             this.step = 'change_password';
             this.currentPassword = this.password;
-            // Si el backend envía un token temporal en el error, lo guardamos
             if (err.error?.data?.accessToken) {
                sessionStorage.setItem('ACCESS_TOKEN', err.error.data.accessToken);
             }
+            this.clearFieldErrors();
             this.cdr.detectChanges();
             return;
         }
@@ -110,15 +181,15 @@ export class Login implements OnInit, OnDestroy {
         if (err.error && err.error.message) {
           this.error = err.error.message;
         } else if (err.status === 400 || err.status === 401) {
-          this.error = 'Credenciales incorrectas. Verifique su usuario y contraseña.';
+          this.error = 'Credenciales incorrectas. Verifique su usuario y contrasena.';
         } else if (err.status === 403) {
-          this.error = 'Su usuario está inactivo o bloqueado.';
+          this.error = 'Su usuario esta inactivo o bloqueado.';
         } else if (err.status === 429) {
-          this.error = 'Demasiados intentos. Por favor intente más tarde.';
+          this.error = 'Demasiados intentos. Por favor intente mas tarde.';
         } else {
-          this.error = 'Error de conexión con el servidor. Intente nuevamente.';
+          this.error = 'Error de conexion con el servidor. Intente nuevamente.';
         }
-        
+
         this.cdr.detectChanges();
       }
     });
@@ -129,59 +200,63 @@ export class Login implements OnInit, OnDestroy {
     this.error = '';
     this.success = '';
 
-    if (this.mfaCode.length === 6) {
-      this.isLoading = true;
-      this.authService.verifyMfa(this.partialToken, this.mfaCode).subscribe({
-        next: () => {
-          this.isLoading = false;
-          this.success = 'TOTP correcto. Iniciando sesión...';
-          const user = this.authService.currentUser();
-          if (user) {
-            this.evaluateUserState(user, sessionStorage.getItem('ACCESS_TOKEN') || '');
-          } else {
-            this.error = 'No se pudo obtener la información del usuario.';
-            this.cdr.detectChanges();
-          }
-        },
-        error: (err) => {
-          this.isLoading = false;
-          this.error = 'Código de verificación inválido.';
+    this.mfaCodeError = this.validateMfaCodeField();
+    if (this.mfaCodeError) {
+      this.cdr.detectChanges();
+      return;
+    }
+
+    this.isLoading = true;
+    this.authService.verifyMfa(this.partialToken, this.mfaCode).subscribe({
+      next: () => {
+        this.isLoading = false;
+        this.success = 'TOTP correcto. Iniciando sesion...';
+        const user = this.authService.currentUser();
+        if (user) {
+          this.evaluateUserState(user, sessionStorage.getItem('ACCESS_TOKEN') || '');
+        } else {
+          this.error = 'No se pudo obtener la informacion del usuario.';
           this.cdr.detectChanges();
         }
-      });
-    } else {
-      this.error = 'El código debe tener 6 dígitos.';
-    }
+      },
+      error: (err) => {
+        this.isLoading = false;
+        this.error = 'Codigo de verificacion invalido.';
+        this.cdr.detectChanges();
+      }
+    });
   }
 
   onMfaSetup(event: Event) {
     event.preventDefault();
     this.error = '';
     this.success = '';
-    
-    if (this.mfaCode.length === 6) {
-      this.isLoading = true;
-      this.authService.verifyMfaSetup(this.partialToken, this.mfaCode).subscribe({
-        next: (res: any) => {
-          this.isLoading = false;
-          this.success = 'MFA configurado correctamente. Iniciando sesión...';
-          const token = res.data?.accessToken || res.accessToken || this.partialToken;
-          sessionStorage.setItem('ACCESS_TOKEN', token);
-          
-          // Re-fetch me to get the updated role/user
-          this.authService.getMe().subscribe(user => {
-            this.evaluateUserState(user, sessionStorage.getItem('ACCESS_TOKEN') || '');
-          });
-        },
-        error: (err) => {
-          this.isLoading = false;
-          this.error = 'El código es inválido. Intenta de nuevo.';
-          this.cdr.detectChanges();
-        }
-      });
-    } else {
-      this.error = 'El código debe tener 6 dígitos.';
+
+    this.mfaCodeError = this.validateMfaCodeField();
+    if (this.mfaCodeError) {
+      this.cdr.detectChanges();
+      return;
     }
+
+    this.isLoading = true;
+    this.authService.verifyMfaSetup(this.partialToken, this.mfaCode).subscribe({
+      next: (res: any) => {
+        this.isLoading = false;
+        this.success = 'MFA configurado correctamente. Iniciando sesion...';
+        const token = res.data?.accessToken || res.accessToken || this.partialToken;
+        sessionStorage.setItem('ACCESS_TOKEN', token);
+
+        // Re-fetch me to get the updated role/user
+        this.authService.getMe().subscribe(user => {
+          this.evaluateUserState(user, sessionStorage.getItem('ACCESS_TOKEN') || '');
+        });
+      },
+      error: (err) => {
+        this.isLoading = false;
+        this.error = 'El codigo es invalido. Intenta de nuevo.';
+        this.cdr.detectChanges();
+      }
+    });
   }
 
   private navigateToRole(role: string) {
@@ -208,18 +283,12 @@ export class Login implements OnInit, OnDestroy {
     this.error = '';
     this.success = '';
 
-    if (!this.currentPassword || !this.newPassword || !this.confirmPassword) {
-      this.error = 'Todos los campos son obligatorios.';
-      return;
-    }
+    this.currentPasswordError = this.validateCurrentPasswordField();
+    this.newPasswordError = this.validateNewPasswordField();
+    this.confirmPasswordError = this.validateConfirmPasswordField();
 
-    if (this.newPassword !== this.confirmPassword) {
-      this.error = 'La nueva contraseña y la confirmación no coinciden.';
-      return;
-    }
-
-    if (this.newPassword.length < 8) {
-      this.error = 'La nueva contraseña debe tener al menos 8 caracteres.';
+    if (this.currentPasswordError || this.newPasswordError || this.confirmPasswordError) {
+      this.cdr.detectChanges();
       return;
     }
 
@@ -230,18 +299,18 @@ export class Login implements OnInit, OnDestroy {
     }).subscribe({
       next: () => {
         this.isLoading = false;
-        this.success = 'Contraseña actualizada. Redirigiendo...';
+        this.success = 'Contrasena actualizada. Redirigiendo...';
         const user = this.authService.currentUser();
         if (user) {
           this.evaluateUserState(user, sessionStorage.getItem('ACCESS_TOKEN') || '');
         } else {
-          this.error = 'No se pudo obtener información del usuario.';
+          this.error = 'No se pudo obtener informacion del usuario.';
           this.cdr.detectChanges();
         }
       },
       error: (err: any) => {
         this.isLoading = false;
-        this.error = err.error?.message || 'Error al actualizar la contraseña.';
+        this.error = err.error?.message || 'Error al actualizar la contrasena.';
         this.cdr.detectChanges();
       }
     });
@@ -288,6 +357,7 @@ export class Login implements OnInit, OnDestroy {
     this.otpauthUrl = '';
     this.totpSecret = '';
     this.copyFeedback = '';
+    this.clearFieldErrors();
 }
 
   /**
