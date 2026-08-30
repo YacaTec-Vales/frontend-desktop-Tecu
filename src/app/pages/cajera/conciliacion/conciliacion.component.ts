@@ -241,7 +241,19 @@ export class ConciliacionComponent implements OnInit {
   }
 
   confirmManualReconciliation() {
-    if (!this.selectedMovement || !this.selectedRelationId) return;
+    if (!this.selectedMovement || !this.selectedRelationId) {
+      this.manualErrorMessage = 'Debes seleccionar una relacion pendiente.';
+      return;
+    }
+    const auth = (this.authorizationId || '').trim();
+    if (auth.length === 0) {
+      this.manualErrorMessage = 'Debes ingresar el ID de autorizacion.';
+      return;
+    }
+    if (!/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/.test(auth)) {
+      this.manualErrorMessage = 'El ID de autorizacion debe tener formato UUID valido.';
+      return;
+    }
 
     this.isProcessingManual = true;
     this.manualErrorMessage = '';

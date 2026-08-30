@@ -386,14 +386,19 @@ export class AprobacionesComponent implements OnInit {
 
   aprobar() {
     if (!this.selectedItem) return;
-    
-    if (this.selectedItem.type === 'ALTA' && (!this.montoAprobacion || this.montoAprobacion <= 0)) {
-      this.alertService.warning('Debes asignar un límite de crédito válido mayor a 0.');
+
+    const monto = Number(this.montoAprobacion);
+    if (this.selectedItem.type === 'ALTA' && (!this.montoAprobacion || !Number.isFinite(monto) || monto <= 0)) {
+      this.alertService.warning('Debes asignar un limite de credito valido mayor a 0.');
       return;
     }
 
-    if (this.selectedItem.type === 'AUMENTO' && (!this.montoAprobacion || this.montoAprobacion <= 0)) {
+    if (this.selectedItem.type === 'AUMENTO' && (!this.montoAprobacion || !Number.isFinite(monto) || monto <= 0)) {
       this.alertService.warning('El monto a aprobar debe ser mayor a 0.');
+      return;
+    }
+    if (Number.isFinite(monto) && monto > 10_000_000) {
+      this.alertService.warning('El monto no puede exceder 10,000,000.');
       return;
     }
 
@@ -463,11 +468,18 @@ export class AprobacionesComponent implements OnInit {
 
   rechazar() {
     if (!this.selectedItem) return;
-    
-    if (!this.motivoRechazo || this.motivoRechazo.trim() === '') {
-      this.alertService.error('Debes proporcionar un motivo de rechazo.');
+
+    const motivoTrim = this.motivoRechazo ? this.motivoRechazo.trim() : '';
+    if (motivoTrim.length < 10) {
+      this.alertService.error('El motivo de rechazo debe tener al menos 10 caracteres.');
       return;
     }
+    if (motivoTrim.length > 500) {
+      this.alertService.error('El motivo de rechazo no puede tener mas de 500 caracteres.');
+      return;
+    }
+    // Sobrescribir con la version trimmed para no enviar espacios al backend.
+    this.motivoRechazo = motivoTrim;
 
     this.isLoading = true;
 
