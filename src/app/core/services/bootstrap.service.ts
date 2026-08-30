@@ -1,23 +1,21 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
-import { Observable, forkJoin, of, map, catchError } from 'rxjs';
+import { Observable, of, map, catchError } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { AuthService } from './auth.service';
-import { BranchService } from './branch.service';
-import { StaffService } from './staff.service';
 
 /**
- * Estado del bootstrap del sistema.
+ * Estado del bootstrap del sistema. Lo devuelve el endpoint
+ * oficial `GET /admin/bootstrap/status` y el frontend lo
+ * mantiene como signal compartido entre el dashboard del admin
+ * y el wizard.
  *
- * - `hasMatriz`: indica si ya existe una sucursal con `esMatriz = true`.
- *   El backend enforce unicidad via indice parcial `uq_branch_single_matriz`.
- * - `hasGeneralManager`: indica si ya existe al menos un usuario activo con
- *   rol `GERENTE_GENERAL`. El backend enforce unicidad con lock +
- *   `uq_user_single_active_general_manager`.
- * - `bootstrapComplete`: ambos `true` -> el sistema esta inicializado.
- *
- * Se usa para decidir si el wizard de bootstrap se muestra al admin
- * (`pages/admin/dashboard`) o si debe ir directo a las pantallas operativas.
+ *  - `hasMatriz`: ya existe una sucursal con `esMatriz = true`.
+ *  - `hasGeneralManager`: ya existe un usuario activo con rol
+ *    `GERENTE_GENERAL`.
+ *  - `bootstrapComplete`: ambos `true` -> sistema inicializado.
+ *  - El resto de campos son los identificadores basicos que el
+ *    dashboard necesita sin disparar mas llamadas.
  */
 export interface BootstrapStatus {
   hasMatriz: boolean;
@@ -32,17 +30,18 @@ export interface BootstrapStatus {
 }
 
 /**
- * Servicio que centraliza el flujo de bootstrap inicial del sistema.
+ * Servicio que centraliza el estado del bootstrap del sistema.
  *
- * - `getSystemStatus`: detecta si ya existe MATRIZ + GG en backend.
- * - `createMatriz`: wrapper sobre `BranchService.createBranch` que fuerza
- *   `branchType='MATRIZ'` y `esMatriz=true`.
- * - `createGerenteGeneral`: wrapper sobre `StaffService.createGerenteGeneral`
- *   que entrega el payload al backend (ya fuerza `branchId=null`).
- *
- * El admin usa el permiso dedicado `branch.create.matriz` para crear la
- * matriz y `user.create.general_manager` para crear al Gerente General.
- * El backend hace el lock pesimista + enforce unicidad.
+ * - `status` (signal): cache del ultimo estado conocido. Lo leen
+ *   dashboard y wizard sin re-pegarle al backend.
+ * - `refreshStatus()`: pega contra `GET /admin/bootstrap/status`
+ *   (sin cache-busting: el backend ya envia `Cache-Control: no-store`).
+ *   En caso de 404 (entpoint no desplegado aun), cae al metodo
+ *   legacy basado en `GET /branches` + `GET /users` para no romper
+ *   durante el rollout.
+ * - `createMatriz` / `createGerenteGeneral` / `transferMatriz`:
+ *   wrappers delgados que devuelven la respuesta cruda; el
+ *   componente se encarga de desenvolverla.
  */
 @Injectable({
   providedIn: 'root',
@@ -51,50 +50,69 @@ export class BootstrapService {
   private apiUrl = `${environment.apiUrl}`;
   private http = inject(HttpClient);
   private authService = inject(AuthService);
-  private branchService = inject(BranchService);
-  private staffService = inject(StaffService);
 
   /**
-   * Headers comunes para las llamadas autenticadas del bootstrap.
-   * Usa el token actual (el del admin). Si no hay token, devuelve sin
-   * `Authorization` para que el backend responda 401 y propaguemos el
-   * error correctamente.
+   * Estado actual del bootstrap. El dashboard y el wizard lo
+   * leen y se re-renderizan al cambiar via `refreshStatus()`.
    */
+  readonly status = signal<BootstrapStatus>({
+    hasMatriz: false,
+    hasGeneralManager: false,
+    bootstrapComplete: false,
+  });
+
   private buildHeaders(): HttpHeaders {
-    let headers = new HttpHeaders({ 'X-Client-App': 'Tecu' });
+    let headers = new HttpHeaders({
+      'X-Client-App': 'Tecu',
+    });
     const token = this.authService.getToken();
-    if (token) headers = headers.set('Authorization', `Bearer ${token}`);
+    if (token) {
+      headers = headers.set('Authorization', `Bearer ${token}`);
+    }
     return headers;
   }
 
   /**
-   * Detecta el estado del bootstrap.
-   *
-   * Implementacion:
-   *   1. `GET /branches?esMatriz=true&limit=1` para detectar la MATRIZ.
-   *   2. `GET /users?roleCode=GERENTE_GENERAL&limit=1` para detectar el GG.
-   *   3. Combinar y devolver el `BootstrapStatus`.
-   *
-   * Si uno de los endpoints falla, se considera `false` para ese campo
-   * (fail-open: el admin vera el wizard y el backend le dira el error
-   * concreto al intentar crear).
+   * Llama al endpoint oficial `/admin/bootstrap/status`. Si la
+   * respuesta es 404 (backend sin deploy del nuevo modulo),
+   * cae al metodo legacy que combinaba `/branches` + `/users`.
+   * Asi no rompemos durante el rollout del backend.
    */
-  getSystemStatus(): Observable<BootstrapStatus> {
-    // Sin cache-busting via query param: el backend envia
-    // `Cache-Control: no-store` en TODA respuesta JSON, asi que
-    // el navegador no debe cachear respuestas viejas.
-    //
-    // NOTA historica: se intento agregar `_=${Date.now()}` al
-    // query string para forzar invalidacion, pero el backend tiene
-    // `forbidNonWhitelisted: true` en el ValidationPipe y rechaza
-    // cualquier query param no whitelisted con 400 BAD_REQUEST.
-    const branchesParams = new HttpParams()
-      .set('esMatriz', 'true')
-      .set('limit', '1');
-    const usersParams = new HttpParams()
-      .set('roleCode', 'GERENTE_GENERAL')
-      .set('limit', '1');
+  refreshStatus(): Observable<BootstrapStatus> {
+    return this.http
+      .get<{ data?: BootstrapStatus }>(`${this.apiUrl}/admin/bootstrap/status`, {
+        headers: this.buildHeaders(),
+      })
+      .pipe(
+        map((res) => {
+          const data = res?.data ?? (res as unknown as BootstrapStatus);
+          const normalized = this.normalizeStatus(data);
+          this.status.set(normalized);
+          return normalized;
+        }),
+        catchError((err) => {
+          if (err?.status === 404) {
+            return this.legacyStatus().pipe(map((s) => (this.status.set(s), s)));
+          }
+          // Cualquier otro error: re-emite el cache actual para no
+          // romper la UI con un spinner infinito.
+          return of(this.status());
+        }),
+      );
+  }
 
+  /** Wrapper de compatibilidad (legado): NO usar en codigo nuevo. */
+  getSystemStatus(): Observable<BootstrapStatus> {
+    return this.refreshStatus();
+  }
+
+  /**
+   * Metodo legacy: dos GETs en paralelo que solo consultan
+   * existencia. Se conserva unicamente como fallback durante
+   * el rollout.
+   */
+  private legacyStatus(): Observable<BootstrapStatus> {
+    const branchesParams = new HttpParams().set('esMatriz', 'true').set('limit', '1');
     const branches$ = this.http
       .get<any>(`${this.apiUrl}/branches`, {
         params: branchesParams,
@@ -103,82 +121,107 @@ export class BootstrapService {
       .pipe(
         map((res) => {
           const items = res?.data?.data ?? res?.data ?? [];
-          const itemCount =
-            res?.data?.meta?.itemCount ?? res?.meta?.itemCount ?? items.length;
           return {
-            hasMatriz: items.length > 0 || itemCount > 0,
-            matrizId: items[0]?.id,
+            hasMatriz: items.length > 0,
+            matrizId: items[0]?.id ?? null,
+            matrizName: items[0]?.name ?? null,
+            matrizFolioPrefix: items[0]?.folioPrefix ?? null,
           };
         }),
-        catchError(() => of({ hasMatriz: false as boolean, matrizId: undefined })),
+        catchError(
+          () =>
+            of({
+              hasMatriz: false,
+              matrizId: null,
+              matrizName: null,
+              matrizFolioPrefix: null,
+            }),
+        ),
       );
-
-    const users$ = this.staffService
-      .getUsers(1, 1, 'GERENTE_GENERAL')
+    const users$ = this.http
+      .get<any>(`${this.apiUrl}/users`, {
+        params: new HttpParams().set('roleCode', 'GERENTE_GENERAL').set('limit', '1'),
+        headers: this.buildHeaders(),
+      })
       .pipe(
         map((res) => {
-          const items = res.data ?? [];
+          const items = res?.data?.data ?? res?.data ?? [];
           return {
             hasGeneralManager: items.length > 0,
-            generalManagerId: items[0]?.id,
+            generalManagerId: items[0]?.id ?? null,
+            generalManagerName: items[0]?.fullName ?? items[0]?.displayName ?? null,
+            generalManagerEmail: items[0]?.email ?? null,
           };
         }),
-        catchError(() => of({ hasGeneralManager: false as boolean, generalManagerId: undefined })),
+        catchError(
+          () =>
+            of({
+              hasGeneralManager: false,
+              generalManagerId: null,
+              generalManagerName: null,
+              generalManagerEmail: null,
+            }),
+        ),
       );
-
-    return forkJoin({ branches: branches$, users: users$ }).pipe(
-      map(({ branches, users }) => ({
-        hasMatriz: branches.hasMatriz,
-        hasGeneralManager: users.hasGeneralManager,
-        bootstrapComplete: branches.hasMatriz && users.hasGeneralManager,
-        matrizId: branches.matrizId,
-        generalManagerId: users.generalManagerId,
-      })),
-    );
+    return new Observable<BootstrapStatus>((sub) => {
+      let bDone = false;
+      let uDone = false;
+      let bResult: any = {};
+      let uResult: any = {};
+      const next = () => {
+        if (!bDone || !uDone) return;
+        const combined = this.normalizeStatus({
+          hasMatriz: bResult.hasMatriz,
+          matrizId: bResult.matrizId,
+          matrizName: bResult.matrizName,
+          matrizFolioPrefix: bResult.matrizFolioPrefix,
+          hasGeneralManager: uResult.hasGeneralManager,
+          generalManagerId: uResult.generalManagerId,
+          generalManagerName: uResult.generalManagerName,
+          generalManagerEmail: uResult.generalManagerEmail,
+        });
+        sub.next(combined);
+        sub.complete();
+      };
+      branches$.subscribe({
+        next: (r) => ((bResult = r), (bDone = true), next()),
+      });
+      users$.subscribe({
+        next: (r) => ((uResult = r), (uDone = true), next()),
+      });
+    });
   }
 
-  /**
-   * Crea la primera (y unica) sucursal MATRIZ del sistema.
-   *
-   * Payload esperado (campos minimos):
-   *   - name: string (3-100 chars)
-   *   - address?: string
-   *   - folioPrefix: 3 letras mayusculas
-   *   - cutoffDay/paymentDay/earlyPaymentDays?: number
-   *
-   * El backend exige el permiso `branch.create.matriz` (rol ADMINISTRADOR)
-   * o `branch.create` (rol GERENTE_GENERAL).
-   */
+  private normalizeStatus(raw: Partial<BootstrapStatus>): BootstrapStatus {
+    const hasMatriz = !!raw.hasMatriz;
+    const hasGeneralManager = !!raw.hasGeneralManager;
+    return {
+      hasMatriz,
+      matrizId: raw.matrizId ?? null,
+      matrizName: raw.matrizName ?? null,
+      matrizFolioPrefix: raw.matrizFolioPrefix ?? null,
+      hasGeneralManager,
+      generalManagerId: raw.generalManagerId ?? null,
+      generalManagerName: raw.generalManagerName ?? null,
+      generalManagerEmail: raw.generalManagerEmail ?? null,
+      bootstrapComplete: hasMatriz && hasGeneralManager,
+    };
+  }
+
   createMatriz(payload: {
     name: string;
     address?: string;
     folioPrefix: string;
+    branchType: 'MATRIZ';
+    esMatriz: true;
     cutoffDay?: number;
     paymentDay?: number;
-    earlyPaymentDays?: number;
   }): Observable<unknown> {
-    return this.branchService.createBranch({
-      ...payload,
-      branchType: 'MATRIZ',
-      esMatriz: true,
+    return this.http.post<unknown>(`${this.apiUrl}/branches`, payload, {
+      headers: this.buildHeaders(),
     });
   }
 
-  /**
-   * Crea al unico Gerente General del sistema.
-   *
-   * Payload esperado:
-   *   - firstName, lastNamePaternal, lastNameMaternal: requeridos
-   *   - email: requerido, unico
-   *   - username: requerido (3-50 chars, lowercase a-z0-9._-)
-   *   - phone?: opcional
-   *   - personalData?: objeto libre
-   *
-   * Backend enforces:
-   *   - CHECK `chk_user_gerente_general_branch`: `branchId IS NULL`.
-   *   - unicidad: lock pesimista + indice unico parcial.
-   *   - El staff.service.ts pone `branchId: null` antes de la peticion.
-   */
   createGerenteGeneral(payload: {
     firstName: string;
     lastNamePaternal: string;
@@ -187,19 +230,13 @@ export class BootstrapService {
     username: string;
     phone?: string;
   }): Observable<unknown> {
-    return this.staffService.createGerenteGeneral(payload);
+    return this.http.post<unknown>(
+      `${this.apiUrl}/users`,
+      { ...payload, roleCode: 'GERENTE_GENERAL', branchId: null },
+      { headers: this.buildHeaders() },
+    );
   }
 
-  /**
-   * Transfiere la cualidad de MATRIZ a otra sucursal del sistema.
-   *
-   * Solo disponible para ADMINISTRADOR (permiso `branch.transfer.matriz`).
-   * La sucursal destino pierde su gerente (si lo tenia) porque el GG
-   * pertenece unicamente a la MATRIZ.
-   *
-   * @param branchId - UUID de la sucursal que sera la nueva matriz.
-   * @returns Observable con la respuesta del backend (BranchResponse).
-   */
   transferMatriz(branchId: string): Observable<unknown> {
     return this.http
       .post<unknown>(

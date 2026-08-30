@@ -1,17 +1,21 @@
-import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
-import { BootstrapService, BootstrapStatus } from '../../../core/services/bootstrap.service';
+import { BootstrapService } from '../../../core/services/bootstrap.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { AlertService } from '../../../core/services/alert.service';
 
 /**
  * Dashboard principal del ADMINISTRADOR.
  *
- * - Lee `BootstrapService.getSystemStatus()` al cargar para saber si el
- *   sistema esta inicializado (MATRIZ + GG creados).
- * - Si NO esta inicializado: card grande con CTA al wizard de bootstrap.
- * - Si YA esta inicializado: tres cards con el estado real y un CTA para
- *   transferir la cualidad de MATRIZ a otra sucursal.
+ * - Lee el signal compartido `BootstrapService.status()` para
+ *   evitar parpadeos al volver del wizard (la data no se re-pide
+ *   si el wizard ya la refresco).
+ * - `ngOnInit` dispara `refreshStatus()` para que el backend sea
+ *   la fuente de verdad (envia `Cache-Control: no-store`).
+ * - El estado `isLoading` se activa solo durante la peticion
+ *   inicial; cuando ya tenemos cache, el dashboard se muestra
+ *   de inmediato y se actualiza silenciosamente.
  */
 @Component({
   selector: 'app-admin-dashboard',
@@ -22,31 +26,40 @@ export class DashboardComponent implements OnInit {
   private bootstrapService = inject(BootstrapService);
   private authService = inject(AuthService);
   private router = inject(Router);
-  private cdr = inject(ChangeDetectorRef);
+  private alert = inject(AlertService);
 
-  status: BootstrapStatus | null = null;
-  isLoading = true;
-  error = '';
+  readonly status = computed(() => this.bootstrapService.status());
+  private hasCache = computed(() => {
+    const s = this.status();
+    return s.hasMatriz || s.hasGeneralManager;
+  });
+  readonly isLoading = signal(true);
+  readonly error = signal<string | null>(null);
+
+  readonly showSkeleton = computed(
+    () => this.isLoading() && !this.hasCache(),
+  );
 
   ngOnInit(): void {
     this.refresh();
   }
 
   refresh(): void {
-    this.isLoading = true;
-    this.error = '';
-    this.bootstrapService.getSystemStatus().subscribe({
-      next: (s) => {
-        this.status = s;
-        this.isLoading = false;
-        this.cdr.detectChanges();
-      },
+    // Si ya tenemos cache, no mostramos el spinner completo:
+    // dejamos la UI visible y solo refrescamos en background.
+    if (!this.hasCache()) {
+      this.isLoading.set(true);
+    }
+    this.error.set(null);
+    this.bootstrapService.refreshStatus().subscribe({
+      next: () => this.isLoading.set(false),
       error: (err) => {
-        this.error =
+        this.isLoading.set(false);
+        const msg =
           err?.error?.message ||
-          'Error al consultar el estado del sistema. Intente nuevamente.';
-        this.isLoading = false;
-        this.cdr.detectChanges();
+          'No se pudo consultar el estado del sistema. Intente nuevamente.';
+        this.error.set(msg);
+        this.alert.error(msg);
       },
     });
   }
@@ -60,14 +73,13 @@ export class DashboardComponent implements OnInit {
     this.router.navigate(['/admin/bootstrap']);
   }
 
-  /**
-   * Navega al wizard de bootstrap en modo "transferir matriz".
-   * El wizard detecta que ya existe MATRIZ y muestra el formulario
-   * de transferencia en lugar del wizard de creacion inicial.
-   */
   goToTransferMatriz(): void {
     this.router.navigate(['/admin/bootstrap'], {
       queryParams: { mode: 'transfer-matriz' },
     });
+  }
+
+  goToSucursales(): void {
+    this.router.navigate(['/admin/sucursales']);
   }
 }

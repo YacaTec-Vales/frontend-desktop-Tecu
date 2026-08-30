@@ -1,10 +1,17 @@
-import { Component, OnInit, inject, ChangeDetectorRef, signal, computed } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { BootstrapService, BootstrapStatus } from '../../../core/services/bootstrap.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { BranchService } from '../../../core/services/branch.service';
+import { AlertService } from '../../../core/services/alert.service';
+import { AppValidators } from '../../../core/validators/app-validators';
+import { OnlyDigitsDirective } from '../../../core/directives/only-digits.directive';
+import { OnlyLettersDirective } from '../../../core/directives/only-letters.directive';
+import { UppercaseDirective } from '../../../core/directives/uppercase.directive';
+import { LowercaseDirective } from '../../../core/directives/lowercase.directive';
+import { sanitizePayload } from '../../../core/utils/sanitizer.util';
 import type { Branch } from '../../../core/models/branch.model';
 
 type Step = 'matriz' | 'gerente-general' | 'done' | 'transfer-matriz' | 'transfer-done';
@@ -31,7 +38,14 @@ type Step = 'matriz' | 'gerente-general' | 'done' | 'transfer-matriz' | 'transfe
  */
 @Component({
   selector: 'app-bootstrap-wizard',
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    OnlyDigitsDirective,
+    OnlyLettersDirective,
+    UppercaseDirective,
+    LowercaseDirective,
+  ],
   templateUrl: './bootstrap-wizard.component.html',
 })
 export class BootstrapWizardComponent implements OnInit {
@@ -41,7 +55,7 @@ export class BootstrapWizardComponent implements OnInit {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private branchService = inject(BranchService);
-  private cdr = inject(ChangeDetectorRef);
+  private alert = inject(AlertService);
 
   /** Modo del wizard detectado al cargar. */
   readonly mode = signal<'create' | 'transfer'>('create');
@@ -73,21 +87,24 @@ export class BootstrapWizardComponent implements OnInit {
   isLoadingTransfer = signal(false);
 
   /** Forms reactivos con validaciones alineadas al backend. */
-  matrizForm: FormGroup = this.fb.group({
-    name: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(100)]],
-    folioPrefix: ['', [Validators.required, Validators.pattern(/^[A-Z]{3}$/)]],
-    address: [''],
-    cutoffDay: [15, [Validators.min(1), Validators.max(31)]],
-    paymentDay: [20, [Validators.min(1), Validators.max(31)]],
-  });
+  matrizForm: FormGroup = this.fb.group(
+    {
+      name: ['', [Validators.required, AppValidators.branchName()]],
+      folioPrefix: ['', [Validators.required, AppValidators.folioPrefix()]],
+      address: ['', [Validators.maxLength(255)]],
+      cutoffDay: [15, [Validators.required, Validators.min(1), Validators.max(31)]],
+      paymentDay: [20, [Validators.required, Validators.min(1), Validators.max(31)]],
+    },
+    { validators: AppValidators.paymentDayAfterCutoff(5) },
+  );
 
   ggForm: FormGroup = this.fb.group({
-    firstName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
-    lastNamePaternal: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
-    lastNameMaternal: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
-    email: ['', [Validators.required, Validators.email, Validators.maxLength(255)]],
-    username: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(50)]],
-    phone: [''],
+    firstName: ['', [Validators.required, AppValidators.personName()]],
+    lastNamePaternal: ['', [Validators.required, AppValidators.personName()]],
+    lastNameMaternal: ['', [Validators.required, AppValidators.personName()]],
+    email: ['', [Validators.required, Validators.email, AppValidators.emailMax255()]],
+    username: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(50), AppValidators.usernameSlug()]],
+    phone: ['', [AppValidators.phoneMx()]],
   });
 
   transferForm: FormGroup = this.fb.group({
@@ -96,7 +113,7 @@ export class BootstrapWizardComponent implements OnInit {
   });
 
   /** Numero del paso actual (1..N) para mostrar progreso. */
-  readonly stepNumber = computed(() => {
+  readonly stepNumber = (): number => {
     switch (this.currentStep()) {
       case 'matriz':
         return 1;
@@ -109,9 +126,11 @@ export class BootstrapWizardComponent implements OnInit {
       case 'transfer-done':
         return 2;
     }
-  });
+  };
 
-  readonly totalSteps = computed(() => (this.mode() === 'transfer' ? 2 : 3));
+  totalSteps(): number {
+    return this.mode() === 'transfer' ? 2 : 3;
+  }
 
   ngOnInit(): void {
     const requestedMode = this.route.snapshot.queryParamMap.get('mode');
@@ -122,7 +141,7 @@ export class BootstrapWizardComponent implements OnInit {
       return;
     }
     // Modo creacion: redirigir al dashboard si ya esta inicializado.
-    this.bootstrapService.getSystemStatus().subscribe({
+    this.bootstrapService.refreshStatus().subscribe({
       next: (s) => {
         if (s.bootstrapComplete) {
           this.router.navigate(['/admin/dashboard']);
@@ -131,7 +150,6 @@ export class BootstrapWizardComponent implements OnInit {
           this.matrizName.set(s.matrizName ?? null);
           this.currentStep.set('gerente-general');
         }
-        this.cdr.detectChanges();
       },
     });
   }
@@ -143,12 +161,10 @@ export class BootstrapWizardComponent implements OnInit {
       next: (res) => {
         this.availableBranches.set(res.data ?? []);
         this.isLoadingBranches.set(false);
-        this.cdr.detectChanges();
       },
       error: () => {
         this.isLoadingBranches.set(false);
         this.transferError.set('No se pudieron cargar las sucursales.');
-        this.cdr.detectChanges();
       },
     });
   }
@@ -160,14 +176,28 @@ export class BootstrapWizardComponent implements OnInit {
       return;
     }
     this.isLoadingMatriz.set(true);
-    const payload = this.matrizForm.value;
+    const raw = this.matrizForm.value as {
+      name: string;
+      folioPrefix: string;
+      address?: string;
+      cutoffDay: number;
+      paymentDay: number;
+    };
+    const payload = sanitizePayload({
+      name: raw.name,
+      folioPrefix: raw.folioPrefix.toUpperCase(),
+      branchType: 'MATRIZ' as const,
+      esMatriz: true as const,
+      cutoffDay: Number(raw.cutoffDay),
+      paymentDay: Number(raw.paymentDay),
+      ...(raw.address && raw.address.trim() ? { address: raw.address.trim() } : {}),
+    });
     this.bootstrapService.createMatriz(payload).subscribe({
       next: (res: any) => {
         this.isLoadingMatriz.set(false);
-        this.matrizId.set(res?.id ?? null);
-        this.matrizName.set(res?.name ?? null);
+        this.matrizId.set(res?.id ?? res?.data?.id ?? null);
+        this.matrizName.set(res?.name ?? res?.data?.name ?? raw.name);
         this.currentStep.set('gerente-general');
-        this.cdr.detectChanges();
       },
       error: (err) => {
         this.isLoadingMatriz.set(false);
@@ -176,13 +206,14 @@ export class BootstrapWizardComponent implements OnInit {
           this.matrizError.set(
             'Ya existe una MATRIZ activa. El sistema rechaza una segunda. Refresca la pagina.',
           );
+        } else if (code === 'BRANCH.FOLIO_PREFIX_EXISTS') {
+          this.matrizError.set('Ese prefijo de folio ya esta en uso. Elige otro.');
         } else {
           this.matrizError.set(
             err?.error?.message ||
               'Error al crear la sucursal MATRIZ. Intente nuevamente.',
           );
         }
-        this.cdr.detectChanges();
       },
     });
   }
@@ -194,14 +225,34 @@ export class BootstrapWizardComponent implements OnInit {
       return;
     }
     this.isLoadingGg.set(true);
-    const payload = this.ggForm.value;
+    const raw = this.ggForm.value as {
+      firstName: string;
+      lastNamePaternal: string;
+      lastNameMaternal: string;
+      email: string;
+      username: string;
+      phone?: string;
+    };
+    const payload = sanitizePayload({
+      firstName: raw.firstName,
+      lastNamePaternal: raw.lastNamePaternal,
+      lastNameMaternal: raw.lastNameMaternal,
+      email: raw.email.toLowerCase(),
+      username: raw.username.toLowerCase(),
+      ...(raw.phone ? { phone: raw.phone } : {}),
+    });
     this.bootstrapService.createGerenteGeneral(payload).subscribe({
       next: (res: any) => {
         this.isLoadingGg.set(false);
-        this.generalManagerId.set(res?.id ?? null);
-        this.generalManagerEmail.set(payload.email);
-        this.currentStep.set('done');
-        this.cdr.detectChanges();
+        const id = res?.user?.id ?? res?.id ?? res?.data?.id ?? null;
+        this.generalManagerId.set(id);
+        this.generalManagerEmail.set(raw.email);
+        // Refresca el estado global antes de mostrar "done" para que
+        // el dashboard salga como Operativo si el usuario vuelve.
+        this.bootstrapService.refreshStatus().subscribe({
+          next: () => this.currentStep.set('done'),
+          error: () => this.currentStep.set('done'),
+        });
       },
       error: (err) => {
         this.isLoadingGg.set(false);
@@ -220,7 +271,6 @@ export class BootstrapWizardComponent implements OnInit {
               'Error al crear el Gerente General. Intente nuevamente.',
           );
         }
-        this.cdr.detectChanges();
       },
     });
   }
@@ -241,11 +291,14 @@ export class BootstrapWizardComponent implements OnInit {
     this.bootstrapService.transferMatriz(branchId).subscribe({
       next: (res: any) => {
         this.isLoadingTransfer.set(false);
-        this.transferredFromId.set(res?.oldId ?? null);
-        this.transferredToId.set(res?.id ?? branchId);
-        this.transferredToName.set(res?.name ?? selected?.name ?? null);
+        const data = res?.data ?? res;
+        this.transferredToId.set(data?.id ?? branchId);
+        this.transferredToName.set(data?.name ?? selected?.name ?? null);
+        this.transferredFromId.set(data?.oldId ?? null);
         this.currentStep.set('transfer-done');
-        this.cdr.detectChanges();
+        // Refresca el estado global para que el dashboard muestre la
+        // nueva matriz al volver.
+        this.bootstrapService.refreshStatus().subscribe();
       },
       error: (err) => {
         this.isLoadingTransfer.set(false);
@@ -254,15 +307,16 @@ export class BootstrapWizardComponent implements OnInit {
           this.transferError.set('Esa sucursal ya es la matriz activa.');
         } else if (code === 'BRANCH.NOT_FOUND') {
           this.transferError.set('La sucursal seleccionada ya no existe.');
-        } else if (code === 'AUTH.PERMISSION_DENIED') {
-          this.transferError.set('No tienes permisos para transferir la matriz.');
+        } else if (code === 'BRANCH.TRANSFER_FORBIDDEN' || code === 'AUTH.PERMISSION_DENIED' || code === 'AUTH.INSUFFICIENT_PERMISSIONS') {
+          this.transferError.set(
+            'No tienes permisos para transferir la matriz. El permiso `branch.transfer.matriz` debe asignarse en backend (`npm run seed:branch-permissions`).',
+          );
         } else {
           this.transferError.set(
             err?.error?.message ||
               'Error al transferir la matriz. Intente nuevamente.',
           );
         }
-        this.cdr.detectChanges();
       },
     });
   }

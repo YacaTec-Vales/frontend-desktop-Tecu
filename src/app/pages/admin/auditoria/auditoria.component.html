@@ -1,76 +1,284 @@
 <div class="max-w-7xl mx-auto space-y-6 pb-12">
+
   <div class="flex justify-between items-end mb-8">
     <div>
-      <h1 class="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight">Visor de Auditoría</h1>
-      <p class="text-gray-500 dark:text-gray-400 mt-2 text-lg">Registro inmutable de todas las acciones críticas realizadas en el sistema.</p>
+      <h1 class="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight">Visor de Auditoria</h1>
+      <p class="text-gray-500 dark:text-gray-400 mt-2 text-lg">Registro inmutable de todas las acciones criticas realizadas en el sistema.</p>
     </div>
     <div class="flex gap-3">
-      <input type="date" class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand focus:border-brand p-2.5">
-      <button type="button" class="px-5 py-2.5 text-sm font-medium text-gray-900 bg-white rounded-lg border border-gray-200 hover:bg-gray-100">
-        Exportar Log
+      <button type="button" (click)="loadCurrentTab()" [disabled]="isLoading()"
+        class="px-5 py-2.5 text-sm font-medium text-gray-900 bg-white rounded-lg border border-gray-200 hover:bg-gray-100 disabled:opacity-50">
+        Refrescar
+      </button>
+      <button type="button" (click)="exportCsv()" [disabled]="isLoading()"
+        class="px-5 py-2.5 text-sm font-medium text-gray-900 bg-white rounded-lg border border-gray-200 hover:bg-gray-100 disabled:opacity-50">
+        Exportar CSV
       </button>
     </div>
   </div>
 
-  <div class="bg-white rounded-xl shadow-sm border border-gray-200 dark:bg-gray-800 dark:border-gray-700 overflow-hidden">
-    <div class="p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 flex justify-between items-center gap-4">
-      <div class="relative flex-1 max-w-md">
-        <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-          <svg class="w-5 h-5 text-gray-500 dark:text-gray-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"></path></svg>
-        </div>
-        <input type="text" class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand focus:border-brand block w-full pl-10 p-2" placeholder="Buscar por usuario, IP, o evento...">
-      </div>
-      <select class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand focus:border-brand p-2">
-        <option>Todos los Eventos</option>
-        <option>Login / Logout</option>
-        <option>Aprobaciones</option>
-        <option>Configuraciones</option>
-        <option>Tokens</option>
-      </select>
-    </div>
-    
-    <div class="overflow-x-auto font-mono text-sm">
-        <table class="w-full text-left text-gray-500 dark:text-gray-400">
-            <thead class="text-xs text-gray-700 uppercase bg-gray-100 dark:bg-gray-700 dark:text-gray-400">
-                <tr>
-                    <th scope="col" class="px-6 py-3">Timestamp</th>
-                    <th scope="col" class="px-6 py-3">Usuario (Email)</th>
-                    <th scope="col" class="px-6 py-3">IP Origen</th>
-                    <th scope="col" class="px-6 py-3">Tipo Evento</th>
-                    <th scope="col" class="px-6 py-3">Detalle</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50">
-                    <td class="px-6 py-3 whitespace-nowrap">2026-07-28 10:15:32</td>
-                    <td class="px-6 py-3 text-blue-600">gerente_general@empresa.com</td>
-                    <td class="px-6 py-3 text-gray-400">192.168.1.45</td>
-                    <td class="px-6 py-3"><span class="bg-purple-100 text-purple-800 px-2 py-0.5 rounded text-xs">CONFIG_UPDATE</span></td>
-                    <td class="px-6 py-3">Modificó tasa de interés base a 12%</td>
-                </tr>
-                <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50">
-                    <td class="px-6 py-3 whitespace-nowrap">2026-07-28 09:42:11</td>
-                    <td class="px-6 py-3 text-blue-600">gerente_sucursal@empresa.com</td>
-                    <td class="px-6 py-3 text-gray-400">10.0.4.12</td>
-                    <td class="px-6 py-3"><span class="bg-green-100 text-green-800 px-2 py-0.5 rounded text-xs">APPROVAL</span></td>
-                    <td class="px-6 py-3">Aprobó alta distribuidora: SAMG850123HNLXYZ09</td>
-                </tr>
-                <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50">
-                    <td class="px-6 py-3 whitespace-nowrap">2026-07-28 08:30:05</td>
-                    <td class="px-6 py-3 text-blue-600">admin@empresa.com</td>
-                    <td class="px-6 py-3 text-gray-400">10.0.5.99</td>
-                    <td class="px-6 py-3"><span class="bg-red-100 text-red-800 px-2 py-0.5 rounded text-xs">TOKEN_USED</span></td>
-                    <td class="px-6 py-3">Desbloqueo de cajero con token 842910</td>
-                </tr>
-                <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50">
-                    <td class="px-6 py-3 whitespace-nowrap">2026-07-28 08:00:00</td>
-                    <td class="px-6 py-3 text-blue-600">admin@empresa.com</td>
-                    <td class="px-6 py-3 text-gray-400">10.0.5.99</td>
-                    <td class="px-6 py-3"><span class="bg-gray-200 text-gray-800 px-2 py-0.5 rounded text-xs">LOGIN</span></td>
-                    <td class="px-6 py-3">Inicio de sesión exitoso</td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
+  <div class="border-b border-gray-200">
+    <nav class="flex gap-6" aria-label="Tabs">
+      <button type="button" (click)="switchTab('data')"
+        [attr.aria-current]="tab() === 'data' ? 'page' : null"
+        [class]="tab() === 'data' ? 'border-b-2 border-brand text-brand font-semibold py-3' : 'border-b-2 border-transparent text-gray-500 hover:text-gray-700 py-3'">
+        Cambios de datos
+      </button>
+      <button type="button" (click)="switchTab('system')"
+        [attr.aria-current]="tab() === 'system' ? 'page' : null"
+        [class]="tab() === 'system' ? 'border-b-2 border-brand text-brand font-semibold py-3' : 'border-b-2 border-transparent text-gray-500 hover:text-gray-700 py-3'">
+        Eventos del sistema
+      </button>
+    </nav>
   </div>
+
+  @if (tab() === 'data') {
+
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 dark:bg-gray-800 dark:border-gray-700 p-4">
+      <div class="grid grid-cols-1 md:grid-cols-5 gap-3">
+        <div>
+          <label for="d-user" class="block text-xs font-medium text-gray-500 mb-1">User ID</label>
+          <input id="d-user" type="text" [ngModel]="dataUserId()" (ngModelChange)="dataUserId.set($event)"
+            class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2" placeholder="UUID" />
+        </div>
+        <div>
+          <label for="d-action" class="block text-xs font-medium text-gray-500 mb-1">Accion</label>
+          <input id="d-action" type="text" [ngModel]="dataAction()" (ngModelChange)="dataAction.set($event)"
+            class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2" placeholder="USER.CREATE" />
+        </div>
+        <div>
+          <label for="d-from" class="block text-xs font-medium text-gray-500 mb-1">Desde</label>
+          <input id="d-from" type="date" [ngModel]="dataStartDate()" (ngModelChange)="dataStartDate.set($event)"
+            class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2" />
+        </div>
+        <div>
+          <label for="d-to" class="block text-xs font-medium text-gray-500 mb-1">Hasta</label>
+          <input id="d-to" type="date" [ngModel]="dataEndDate()" (ngModelChange)="dataEndDate.set($event)"
+            class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2" />
+        </div>
+        <div class="flex items-end gap-2">
+          <button type="button" (click)="applyFilters()"
+            class="flex-1 px-4 py-2 text-sm font-medium text-white bg-brand rounded-lg hover:opacity-90">
+            Filtrar
+          </button>
+          <button type="button" (click)="clearFilters()"
+            class="px-4 py-2 text-sm font-medium text-gray-900 bg-white rounded-lg border border-gray-200 hover:bg-gray-100">
+            Limpiar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 dark:bg-gray-800 dark:border-gray-700 overflow-hidden">
+      <div class="overflow-x-auto font-mono text-sm">
+        <table class="w-full text-left text-gray-500 dark:text-gray-400">
+          <thead class="text-xs text-gray-700 uppercase bg-gray-100 dark:bg-gray-700 dark:text-gray-400">
+            <tr>
+              <th scope="col" class="px-6 py-3">Fecha</th>
+              <th scope="col" class="px-6 py-3">Usuario</th>
+              <th scope="col" class="px-6 py-3">Tabla</th>
+              <th scope="col" class="px-6 py-3">Operacion</th>
+              <th scope="col" class="px-6 py-3">Accion</th>
+              <th scope="col" class="px-6 py-3">IP</th>
+              <th scope="col" class="px-6 py-3"></th>
+            </tr>
+          </thead>
+          <tbody>
+            @if (isLoading() && dataRows().length === 0) {
+              <tr><td colspan="7" class="px-6 py-6 text-center text-gray-400 italic">Cargando...</td></tr>
+            } @else if (dataRows().length === 0) {
+              <tr><td colspan="7" class="px-6 py-6 text-center text-gray-400 italic">Sin registros para los filtros aplicados.</td></tr>
+            } @else {
+              @for (r of dataRows(); track r.id) {
+                <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50">
+                  <td class="px-6 py-3 whitespace-nowrap">{{ r.recordedAt | date:'yyyy-MM-dd HH:mm:ss' }}</td>
+                  <td class="px-6 py-3 text-blue-600 break-all">{{ userLabel(r.userId) }}</td>
+                  <td class="px-6 py-3">{{ r.tableName }}</td>
+                  <td class="px-6 py-3">
+                    <span class="px-2 py-0.5 rounded text-xs" [class]="operationBadgeClass(r.operation)">{{ r.operation }}</span>
+                  </td>
+                  <td class="px-6 py-3">{{ r.action || '-' }}</td>
+                  <td class="px-6 py-3 text-gray-400">{{ r.ipAddress || '-' }}</td>
+                  <td class="px-6 py-3">
+                    <button type="button" (click)="toggleData(r.id)" class="text-brand hover:underline"
+                      [attr.aria-expanded]="expandedDataRow() === r.id">
+                      {{ expandedDataRow() === r.id ? 'Ocultar' : 'Detalle' }}
+                    </button>
+                  </td>
+                </tr>
+                @if (expandedDataRow() === r.id) {
+                  <tr class="bg-gray-50">
+                    <td colspan="7" class="px-6 py-4">
+                      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                        <div>
+                          <div class="font-semibold text-gray-700 mb-1">Record ID</div>
+                          <div class="break-all text-gray-900">{{ r.recordId }}</div>
+                        </div>
+                        <div>
+                          <div class="font-semibold text-gray-700 mb-1">Device / User Agent</div>
+                          <div class="break-all text-gray-900">{{ r.device || '-' }}</div>
+                          <div class="break-all text-gray-500">{{ r.userAgent || '' }}</div>
+                        </div>
+                        @if (r.changedFields) {
+                          <div class="md:col-span-2">
+                            <div class="font-semibold text-gray-700 mb-1">Campos cambiados</div>
+                            <pre class="bg-white border rounded p-2 overflow-x-auto">{{ r.changedFields | json }}</pre>
+                          </div>
+                        }
+                        @if (r.oldValues) {
+                          <div>
+                            <div class="font-semibold text-gray-700 mb-1">Valores anteriores</div>
+                            <pre class="bg-white border rounded p-2 overflow-x-auto">{{ r.oldValues | json }}</pre>
+                          </div>
+                        }
+                        @if (r.newValues) {
+                          <div>
+                            <div class="font-semibold text-gray-700 mb-1">Valores nuevos</div>
+                            <pre class="bg-white border rounded p-2 overflow-x-auto">{{ r.newValues | json }}</pre>
+                          </div>
+                        }
+                        @if (r.metadata && (r.metadata | json) !== '{}') {
+                          <div class="md:col-span-2">
+                            <div class="font-semibold text-gray-700 mb-1">Metadata</div>
+                            <pre class="bg-white border rounded p-2 overflow-x-auto">{{ r.metadata | json }}</pre>
+                          </div>
+                        }
+                      </div>
+                    </td>
+                  </tr>
+                }
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+      <div class="flex items-center justify-between p-4 border-t border-gray-200 text-sm text-gray-600">
+        <span>Pagina {{ dataPage() }} de {{ dataTotalPages() }} ({{ dataTotal() }} registros)</span>
+        <div class="flex gap-2">
+          <button type="button" (click)="goDataPage(dataPage() - 1)" [disabled]="dataPage() <= 1 || isLoading()"
+            class="px-3 py-1.5 rounded border border-gray-200 hover:bg-gray-100 disabled:opacity-50">Anterior</button>
+          <button type="button" (click)="goDataPage(dataPage() + 1)" [disabled]="dataPage() >= dataTotalPages() || isLoading()"
+            class="px-3 py-1.5 rounded border border-gray-200 hover:bg-gray-100 disabled:opacity-50">Siguiente</button>
+        </div>
+      </div>
+    </div>
+
+  } @else {
+
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 dark:bg-gray-800 dark:border-gray-700 p-4">
+      <div class="grid grid-cols-1 md:grid-cols-5 gap-3">
+        <div>
+          <label for="s-user" class="block text-xs font-medium text-gray-500 mb-1">User ID</label>
+          <input id="s-user" type="text" [ngModel]="sysUserId()" (ngModelChange)="sysUserId.set($event)"
+            class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2" placeholder="UUID" />
+        </div>
+        <div>
+          <label for="s-type" class="block text-xs font-medium text-gray-500 mb-1">Tipo de evento</label>
+          <select id="s-type" [ngModel]="sysLogType()" (ngModelChange)="sysLogType.set($event)"
+            class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2">
+            <option value="">Todos</option>
+            @for (t of LOG_TYPES; track t) {
+              <option [value]="t">{{ t }}</option>
+            }
+          </select>
+        </div>
+        <div>
+          <label for="s-from" class="block text-xs font-medium text-gray-500 mb-1">Desde</label>
+          <input id="s-from" type="date" [ngModel]="sysStartDate()" (ngModelChange)="sysStartDate.set($event)"
+            class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2" />
+        </div>
+        <div>
+          <label for="s-to" class="block text-xs font-medium text-gray-500 mb-1">Hasta</label>
+          <input id="s-to" type="date" [ngModel]="sysEndDate()" (ngModelChange)="sysEndDate.set($event)"
+            class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2" />
+        </div>
+        <div class="flex items-end gap-2">
+          <button type="button" (click)="applyFilters()"
+            class="flex-1 px-4 py-2 text-sm font-medium text-white bg-brand rounded-lg hover:opacity-90">
+            Filtrar
+          </button>
+          <button type="button" (click)="clearFilters()"
+            class="px-4 py-2 text-sm font-medium text-gray-900 bg-white rounded-lg border border-gray-200 hover:bg-gray-100">
+            Limpiar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 dark:bg-gray-800 dark:border-gray-700 overflow-hidden">
+      <div class="overflow-x-auto font-mono text-sm">
+        <table class="w-full text-left text-gray-500 dark:text-gray-400">
+          <thead class="text-xs text-gray-700 uppercase bg-gray-100 dark:bg-gray-700 dark:text-gray-400">
+            <tr>
+              <th scope="col" class="px-6 py-3">Fecha</th>
+              <th scope="col" class="px-6 py-3">Usuario</th>
+              <th scope="col" class="px-6 py-3">Tipo</th>
+              <th scope="col" class="px-6 py-3">Mensaje</th>
+              <th scope="col" class="px-6 py-3">IP</th>
+              <th scope="col" class="px-6 py-3"></th>
+            </tr>
+          </thead>
+          <tbody>
+            @if (isLoading() && sysRows().length === 0) {
+              <tr><td colspan="6" class="px-6 py-6 text-center text-gray-400 italic">Cargando...</td></tr>
+            } @else if (sysRows().length === 0) {
+              <tr><td colspan="6" class="px-6 py-6 text-center text-gray-400 italic">Sin registros para los filtros aplicados.</td></tr>
+            } @else {
+              @for (r of sysRows(); track r.id) {
+                <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50">
+                  <td class="px-6 py-3 whitespace-nowrap">{{ r.createdAt | date:'yyyy-MM-dd HH:mm:ss' }}</td>
+                  <td class="px-6 py-3 text-blue-600 break-all">{{ userLabel(r.userId) }}</td>
+                  <td class="px-6 py-3">
+                    <span class="px-2 py-0.5 rounded text-xs" [class]="logTypeBadgeClass(r.logType)">{{ r.logType }}</span>
+                  </td>
+                  <td class="px-6 py-3 break-all">{{ r.message || r.action || '-' }}</td>
+                  <td class="px-6 py-3 text-gray-400">{{ r.ipAddress || '-' }}</td>
+                  <td class="px-6 py-3">
+                    <button type="button" (click)="toggleSys(r.id)" class="text-brand hover:underline"
+                      [attr.aria-expanded]="expandedSysRow() === r.id">
+                      {{ expandedSysRow() === r.id ? 'Ocultar' : 'Detalle' }}
+                    </button>
+                  </td>
+                </tr>
+                @if (expandedSysRow() === r.id) {
+                  <tr class="bg-gray-50">
+                    <td colspan="6" class="px-6 py-4 text-xs">
+                      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <div class="font-semibold text-gray-700 mb-1">Device / User Agent</div>
+                          <div class="break-all text-gray-900">{{ r.device || '-' }}</div>
+                          <div class="break-all text-gray-500">{{ r.userAgent || '' }}</div>
+                        </div>
+                        <div>
+                          <div class="font-semibold text-gray-700 mb-1">Duracion</div>
+                          <div class="text-gray-900">{{ r.durationMs != null ? r.durationMs + ' ms' : '-' }}</div>
+                        </div>
+                        @if (r.metadata && (r.metadata | json) !== '{}') {
+                          <div class="md:col-span-2">
+                            <div class="font-semibold text-gray-700 mb-1">Metadata</div>
+                            <pre class="bg-white border rounded p-2 overflow-x-auto">{{ r.metadata | json }}</pre>
+                          </div>
+                        }
+                      </div>
+                    </td>
+                  </tr>
+                }
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+      <div class="flex items-center justify-between p-4 border-t border-gray-200 text-sm text-gray-600">
+        <span>Pagina {{ sysPage() }} de {{ sysTotalPages() }} ({{ sysTotal() }} registros)</span>
+        <div class="flex gap-2">
+          <button type="button" (click)="goSysPage(sysPage() - 1)" [disabled]="sysPage() <= 1 || isLoading()"
+            class="px-3 py-1.5 rounded border border-gray-200 hover:bg-gray-100 disabled:opacity-50">Anterior</button>
+          <button type="button" (click)="goSysPage(sysPage() + 1)" [disabled]="sysPage() >= sysTotalPages() || isLoading()"
+            class="px-3 py-1.5 rounded border border-gray-200 hover:bg-gray-100 disabled:opacity-50">Siguiente</button>
+        </div>
+      </div>
+    </div>
+
+  }
+
 </div>

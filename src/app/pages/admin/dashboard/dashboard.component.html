@@ -1,6 +1,5 @@
 <div class="max-w-7xl mx-auto space-y-6 pb-12">
 
-  <!-- Header -->
   <div class="flex justify-between items-end mb-8">
     <div>
       <h1 class="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight">
@@ -12,34 +11,27 @@
       </p>
     </div>
     <div class="flex gap-3">
-      <button
-        type="button"
-        (click)="refresh()"
-        class="px-5 py-2.5 text-sm font-medium text-gray-900 bg-white rounded-lg border border-gray-200 hover:bg-gray-100">
+      <button type="button" (click)="refresh()" [disabled]="isLoading()"
+        class="px-5 py-2.5 text-sm font-medium text-gray-900 bg-white rounded-lg border border-gray-200 hover:bg-gray-100 disabled:opacity-50">
         Refrescar estado
       </button>
     </div>
   </div>
 
-  <!-- Error -->
-  @if (error) {
-    <div class="bg-red-50 border border-red-200 text-red-800 rounded-xl p-4 text-sm">
-      {{ error }}
+  @if (error()) {
+    <div class="bg-red-50 border border-red-200 text-red-800 rounded-xl p-4 text-sm" role="alert">
+      {{ error() }}
     </div>
   }
 
-  <!-- Loading -->
-  @if (isLoading) {
+  @if (showSkeleton()) {
     <div class="text-gray-500 dark:text-gray-400 italic">
       Consultando estado del sistema...
     </div>
   }
 
-  <!-- Estado del sistema -->
-  @if (!isLoading && status) {
-
-    <!-- Si el sistema esta incompleto: CTA grande al wizard de bootstrap. -->
-    @if (!status.bootstrapComplete) {
+  @if (!showSkeleton()) {
+    @if (!status().bootstrapComplete) {
       <div class="bg-amber-50 border border-amber-200 rounded-xl p-6 shadow-sm">
         <div class="flex items-start">
           <svg class="w-10 h-10 text-amber-500 mr-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -54,9 +46,7 @@
               la sucursal <strong>MATRIZ</strong> y el unico <strong>Gerente General</strong>.
               Tu rol de administrador es el unico con los permisos necesarios para hacerlo.
             </p>
-            <button
-              type="button"
-              (click)="goToBootstrap()"
+            <button type="button" (click)="goToBootstrap()"
               class="mt-4 inline-flex items-center px-5 py-2.5 text-sm font-medium text-white bg-brand rounded-lg hover:opacity-90 transition">
               Iniciar bootstrap del sistema
               <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -68,88 +58,79 @@
       </div>
     }
 
-    <!-- Estado de los componentes clave del sistema. -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-      <!-- MATRIZ -->
       <div class="bg-white rounded-xl shadow-sm border border-gray-200 dark:bg-gray-800 dark:border-gray-700 p-6">
         <div class="flex items-center justify-between mb-3">
           <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wider">Sucursal MATRIZ</h3>
-          @if (status.hasMatriz) {
+          @if (status().hasMatriz) {
             <span class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Activa</span>
           } @else {
             <span class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Faltante</span>
           }
         </div>
-        @if (status.hasMatriz) {
-          <p class="text-2xl font-extrabold text-gray-900 dark:text-white truncate" [title]="status.matrizName || ''">
-            {{ status.matrizName }}
+        @if (status().hasMatriz) {
+          <p class="text-2xl font-extrabold text-gray-900 dark:text-white truncate" [title]="status().matrizName || ''">
+            {{ status().matrizName }}
           </p>
-          @if (status.matrizFolioPrefix) {
+          @if (status().matrizFolioPrefix) {
             <p class="text-sm text-gray-500 mt-1">
-              Folio: <span class="font-mono font-bold text-brand">{{ status.matrizFolioPrefix }}</span>
+              Folio: <span class="font-mono font-bold text-brand">{{ status().matrizFolioPrefix }}</span>
             </p>
           }
-          @if (status.matrizId) {
-            <p class="text-xs text-gray-500 mt-2 font-mono break-all">
-              ID: {{ status.matrizId }}
-            </p>
+          @if (status().matrizId) {
+            <p class="text-xs text-gray-500 mt-2 font-mono break-all">ID: {{ status().matrizId }}</p>
           }
         } @else {
-          <p class="text-2xl font-extrabold text-gray-900 dark:text-white">
-            Ninguna
-          </p>
+          <p class="text-2xl font-extrabold text-gray-900 dark:text-white">Ninguna</p>
           <p class="text-xs text-gray-500 mt-2">
             Crea la primera sucursal con <code class="font-mono">branchType=MATRIZ</code>.
           </p>
         }
       </div>
 
-      <!-- GERENTE GENERAL -->
       <div class="bg-white rounded-xl shadow-sm border border-gray-200 dark:bg-gray-800 dark:border-gray-700 p-6">
         <div class="flex items-center justify-between mb-3">
           <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wider">Gerente General</h3>
-          @if (status.hasGeneralManager) {
+          @if (status().hasGeneralManager) {
             <span class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Activo</span>
           } @else {
             <span class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Faltante</span>
           }
         </div>
-        @if (status.hasGeneralManager) {
-          <p class="text-2xl font-extrabold text-gray-900 dark:text-white truncate" [title]="status.generalManagerName || ''">
-            {{ status.generalManagerName }}
+        @if (status().hasGeneralManager) {
+          <p class="text-2xl font-extrabold text-gray-900 dark:text-white truncate" [title]="status().generalManagerName || ''">
+            {{ status().generalManagerName || 'Gerente General' }}
           </p>
-          @if (status.generalManagerEmail) {
-            <p class="text-sm text-gray-500 mt-1 truncate" [title]="status.generalManagerEmail">
-              {{ status.generalManagerEmail }}
+          @if (status().generalManagerEmail) {
+            <p class="text-sm text-gray-500 mt-1 truncate" [title]="status().generalManagerEmail">
+              {{ status().generalManagerEmail }}
             </p>
           }
-          @if (status.generalManagerId) {
-            <p class="text-xs text-gray-500 mt-2 font-mono break-all">
-              ID: {{ status.generalManagerId }}
-            </p>
+          @if (status().generalManagerId) {
+            <p class="text-xs text-gray-500 mt-2 font-mono break-all">ID: {{ status().generalManagerId }}</p>
           }
+          <p class="text-xs text-gray-400 mt-3 italic">
+            La reasignacion del GG requiere un endpoint dedicado en backend (no disponible en la UI).
+          </p>
         } @else {
-          <p class="text-2xl font-extrabold text-gray-900 dark:text-white">
-            Ninguno
-          </p>
+          <p class="text-2xl font-extrabold text-gray-900 dark:text-white">Ninguno</p>
           <p class="text-xs text-gray-500 mt-2">
             Crea el unico usuario con rol <code class="font-mono">GERENTE_GENERAL</code>.
           </p>
         }
       </div>
 
-      <!-- ESTADO GLOBAL -->
       <div class="bg-white rounded-xl shadow-sm border border-gray-200 dark:bg-gray-800 dark:border-gray-700 p-6">
         <div class="flex items-center justify-between mb-3">
           <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wider">Estado del sistema</h3>
-          @if (status.bootstrapComplete) {
+          @if (status().bootstrapComplete) {
             <span class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Operativo</span>
           } @else {
             <span class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">Pendiente</span>
           }
         </div>
         <p class="text-lg font-semibold text-gray-900 dark:text-white">
-          @if (status.bootstrapComplete) {
+          @if (status().bootstrapComplete) {
             Sistema inicializado. El Gerente General puede iniciar sesion.
           } @else {
             Requiere bootstrap para empezar a operar.
@@ -158,48 +139,49 @@
       </div>
     </div>
 
-    <!-- Transferir matriz (solo cuando bootstrap completo) -->
-    @if (status.bootstrapComplete && status.matrizId) {
-      <div class="bg-white rounded-xl shadow-sm border border-gray-200 dark:bg-gray-800 dark:border-gray-700 p-6">
-        <h3 class="text-lg font-bold text-gray-900 dark:text-white flex items-center mb-2">
-          <svg class="w-5 h-5 mr-2 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
-          </svg>
-          Transferir la cualidad de MATRIZ
-        </h3>
-        <p class="text-sm text-gray-600 mb-4">
-          Promueve otra sucursal a MATRIZ. La actual dejara de serlo y perdera
-          su gerente. Esta operacion es irreversible desde la UI (debes repetir
-          el flujo inverso para revertir).
-        </p>
-        <button
-          type="button"
-          (click)="goToTransferMatriz()"
-          class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-brand rounded-lg hover:opacity-90 transition">
-          Transferir MATRIZ
-        </button>
+    @if (status().bootstrapComplete) {
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 dark:bg-gray-800 dark:border-gray-700 p-6">
+          <h3 class="text-lg font-bold text-gray-900 dark:text-white flex items-center mb-2">
+            <svg class="w-5 h-5 mr-2 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
+            </svg>
+            Sucursales y MATRIZ
+          </h3>
+          <p class="text-sm text-gray-600 mb-4">
+            Crear una nueva sucursal, transferir la cualidad de MATRIZ a otra,
+            o dejarla donde esta.
+          </p>
+          <div class="flex flex-wrap gap-2">
+            <button type="button" (click)="goToSucursales()"
+              class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-brand rounded-lg hover:opacity-90 transition">
+              Gestionar sucursales
+            </button>
+            <button type="button" (click)="goToTransferMatriz()"
+              class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-900 bg-white rounded-lg border border-gray-200 hover:bg-gray-100 transition">
+              Transferir MATRIZ
+            </button>
+          </div>
+        </div>
+
+        <a routerLink="/admin/auditoria"
+          class="bg-white rounded-xl shadow-sm border border-gray-200 dark:bg-gray-800 dark:border-gray-700 p-6 hover:shadow-md transition-shadow">
+          <h3 class="text-lg font-bold text-gray-900 dark:text-white flex items-center">
+            <svg class="w-5 h-5 mr-2 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+              </path>
+            </svg>
+            Visor de Auditoria
+          </h3>
+          <p class="text-sm text-gray-500 mt-2">
+            Registro inmutable de todas las acciones criticas. Disponible solo para
+            el rol Administrador (audit.read).
+          </p>
+        </a>
       </div>
     }
-
-    <!-- Atajos -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <a routerLink="/admin/auditoria"
-        class="bg-white rounded-xl shadow-sm border border-gray-200 dark:bg-gray-800 dark:border-gray-700 p-6 hover:shadow-md transition-shadow">
-        <h3 class="text-lg font-bold text-gray-900 dark:text-white flex items-center">
-          <svg class="w-5 h-5 mr-2 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
-            </path>
-          </svg>
-          Visor de Auditoria
-        </h3>
-        <p class="text-sm text-gray-500 mt-2">
-          Registro inmutable de todas las acciones criticas. Disponible solo para
-          el rol Administrador (auditoria.read).
-        </p>
-      </a>
-    </div>
 
   }
 
