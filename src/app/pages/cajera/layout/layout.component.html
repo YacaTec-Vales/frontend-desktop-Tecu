@@ -76,6 +76,12 @@
 
   <!-- Main Content -->
   <main class="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-900 w-full relative h-screen">
+    <!-- VPN indicator (top-right corner) -->
+    <div class="absolute top-4 right-6 z-30">
+      <app-vpn-indicator></app-vpn-indicator>
+    </div>
+    <!-- Banner de solo lectura cuando NO-VPN -->
+    <app-vpn-readonly-banner></app-vpn-readonly-banner>
     <div class="p-8">
       <router-outlet></router-outlet>
     </div>

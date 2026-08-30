@@ -7,6 +7,7 @@ import { ButtonComponent } from '../../../components/ui/button/button';
 import { ModalComponent } from '../../../components/ui/modal/modal';
 import { InputComponent } from '../../../components/ui/input/input';
 import { TableActionsComponent } from '../../../components/ui/table/table-actions';
+import { VpnOnlyDirective } from '../../../core/directives/vpn-only.directive';
 
 import { StaffService } from '../../../core/services/staff.service';
 import { Coordinador, Verificador, Cajero, CreateStaffDto } from '../../../core/models/staff.model';
@@ -16,7 +17,7 @@ type PersonalTab = 'coordinadores' | 'verificadores' | 'cajeros';
 @Component({
   selector: 'app-plantilla',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, CardComponent, TableComponent, ButtonComponent, ModalComponent, InputComponent, TableActionsComponent],
+  imports: [CommonModule, ReactiveFormsModule, CardComponent, TableComponent, ButtonComponent, ModalComponent, InputComponent, TableActionsComponent, VpnOnlyDirective],
   templateUrl: './plantilla.component.html'
 })
 export class PlantillaComponent implements OnInit {

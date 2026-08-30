@@ -59,7 +59,7 @@
           (limitChange)="onLimitChange($event, 'productos')">
           
           <!-- Botones que se inyectan en la tabla -->
-          <app-button table-actions variant="primary" (onClick)="abrirModalProducto()">+ Nuevo Vale</app-button>
+          <app-button *vpnOnly table-actions variant="primary" (onClick)="abrirModalProducto()">+ Nuevo Vale</app-button>
           
           <tr *ngFor="let p of productos" class="bg-white border-b hover:bg-gray-50">
               <td class="px-6 py-4 font-bold">{{ p.code }}</td>
@@ -93,7 +93,7 @@
         (pageChange)="onPageChange($event, 'categorias')" (searchChange)="onSearch($event, 'categorias')"
         (limitChange)="onLimitChange($event, 'categorias')">
         
-        <app-button table-actions variant="primary" (onClick)="abrirModalCategoria()">+ Nueva Categoría</app-button>
+        <app-button *vpnOnly table-actions variant="primary" (onClick)="abrirModalCategoria()">+ Nueva Categoría</app-button>
 
         <tr *ngFor="let c of categorias" class="bg-white border-b hover:bg-gray-50">
           <td class="px-6 py-4 font-bold uppercase">{{ c.name }}</td>
@@ -116,7 +116,7 @@
           (pageChange)="onPageChange($event, 'sucursales')" (searchChange)="onSearch($event, 'sucursales')"
           (limitChange)="onLimitChange($event, 'sucursales')">
           
-          <app-button table-actions variant="primary" (onClick)="abrirModalSucursal()">+ Nueva Sucursal</app-button>
+          <app-button *vpnOnly table-actions variant="primary" (onClick)="abrirModalSucursal()">+ Nueva Sucursal</app-button>
 
           <tr *ngFor="let s of sucursales" class="bg-white border-b hover:bg-gray-50">
             <td class="px-6 py-4 font-bold">{{ s.name }}</td>
@@ -171,7 +171,7 @@
           (pageChange)="onPersonalPageChange($event, activePersonalTab)" (searchChange)="onPersonalSearch($event, activePersonalTab)"
           (limitChange)="onPersonalLimitChange($event, activePersonalTab)">
           
-          <app-button table-actions variant="primary" (onClick)="abrirModalPersonal()">+ Registrar Empleado</app-button>
+          <app-button *vpnOnly table-actions variant="primary" (onClick)="abrirModalPersonal()">+ Registrar Empleado</app-button>
 
         <ng-container *ngIf="activePersonalTab === 'gerentes'">
           <tr *ngFor="let emp of gerentes" class="bg-white border-b hover:bg-gray-50">
@@ -303,7 +303,7 @@
 
     <div class="mt-6 flex justify-end gap-2">
       <app-button variant="text" type="button" (onClick)="cerrarModalProducto()">Cancelar</app-button>
-      <app-button variant="primary" type="submit" [disabled]="productoForm.invalid">{{ isEditingMode ? 'Guardar Cambios' : 'Confirmar Registro' }}</app-button>
+      <app-button *vpnOnly variant="primary" type="submit" [disabled]="productoForm.invalid">{{ isEditingMode ? 'Guardar Cambios' : 'Confirmar Registro' }}</app-button>
     </div>
   </form>
 </app-modal>
@@ -317,7 +317,7 @@
 
     <div class="flex justify-end gap-2 mt-6">
       <app-button variant="text" (onClick)="isConfirmModalOpen = false">Cancelar</app-button>
-      <app-button variant="error" (onClick)="ejecutarDesactivacion()">Confirmar Acción</app-button>
+      <app-button *vpnOnly variant="error" (onClick)="ejecutarDesactivacion()">Confirmar Acción</app-button>
     </div>
   </div>
 </app-modal>
@@ -346,7 +346,7 @@
 
     <div class="mt-6 flex justify-end gap-2">
       <app-button variant="text" type="button" (onClick)="cerrarModalCategoria()">Cancelar</app-button>
-      <app-button variant="primary" type="submit" [disabled]="categoriaForm.invalid">{{ isEditingMode ? 'Guardar Cambios' : 'Registrar' }}</app-button>
+      <app-button *vpnOnly variant="primary" type="submit" [disabled]="categoriaForm.invalid">{{ isEditingMode ? 'Guardar Cambios' : 'Registrar' }}</app-button>
     </div>
   </form>
 </app-modal>
@@ -390,7 +390,7 @@
 
     <div class="mt-6 flex justify-end gap-2">
       <app-button variant="text" type="button" (onClick)="cerrarModalSucursal()">Cancelar</app-button>
-      <app-button variant="primary" type="submit" [disabled]="sucursalForm.invalid">{{ isEditingMode ? 'Guardar Cambios' : 'Registrar' }}</app-button>
+      <app-button *vpnOnly variant="primary" type="submit" [disabled]="sucursalForm.invalid">{{ isEditingMode ? 'Guardar Cambios' : 'Registrar' }}</app-button>
     </div>
   </form>
 </app-modal>
@@ -442,7 +442,7 @@
 
     <div class="mt-6 flex justify-end gap-2">
       <app-button variant="text" type="button" (onClick)="cerrarModalPersonal()">Cancelar</app-button>
-      <app-button variant="primary" type="submit"
+      <app-button *vpnOnly variant="primary" type="submit"
         [disabled]="personalForm.invalid || (!isEditingMode && !personalForm.get('username')?.value)">{{ isEditingMode ? 'Guardar Cambios' : 'Registrar' }}</app-button>
     </div>
   </form>

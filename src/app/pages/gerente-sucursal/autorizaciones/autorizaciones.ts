@@ -8,11 +8,12 @@ import { ButtonComponent } from '../../../components/ui/button/button';
 import { ModalComponent } from '../../../components/ui/modal/modal';
 import { InputComponent } from '../../../components/ui/input/input';
 import { SafeUrlPipe } from '../../../core/pipes/safe-url.pipe';
+import { VpnOnlyDirective } from '../../../core/directives/vpn-only.directive';
 
 @Component({
   selector: 'app-autorizaciones',
   standalone: true,
-  imports: [CommonModule, FormsModule, CardComponent, ButtonComponent, ModalComponent, TableComponent, InputComponent, SafeUrlPipe],
+  imports: [CommonModule, FormsModule, CardComponent, ButtonComponent, ModalComponent, TableComponent, InputComponent, SafeUrlPipe, VpnOnlyDirective],
   templateUrl: './autorizaciones.html',
 })
 export class Autorizaciones implements OnInit {

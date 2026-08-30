@@ -8,6 +8,7 @@ import { StaffService } from '../../../core/services/staff.service';
 import { Branch } from '../../../core/models/branch.model';
 import { Coordinador } from '../../../core/models/staff.model';
 import { CardComponent } from '../../../components/ui/card/card';
+import { VpnOnlyDirective } from '../../../core/directives/vpn-only.directive';
 import { ModalComponent } from '../../../components/ui/modal/modal';
 import { ButtonComponent } from '../../../components/ui/button/button';
 import { TableComponent } from '../../../components/ui/table/table';
@@ -15,7 +16,7 @@ import { TableComponent } from '../../../components/ui/table/table';
 @Component({
   selector: 'app-distribuidoras',
   standalone: true,
-  imports: [CommonModule, FormsModule, CardComponent, ButtonComponent, TableComponent],
+  imports: [CommonModule, FormsModule, CardComponent, ButtonComponent, TableComponent, VpnOnlyDirective],
   templateUrl: './distribuidoras.html',
 })
 export class Distribuidoras implements OnInit {

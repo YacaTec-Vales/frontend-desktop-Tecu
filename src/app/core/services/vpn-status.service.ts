@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, computed, signal } from '@angular/core';
 import { environment } from '../../../environments/environment';
 
 /**
@@ -16,6 +16,11 @@ import { environment } from '../../../environments/environment';
  * (`environment.production === false`) se considera siempre "en VPN"
  * para que el equipo pueda probar todos los flujos sin necesidad de
  * tunel VPN ni hostname canonico.
+ *
+ * Se expone como signal (`isOnVpn`) para que indicator + banner +
+ * directiva `*vpnOnly` se re-evalúen reactivamente. El hostname en
+ * SPA no cambia, pero la abstraccion queda lista para escenarios
+ * futuros (ej. iframe dentro de la VPN vs fuera).
  */
 @Injectable({ providedIn: 'root' })
 export class VpnStatusService {
@@ -23,7 +28,21 @@ export class VpnStatusService {
     'vpn.taquizaschavez.com.mx',
   ]);
 
-  isOnVpn(): boolean {
+  private readonly _isOnVpn = signal<boolean>(this.detect());
+
+  readonly isOnVpn = this._isOnVpn.asReadonly();
+  readonly isOffVpn = computed(() => !this._isOnVpn());
+
+  /**
+   * Re-evalua el estado leyendo el hostname actual. Pensado para
+   * casos donde el hostname cambia en runtime (poco frecuente en
+   * este repo, pero util en tests).
+   */
+  refresh(): void {
+    this._isOnVpn.set(this.detect());
+  }
+
+  private detect(): boolean {
     if (!environment.production) return true;
     const host =
       typeof window !== 'undefined' ? window.location.hostname.toLowerCase() : '';
