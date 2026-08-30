@@ -11,6 +11,26 @@ import { VpnOnlyDirective } from '../../../core/directives/vpn-only.directive';
 
 import { StaffService } from '../../../core/services/staff.service';
 import { Coordinador, Verificador, Cajero, CreateStaffDto } from '../../../core/models/staff.model';
+import {
+  validateName,
+  validateEmail,
+  validatePhone,
+} from '../../../core/validators/form-validators';
+
+const nameValidator = (fieldName: string) => (control: { value: string | null | undefined }) => {
+  const err = validateName(control.value, fieldName);
+  return err ? { name: { message: err } } : null;
+};
+
+const emailValidator = () => (control: { value: string | null | undefined }) => {
+  const err = validateEmail(control.value);
+  return err ? { email: { message: err } } : null;
+};
+
+const phoneValidator = () => (control: { value: string | null | undefined }) => {
+  const err = validatePhone(control.value);
+  return err ? { phone: { message: err } } : null;
+};
 
 type PersonalTab = 'coordinadores' | 'verificadores' | 'cajeros';
 
@@ -66,11 +86,11 @@ export class PlantillaComponent implements OnInit {
     private fb: FormBuilder
   ) {
     this.personalForm = this.fb.group({
-      firstName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
-      lastNamePaternal: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
-      lastNameMaternal: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
-      email: ['', [Validators.required, Validators.email, Validators.maxLength(255)]],
-      phone: ['', [Validators.required, Validators.pattern('^[0-9]{10}$')]],
+      firstName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100), nameValidator('nombre')]],
+      lastNamePaternal: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100), nameValidator('apellido paterno')]],
+      lastNameMaternal: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100), nameValidator('apellido materno')]],
+      email: ['', [Validators.required, Validators.maxLength(255), emailValidator()]],
+      phone: ['', [Validators.required, phoneValidator()]],
       branchId: ['']
     });
   }
