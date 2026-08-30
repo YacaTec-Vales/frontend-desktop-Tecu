@@ -60,22 +60,32 @@
 
       <div *ngIf="!isMobileOrTablet" class="w-full">
         <!-- Form -->
-        <form *ngIf="step === 'login'" class="space-y-6" (submit)="onSubmit($event)">
+        <form *ngIf="step === 'login'" class="space-y-6" (submit)="onSubmit($event)" novalidate>
         <div>
           <label for="email" class="block mb-2 text-sm font-extrabold"
-            [ngClass]="error ? 'text-red-700' : 'text-gray-900'">Email</label>
-          <input type="text" name="email" id="email" [(ngModel)]="email"
-            [ngClass]="error ? 'bg-red-50 border border-red-500 text-red-900 placeholder-red-700 focus:ring-red-500 focus:border-red-500' : 'bg-gray-200 border-0 text-gray-900 focus:ring-brand-300'"
+            [ngClass]="emailError ? 'text-red-700' : 'text-gray-900'">Email o Usuario</label>
+          <input type="text" name="email" id="email" [(ngModel)]="email" autocomplete="username"
+            [ngClass]="emailError ? 'bg-red-50 border border-red-500 text-red-900 placeholder-red-700 focus:ring-red-500 focus:border-red-500' : 'bg-gray-200 border-0 text-gray-900 focus:ring-brand-300'"
             class="text-lg rounded-xl focus:ring-4 block w-full p-4 font-semibold transition-all outline-none"
-            placeholder="admin@empresa.com" required>
+            placeholder="admin@empresa.com"
+            [attr.aria-invalid]="!!emailError"
+            [attr.aria-describedby]="emailError ? 'email-error' : null">
+          <p *ngIf="emailError" id="email-error" role="alert" class="mt-2 text-sm text-red-700 font-medium">
+            {{ emailError }}
+          </p>
         </div>
         <div>
           <label for="password" class="block mb-2 text-sm font-extrabold"
-            [ngClass]="error ? 'text-red-700' : 'text-gray-900'">Contraseña</label>
-          <input type="password" name="password" id="password" [(ngModel)]="password"
-            [ngClass]="error ? 'bg-red-50 border border-red-500 text-red-900 placeholder-red-700 focus:ring-red-500 focus:border-red-500' : 'bg-gray-200 border-0 text-gray-900 focus:ring-brand-300'"
+            [ngClass]="passwordError ? 'text-red-700' : 'text-gray-900'">Contrasena</label>
+          <input type="password" name="password" id="password" [(ngModel)]="password" autocomplete="current-password"
+            [ngClass]="passwordError ? 'bg-red-50 border border-red-500 text-red-900 placeholder-red-700 focus:ring-red-500 focus:border-red-500' : 'bg-gray-200 border-0 text-gray-900 focus:ring-brand-300'"
             class="text-lg rounded-xl focus:ring-4 block w-full p-4 font-semibold transition-all outline-none"
-            placeholder="••••••••" required>
+            placeholder="Minimo 8 caracteres"
+            [attr.aria-invalid]="!!passwordError"
+            [attr.aria-describedby]="passwordError ? 'password-error' : null">
+          <p *ngIf="passwordError" id="password-error" role="alert" class="mt-2 text-sm text-red-700 font-medium">
+            {{ passwordError }}
+          </p>
         </div>
 
         <button type="submit" [disabled]="isLoading"
@@ -98,15 +108,23 @@
       </form>
 
       <!-- Form: MFA Verify -->
-      <form *ngIf="step === 'mfa_verify'" class="space-y-6" (submit)="onMfaVerify($event)">
+      <form *ngIf="step === 'mfa_verify'" class="space-y-6" (submit)="onMfaVerify($event)" novalidate>
         <div class="text-center mb-4">
-          <h3 class="text-2xl font-bold text-gray-900">Verificación de dos pasos</h3>
-          <p class="text-sm text-gray-600 mt-1">Ingresa el código temporal de tu Autenticador.</p>
+          <h3 class="text-2xl font-bold text-gray-900">Verificacion de dos pasos</h3>
+          <p class="text-sm text-gray-600 mt-1">Ingresa el codigo temporal de tu Autenticador.</p>
         </div>
-        
+
         <div>
-            <label for="mfaCodeVerify" class="block mb-2 text-sm font-extrabold text-gray-900 text-center">Código TOTP</label>
-            <input type="text" name="mfaCode" id="mfaCodeVerify" [(ngModel)]="mfaCode" class="bg-gray-200 border-0 text-gray-900 text-2xl tracking-[0.5em] text-center rounded-xl focus:ring-4 focus:ring-brand-300 block w-full p-4 font-bold transition-all outline-none" placeholder="000000" maxlength="6" required>
+            <label for="mfaCodeVerify" class="block mb-2 text-sm font-extrabold text-gray-900 text-center">Codigo TOTP</label>
+            <input type="text" name="mfaCode" id="mfaCodeVerify" [(ngModel)]="mfaCode" autocomplete="one-time-code" inputmode="numeric"
+              [ngClass]="mfaCodeError ? 'bg-red-50 border border-red-500 text-red-900 focus:ring-red-500 focus:border-red-500' : 'bg-gray-200 border-0 text-gray-900 focus:ring-brand-300'"
+              class="text-2xl tracking-[0.5em] text-center rounded-xl focus:ring-4 block w-full p-4 font-bold transition-all outline-none"
+              placeholder="000000" maxlength="6"
+              [attr.aria-invalid]="!!mfaCodeError"
+              [attr.aria-describedby]="mfaCodeError ? 'mfaCodeVerify-error' : null">
+            <p *ngIf="mfaCodeError" id="mfaCodeVerify-error" role="alert" class="mt-2 text-sm text-red-700 font-medium text-center">
+              {{ mfaCodeError }}
+            </p>
         </div>
         
         <button type="submit" [disabled]="isLoading" class="w-full flex justify-center items-center text-white font-bold rounded-xl text-xl px-5 py-4 mt-4 text-center shadow-lg transition-all duration-200" [ngStyle]="{'background-color': '#600C0C', 'opacity': isLoading ? '0.7' : '1'}" [ngClass]="{'hover:opacity-90 hover:-translate-y-0.5': !isLoading, 'cursor-not-allowed': isLoading}">
@@ -187,8 +205,16 @@
         </div>
 
         <div>
-            <label for="mfaCodeSetup" class="block mb-2 text-sm font-extrabold text-gray-900 text-center">Ingresa el código generado</label>
-            <input type="text" name="mfaCode" id="mfaCodeSetup" [(ngModel)]="mfaCode" class="bg-gray-200 border-0 text-gray-900 text-2xl tracking-[0.5em] text-center rounded-xl focus:ring-4 focus:ring-brand-300 block w-full p-4 font-bold transition-all outline-none" placeholder="000000" maxlength="6" required>
+            <label for="mfaCodeSetup" class="block mb-2 text-sm font-extrabold text-gray-900 text-center">Ingresa el codigo generado</label>
+            <input type="text" name="mfaCode" id="mfaCodeSetup" [(ngModel)]="mfaCode" autocomplete="one-time-code" inputmode="numeric"
+              [ngClass]="mfaCodeError ? 'bg-red-50 border border-red-500 text-red-900 focus:ring-red-500 focus:border-red-500' : 'bg-gray-200 border-0 text-gray-900 focus:ring-brand-300'"
+              class="text-2xl tracking-[0.5em] text-center rounded-xl focus:ring-4 block w-full p-4 font-bold transition-all outline-none"
+              placeholder="000000" maxlength="6"
+              [attr.aria-invalid]="!!mfaCodeError"
+              [attr.aria-describedby]="mfaCodeError ? 'mfaCodeSetup-error' : null">
+            <p *ngIf="mfaCodeError" id="mfaCodeSetup-error" role="alert" class="mt-2 text-sm text-red-700 font-medium text-center">
+              {{ mfaCodeError }}
+            </p>
         </div>
         
         <button type="submit" [disabled]="isLoading" class="w-full flex justify-center items-center text-white font-bold rounded-xl text-xl px-5 py-4 mt-4 text-center shadow-lg transition-all duration-200" [ngStyle]="{'background-color': '#600C0C', 'opacity': isLoading ? '0.7' : '1'}" [ngClass]="{'hover:opacity-90 hover:-translate-y-0.5': !isLoading, 'cursor-not-allowed': isLoading}">
@@ -206,20 +232,55 @@
       </form>
 
       <!-- Form: Change Password -->
-      <form *ngIf="step === 'change_password'" class="space-y-6" (submit)="onChangePasswordSubmit($event)">
+      <form *ngIf="step === 'change_password'" class="space-y-6" (submit)="onChangePasswordSubmit($event)" novalidate>
         <div class="text-center mb-4">
-          <h3 class="text-2xl font-bold text-gray-900">Actualizar Contraseña</h3>
-          <p class="text-sm text-gray-600 mt-1">Por seguridad, debes cambiar tu contraseña antes de continuar.</p>
+          <h3 class="text-2xl font-bold text-gray-900">Actualizar Contrasena</h3>
+          <p class="text-sm text-gray-600 mt-1">Por seguridad, debes cambiar tu contrasena antes de continuar.</p>
         </div>
 
         <div>
-          <label for="newPassword" class="block mb-2 text-sm font-extrabold text-gray-900">Nueva Contraseña</label>
-          <input type="password" name="newPassword" id="newPassword" [(ngModel)]="newPassword" class="bg-gray-200 border-0 text-gray-900 rounded-xl focus:ring-4 focus:ring-brand-300 block w-full p-4 font-semibold transition-all outline-none" placeholder="••••••••" required minlength="8">
+          <label for="currentPassword" class="block mb-2 text-sm font-extrabold"
+            [ngClass]="currentPasswordError ? 'text-red-700' : 'text-gray-900'">Contrasena Actual</label>
+          <input type="password" name="currentPassword" id="currentPassword" [(ngModel)]="currentPassword" autocomplete="current-password"
+            [ngClass]="currentPasswordError ? 'bg-red-50 border border-red-500 text-red-900 focus:ring-red-500 focus:border-red-500' : 'bg-gray-200 border-0 text-gray-900 focus:ring-brand-300'"
+            class="text-lg rounded-xl focus:ring-4 block w-full p-4 font-semibold transition-all outline-none"
+            placeholder="Tu contrasena actual"
+            [attr.aria-invalid]="!!currentPasswordError"
+            [attr.aria-describedby]="currentPasswordError ? 'currentPassword-error' : null">
+          <p *ngIf="currentPasswordError" id="currentPassword-error" role="alert" class="mt-2 text-sm text-red-700 font-medium">
+            {{ currentPasswordError }}
+          </p>
         </div>
-        
+
         <div>
-          <label for="confirmPassword" class="block mb-2 text-sm font-extrabold text-gray-900">Confirmar Nueva Contraseña</label>
-          <input type="password" name="confirmPassword" id="confirmPassword" [(ngModel)]="confirmPassword" class="bg-gray-200 border-0 text-gray-900 rounded-xl focus:ring-4 focus:ring-brand-300 block w-full p-4 font-semibold transition-all outline-none" placeholder="••••••••" required minlength="8">
+          <label for="newPassword" class="block mb-2 text-sm font-extrabold"
+            [ngClass]="newPasswordError ? 'text-red-700' : 'text-gray-900'">Nueva Contrasena</label>
+          <input type="password" name="newPassword" id="newPassword" [(ngModel)]="newPassword" autocomplete="new-password"
+            [ngClass]="newPasswordError ? 'bg-red-50 border border-red-500 text-red-900 focus:ring-red-500 focus:border-red-500' : 'bg-gray-200 border-0 text-gray-900 focus:ring-brand-300'"
+            class="text-lg rounded-xl focus:ring-4 block w-full p-4 font-semibold transition-all outline-none"
+            placeholder="Minimo 8 caracteres"
+            [attr.aria-invalid]="!!newPasswordError"
+            [attr.aria-describedby]="newPasswordError ? 'newPassword-error' : 'newPassword-hint'">
+          <p *ngIf="newPasswordError" id="newPassword-error" role="alert" class="mt-2 text-sm text-red-700 font-medium">
+            {{ newPasswordError }}
+          </p>
+          <p *ngIf="!newPasswordError" id="newPassword-hint" class="mt-2 text-xs text-gray-500">
+            La contrasena debe tener al menos una mayuscula, una minuscula y un digito.
+          </p>
+        </div>
+
+        <div>
+          <label for="confirmPassword" class="block mb-2 text-sm font-extrabold"
+            [ngClass]="confirmPasswordError ? 'text-red-700' : 'text-gray-900'">Confirmar Nueva Contrasena</label>
+          <input type="password" name="confirmPassword" id="confirmPassword" [(ngModel)]="confirmPassword" autocomplete="new-password"
+            [ngClass]="confirmPasswordError ? 'bg-red-50 border border-red-500 text-red-900 focus:ring-red-500 focus:border-red-500' : 'bg-gray-200 border-0 text-gray-900 focus:ring-brand-300'"
+            class="text-lg rounded-xl focus:ring-4 block w-full p-4 font-semibold transition-all outline-none"
+            placeholder="Vuelve a escribirla"
+            [attr.aria-invalid]="!!confirmPasswordError"
+            [attr.aria-describedby]="confirmPasswordError ? 'confirmPassword-error' : null">
+          <p *ngIf="confirmPasswordError" id="confirmPassword-error" role="alert" class="mt-2 text-sm text-red-700 font-medium">
+            {{ confirmPasswordError }}
+          </p>
         </div>
 
         <button type="submit" [disabled]="isLoading" class="w-full flex justify-center items-center text-white font-bold rounded-xl text-xl px-5 py-4 mt-4 text-center shadow-lg transition-all duration-200" [ngStyle]="{'background-color': '#600C0C', 'opacity': isLoading ? '0.7' : '1'}" [ngClass]="{'hover:opacity-90 hover:-translate-y-0.5': !isLoading, 'cursor-not-allowed': isLoading}">
