@@ -1,69 +1,152 @@
 <div class="max-w-4xl mx-auto space-y-6 pb-12">
   <div class="mb-8 border-b border-gray-200 pb-4">
-    <h1 class="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight">Motor de Reglas y Configuración</h1>
-    <p class="text-gray-500 dark:text-gray-400 mt-2 text-lg">Establezca los parámetros matemáticos que rigen toda la financiera.</p>
+    <h1 class="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight">Motor de Reglas</h1>
+    <p class="text-gray-500 dark:text-gray-400 mt-2 text-lg">
+      Vista informativa de las tasas y parametros globales del negocio.
+    </p>
   </div>
 
-  <form class="space-y-8">
-    
-    <!-- Sección de Tasas -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-200 dark:bg-gray-800 dark:border-gray-700 overflow-hidden">
-      <div class="bg-gray-50 px-6 py-4 border-b border-gray-200 dark:bg-gray-700 dark:border-gray-600">
-        <h2 class="text-lg font-bold text-gray-900 dark:text-white">Tasas y Comisiones</h2>
+  <!-- Banner informativo -->
+  <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-start gap-3" role="status">
+    <svg class="w-5 h-5 text-blue-600 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+    <div class="text-sm text-blue-800">
+      <p class="font-bold mb-1">Esta vista es solo de consulta.</p>
+      <p>
+        Para editar tasas y parametros globales usa
+        <a routerLink="/gerente-general/configuracion" class="font-bold underline hover:text-blue-900">Configuracion de Negocio</a>.
+        Los dias de corte y pago se configuran por sucursal en
+        <a routerLink="/gerente-general/catalogos" class="font-bold underline hover:text-blue-900">Sucursales</a>
+        (no son globales).
+      </p>
+    </div>
+  </div>
+
+  <!-- Error -->
+  @if (errorMessage()) {
+    <div class="p-4 text-sm text-red-800 rounded-lg bg-red-50 border border-red-200" role="alert">
+      {{ errorMessage() }}
+    </div>
+  }
+
+  <!-- Loading -->
+  @if (isLoading()) {
+    <div class="flex justify-center items-center py-16">
+      <svg class="animate-spin h-8 w-8 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+      </svg>
+    </div>
+  }
+
+  @if (!isLoading() && !errorMessage()) {
+    <!-- Tasas y Comisiones -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+      <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
+        <h2 class="text-lg font-bold text-gray-900">Tasas y Comisiones</h2>
       </div>
       <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Tasa de Interés Base (Quincenal)</label>
+          <label class="block mb-2 text-sm font-medium text-gray-900">Tasa de Interes Base (Quincenal)</label>
           <div class="flex relative">
-            <input type="number" class="rounded-none rounded-s-lg bg-gray-50 border border-gray-300 text-gray-900 focus:ring-brand focus:border-brand block flex-1 min-w-0 w-full text-sm p-2.5" value="12">
+            <input type="text" readonly [value]="getValue('interest_per_period_bps').display"
+              class="rounded-none rounded-s-lg bg-gray-100 border border-gray-300 text-gray-900 block flex-1 min-w-0 w-full text-sm p-2.5 cursor-not-allowed">
+            <span class="inline-flex items-center px-3 text-sm text-gray-900 bg-gray-200 border border-s-0 border-gray-300 rounded-e-md">%</span>
+          </div>
+          @if (getDescription('interest_per_period_bps')) {
+            <p class="mt-1 text-xs text-gray-500">{{ getDescription('interest_per_period_bps') }}</p>
+          }
+        </div>
+        <div>
+          <label class="block mb-2 text-sm font-medium text-gray-900">Multa por Atraso (MXN)</label>
+          <div class="flex relative">
+            <input type="text" readonly [value]="getValue('late_penalty_cents').display"
+              class="rounded-none rounded-s-lg bg-gray-100 border border-gray-300 text-gray-900 block flex-1 min-w-0 w-full text-sm p-2.5 cursor-not-allowed">
+            <span class="inline-flex items-center px-3 text-sm text-gray-900 bg-gray-200 border border-s-0 border-gray-300 rounded-e-md">$</span>
+          </div>
+          @if (getDescription('late_penalty_cents')) {
+            <p class="mt-1 text-xs text-gray-500">{{ getDescription('late_penalty_cents') }}</p>
+          }
+        </div>
+        <div>
+          <label class="block mb-2 text-sm font-medium text-gray-900">Seguro (MXN)</label>
+          <div class="flex relative">
+            <input type="text" readonly [value]="getValue('insurance_cents').display"
+              class="rounded-none rounded-s-lg bg-gray-100 border border-gray-300 text-gray-900 block flex-1 min-w-0 w-full text-sm p-2.5 cursor-not-allowed">
+            <span class="inline-flex items-center px-3 text-sm text-gray-900 bg-gray-200 border border-s-0 border-gray-300 rounded-e-md">$</span>
+          </div>
+          @if (getDescription('insurance_cents')) {
+            <p class="mt-1 text-xs text-gray-500">{{ getDescription('insurance_cents') }}</p>
+          }
+        </div>
+        <div>
+          <label class="block mb-2 text-sm font-medium text-gray-900">Valor por Punto (MXN)</label>
+          <div class="flex relative">
+            <input type="text" readonly [value]="getValue('points_value_cents').display"
+              class="rounded-none rounded-s-lg bg-gray-100 border border-gray-300 text-gray-900 block flex-1 min-w-0 w-full text-sm p-2.5 cursor-not-allowed">
+            <span class="inline-flex items-center px-3 text-sm text-gray-900 bg-gray-200 border border-s-0 border-gray-300 rounded-e-md">$</span>
+          </div>
+          @if (getDescription('points_value_cents')) {
+            <p class="mt-1 text-xs text-gray-500">{{ getDescription('points_value_cents') }}</p>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- Puntos -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+      <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
+        <h2 class="text-lg font-bold text-gray-900">Sistema de Puntos</h2>
+      </div>
+      <div class="p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div>
+          <label class="block mb-2 text-sm font-medium text-gray-900">Divisor de Puntos (MXN)</label>
+          <div class="flex relative">
+            <input type="text" readonly [value]="getValue('points_divisor_cents').display"
+              class="rounded-none rounded-s-lg bg-gray-100 border border-gray-300 text-gray-900 block flex-1 min-w-0 w-full text-sm p-2.5 cursor-not-allowed">
+            <span class="inline-flex items-center px-3 text-sm text-gray-900 bg-gray-200 border border-s-0 border-gray-300 rounded-e-md">$</span>
+          </div>
+        </div>
+        <div>
+          <label class="block mb-2 text-sm font-medium text-gray-900">Multiplicador (%)</label>
+          <div class="flex relative">
+            <input type="text" readonly [value]="getValue('points_multiplier_bps').display"
+              class="rounded-none rounded-s-lg bg-gray-100 border border-gray-300 text-gray-900 block flex-1 min-w-0 w-full text-sm p-2.5 cursor-not-allowed">
             <span class="inline-flex items-center px-3 text-sm text-gray-900 bg-gray-200 border border-s-0 border-gray-300 rounded-e-md">%</span>
           </div>
         </div>
         <div>
-          <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Interés Moratorio (Diario)</label>
+          <label class="block mb-2 text-sm font-medium text-gray-900">Multa por Atraso (%)</label>
           <div class="flex relative">
-            <input type="number" class="rounded-none rounded-s-lg bg-gray-50 border border-gray-300 text-gray-900 focus:ring-brand focus:border-brand block flex-1 min-w-0 w-full text-sm p-2.5" value="1.5">
+            <input type="text" readonly [value]="getValue('points_late_penalty_bps').display"
+              class="rounded-none rounded-s-lg bg-gray-100 border border-gray-300 text-gray-900 block flex-1 min-w-0 w-full text-sm p-2.5 cursor-not-allowed">
             <span class="inline-flex items-center px-3 text-sm text-gray-900 bg-gray-200 border border-s-0 border-gray-300 rounded-e-md">%</span>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Sección de Ciclos -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-200 dark:bg-gray-800 dark:border-gray-700 overflow-hidden">
-      <div class="bg-gray-50 px-6 py-4 border-b border-gray-200 dark:bg-gray-700 dark:border-gray-600">
-        <h2 class="text-lg font-bold text-gray-900 dark:text-white">Ciclos de Facturación</h2>
+    <!-- Cortes por sucursal (NO globales) -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+      <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
+        <h2 class="text-lg font-bold text-gray-900">Ciclos de Facturacion</h2>
       </div>
-      <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-          <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Día de Corte (1ra Quincena)</label>
-          <select class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand focus:border-brand block w-full p-2.5">
-            <option>10</option>
-            <option selected>12</option>
-            <option>15</option>
-          </select>
-        </div>
-        <div>
-          <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Día de Pago (1ra Quincena)</label>
-          <select class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand focus:border-brand block w-full p-2.5">
-            <option>15</option>
-            <option selected>17</option>
-            <option>20</option>
-          </select>
-        </div>
+      <div class="p-6 space-y-3">
+        <p class="text-sm text-gray-700">
+          Los dias de corte y pago <strong>no son configurables globalmente</strong>;
+          cada sucursal tiene los suyos. Edita la configuracion de una sucursal
+          especifica desde
+          <a routerLink="/gerente-general/catalogos" class="text-brand font-bold hover:underline">Sucursales</a>.
+        </p>
       </div>
     </div>
 
-    <!-- Botones -->
+    <!-- Boton para ir a Configuracion -->
     <div class="flex justify-end gap-4 border-t border-gray-200 pt-6">
-      <button type="button" class="px-5 py-2.5 text-sm font-medium text-gray-900 bg-white rounded-lg border border-gray-200 hover:bg-gray-100 focus:ring-4 focus:ring-gray-100">
-        Restaurar Valores
-      </button>
-      <button type="button" class="px-5 py-2.5 text-sm font-bold text-white rounded-lg shadow-sm hover:opacity-90" style="background-color: #600C0C;">
-        Guardar Configuración Global
-      </button>
+      <app-button variant="primary" (onClick)="goToConfiguracion()">
+        Ir a Configuracion de Negocio (editar)
+      </app-button>
     </div>
-
-  </form>
-
+  }
 </div>
