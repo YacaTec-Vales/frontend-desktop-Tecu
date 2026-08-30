@@ -81,6 +81,30 @@ export class ConfiguracionComponent implements OnInit {
   }
 
   guardarConfiguracion() {
+    this.errorMessage = '';
+
+    // Validacion cliente: campos numericos >= 0 y finitos.
+    const campos: Array<{ name: string; value: number | null; max?: number }> = [
+      { name: 'Seguro (MXN)', value: this.insurancePesos, max: 1_000_000 },
+      { name: 'Interes por periodo (%)', value: this.interestPercent, max: 100 },
+      { name: 'Multa por atraso (MXN)', value: this.latePenaltyPesos, max: 1_000_000 },
+      { name: 'Divisor de puntos (MXN)', value: this.pointsDivisorPesos, max: 1_000_000 },
+      { name: 'Multiplicador de puntos (%)', value: this.pointsMultiplierPercent, max: 1000 },
+      { name: 'Valor por punto (MXN)', value: this.pointsValuePesos, max: 1_000_000 },
+      { name: 'Multa por atraso de puntos (%)', value: this.pointsLatePenaltyPercent, max: 100 },
+    ];
+
+    for (const c of campos) {
+      if (c.value === null || !Number.isFinite(c.value) || c.value < 0) {
+        this.errorMessage = `El campo "${c.name}" debe ser un numero valido mayor o igual a 0.`;
+        return;
+      }
+      if (c.max !== undefined && c.value > c.max) {
+        this.errorMessage = `El campo "${c.name}" no puede ser mayor a ${c.max.toLocaleString('es-MX')}.`;
+        return;
+      }
+    }
+
     this.isSaving = true;
     this.successMessage = '';
     this.errorMessage = '';

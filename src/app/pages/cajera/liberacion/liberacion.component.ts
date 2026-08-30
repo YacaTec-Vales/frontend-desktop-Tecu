@@ -63,7 +63,13 @@ export class LiberacionComponent {
       this.reset();
       return;
     }
-    
+    if (!/^[A-Z]{2,5}-\d{4,8}$/.test(folioLimpio.toUpperCase())) {
+      this.errorBusqueda = 'Formato invalido. Use XXX-1234 (2-5 letras MAYUSCULAS, guion, 4-8 digitos).';
+      this.valeEncontrado = null;
+      this.isLoading = false;
+      return;
+    }
+
     this.isLoading = true;
     this.errorBusqueda = '';
     this.valeEncontrado = null;
@@ -120,7 +126,8 @@ export class LiberacionComponent {
     if (this.valeEncontrado.tipo === 'Pre-Vale') {
       return this.ineValidado && this.comprobanteValidado;
     }
-    return this.ineValidado && this.autorizacionBancaria.length > 3;
+    // Para vales digitales, la autorizacion bancaria debe ser una CLABE valida (18 digitos).
+    return this.ineValidado && /^\d{18}$/.test(this.autorizacionBancaria.trim());
   }
 
   liberarPago() {
@@ -189,7 +196,31 @@ export class LiberacionComponent {
 
   async submitDiscrepancy() {
     if (!this.valeEncontrado?.folio) return;
-    
+
+    // Validacion cliente antes de enviar.
+    const desc = (this.discrepancyData.description || '').trim();
+    const clabe = (this.discrepancyData.clabe || '').trim();
+    if (desc.length < 5) {
+      this.discrepancyError = 'La descripcion debe tener al menos 5 caracteres.';
+      return;
+    }
+    if (desc.length > 500) {
+      this.discrepancyError = 'La descripcion no puede tener mas de 500 caracteres.';
+      return;
+    }
+    if (!/^\d{18}$/.test(clabe)) {
+      this.discrepancyError = 'La CLABE debe tener exactamente 18 digitos.';
+      return;
+    }
+    if ((this.discrepancyData.fullName || '').trim().length < 2) {
+      this.discrepancyError = 'El nombre debe tener al menos 2 caracteres.';
+      return;
+    }
+    if ((this.discrepancyData.banco || '').trim().length < 2) {
+      this.discrepancyError = 'El banco debe tener al menos 2 caracteres.';
+      return;
+    }
+
     this.isSubmittingDiscrepancy = true;
     this.discrepancyError = '';
     
