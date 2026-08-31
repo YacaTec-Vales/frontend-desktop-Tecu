@@ -588,6 +588,54 @@ export class CatalogosComponent implements OnInit {
     this.entityToDeactivate = null;
   }
 
+  /**
+   * BUG FIX 2026-08-31: reenvia el correo de bienvenida al usuario
+   * objetivo. Tiene rate limit exponencial en el backend (5min, 10min,
+   * 20min, ..., 24h max). Si el backend responde 429 (cooldown), muestra
+   * el tiempo de espera al usuario.
+   */
+  reenviarCredenciales(emp: { id: string; firstName?: string; lastNamePaternal?: string }): void {
+    const nombre = `${emp.firstName ?? ''} ${emp.lastNamePaternal ?? ''}`.trim() || emp.id;
+    if (!confirm(`Reenviar credenciales a ${nombre}?\n\nEsto genera una nueva contrasena temporal y envia un nuevo correo.`)) {
+      return;
+    }
+    this.staffService.resendWelcome(emp.id).subscribe({
+      next: (res) => {
+        if (res.emailSent) {
+          this.flashProductoSuccess(
+            `Credenciales reenviadas a ${nombre}. Revisa su correo.`,
+            5000,
+          );
+        } else {
+          this.flashProductoSuccess(
+            `Usuario actualizado pero el correo fallo. Pedir al admin que revise Mailgun.`,
+            6000,
+          );
+        }
+      },
+      error: (err) => {
+        const code = err?.error?.error?.code;
+        const details = err?.error?.error?.details;
+        if (code === 'USERS.WELCOME_RESEND_COOLDOWN') {
+          const mins = details?.cooldownMinutes ?? 5;
+          const retry = details?.retryAfterSeconds ?? 300;
+          const mins2 = Math.ceil(retry / 60);
+          this.flashProductoSuccess(
+            `Espera ${mins} min entre reenvios al mismo usuario. Reintenta en ${mins2} min.`,
+            8000,
+          );
+        } else if (code === 'USERS.NOT_FOUND') {
+          this.flashProductoSuccess(`Usuario no encontrado.`, 5000);
+        } else {
+          this.flashProductoSuccess(
+            `Error al reenviar credenciales: ${err?.error?.message ?? 'desconocido'}`,
+            8000,
+          );
+        }
+      },
+    });
+  }
+
   // Categorias
   abrirModalCategoria(cat?: CreditCategory) {
     this.categoriaError = null;
