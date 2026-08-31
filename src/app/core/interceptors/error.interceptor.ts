@@ -36,6 +36,14 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
         } else if (originalCode === 'AUTH.WRONG_CLIENT_APP') {
           userFriendlyMessage =
             'Esta acción solo puede hacerse desde la aplicación Tecu.';
+        } else if (originalCode === 'AUTH.ORIGIN_NOT_ALLOWED') {
+          // FASE A: el backend rechazo el login porque el origen del
+          // request (header X-Origin que pone nginx) no esta en
+          // `user.allowed_origin`. Para ADMINISTRADOR el unico origen
+          // permitido es 'vpn'. El mensaje del backend trae el detalle.
+          const details = originalError.details || originalError.error?.details;
+          const allowed = details?.allowedOrigins?.join(' o ') ?? 'red privada';
+          userFriendlyMessage = `Esta cuenta solo puede iniciar sesion desde ${allowed}. Si necesitas entrar como administrador, abre vpn.taquizaschavez.com.mx.`;
         } else {
           userFriendlyMessage = 'No tiene permisos para realizar esta acción.';
         }
