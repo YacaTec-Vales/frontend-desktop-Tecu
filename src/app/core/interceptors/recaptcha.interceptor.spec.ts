@@ -95,13 +95,23 @@ describe('recaptchaInterceptor', () => {
     expect(recaptchaMock.getToken).not.toHaveBeenCalled();
   });
 
-  it('envía la petición sin header si Google falla (fail-open)', async () => {
+  it('rechaza la peticion si Google falla (fail-closed)', async () => {
     recaptchaMock.getToken.mockRejectedValue(new Error('google down'));
 
-    http.post('/api/v1/vales', {}).subscribe();
+    let receivedError: unknown;
+    http.post('/api/v1/vales', {}).subscribe({
+      error: (err) => {
+        receivedError = err;
+      },
+    });
 
-    const req = await expectOneWithRetry('/api/v1/vales');
-    expect(req.request.headers.has(RECAPTCHA_TOKEN_HEADER)).toBe(false);
-    req.flush({});
+    await vi.waitFor(() => {
+      expect(receivedError).toBeDefined();
+    });
+    expect((receivedError as Error).message).toMatch(/No se pudo verificar reCAPTCHA/);
+
+    // El request NUNCA debe salir: si llegara, controller.expectOne fallaría
+    // (no fue llamado dentro del waitFor y la suscripcion ya errored).
+    expect(() => controller.expectOne('/api/v1/vales')).toThrow();
   });
 });
