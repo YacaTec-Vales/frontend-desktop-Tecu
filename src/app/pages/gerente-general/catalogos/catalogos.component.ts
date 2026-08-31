@@ -1,4 +1,6 @@
-import { Component, OnInit, ChangeDetectorRef, ViewChild } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, ViewChild, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { timer } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormsModule } from '@angular/forms';
 import { CardComponent } from '../../../components/ui/card/card';
@@ -140,7 +142,8 @@ export class CatalogosComponent implements OnInit {
     private productService: ProductService,
     private categoryService: CategoryService,
     private cdr: ChangeDetectorRef,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private destroyRef: DestroyRef
   ) {
     this.productoForm = this.fb.group({
       code: ['', [Validators.required, Validators.pattern('^\\d{1,3}/\\d{1,3}$')]],
@@ -175,6 +178,23 @@ export class CatalogosComponent implements OnInit {
       name: ['', [Validators.required, Validators.minLength(2), nameValidator('nombre de categoria')]],
       ganancia: [null, [Validators.required, Validators.min(0), Validators.max(1)]]
     });
+  }
+
+  /**
+   * Helper: muestra `productoSuccess` por `delayMs` y luego la limpia
+   * automaticamente. Si el usuario navega fuera del componente antes
+   * del timeout (ej. logout), `takeUntilDestroyed` cancela la
+   * suscripcion y evita el `cdr.detectChanges()` sobre un componente
+   * destruido (BUG FIX 2026-08-31 startTime).
+   */
+  private flashProductoSuccess(msg: string, delayMs: number): void {
+    this.productoSuccess = msg;
+    timer(delayMs)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
+        this.productoSuccess = null;
+        this.cdr.detectChanges();
+      });
   }
 
   ngOnInit() {
@@ -436,10 +456,9 @@ export class CatalogosComponent implements OnInit {
         };
         this.productService.updateProduct(this.productoActivo.id, updateDto).subscribe({
           next: () => {
-            this.productoSuccess = 'Producto actualizado exitosamente.';
+            this.flashProductoSuccess('Producto actualizado exitosamente.', 4000);
             this.loadActiveTab(true);
             this.cerrarModalProducto();
-            setTimeout(() => { this.productoSuccess = null; this.cdr.detectChanges(); }, 4000);
           },
           error: (err) => {
             this.productoError = err.error?.message || 'Error al actualizar el producto.';
@@ -451,9 +470,9 @@ export class CatalogosComponent implements OnInit {
         this.productService.createProduct(dto as CreateProductDto).subscribe({
           next: () => {
             this.productoSuccess = 'Producto creado exitosamente.';
+            this.flashProductoSuccess('Producto creado exitosamente.', 4000);
             this.loadActiveTab(true);
             this.cerrarModalProducto();
-            setTimeout(() => { this.productoSuccess = null; this.cdr.detectChanges(); }, 4000);
           },
           error: (err) => {
             this.productoError = err.error?.message || 'Error al crear el producto. Revisa que el código no exista.';
@@ -513,9 +532,8 @@ export class CatalogosComponent implements OnInit {
       if (p) {
         this.productService.deleteProduct(p.id).subscribe({
           next: () => {
-            this.productoSuccess = 'Producto desactivado exitosamente.';
+            this.flashProductoSuccess('Producto desactivado exitosamente.', 4000);
             this.loadActiveTab(true);
-            setTimeout(() => { this.productoSuccess = null; this.cdr.detectChanges(); }, 4000);
           },
           error: (err) => {
             console.error('Error al desactivar el producto:', err);

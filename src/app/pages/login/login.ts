@@ -1,11 +1,12 @@
-import { Component, inject, ChangeDetectorRef, OnInit, OnDestroy } from '@angular/core';
+import { Component, inject, ChangeDetectorRef, OnInit, OnDestroy, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../core/services/auth.service';
 import { QRCodeComponent } from 'angularx-qrcode';
 import { LayoutModule, BreakpointObserver } from '@angular/cdk/layout';
-import { Subject } from 'rxjs';
+import { Subject, timer } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import {
   validateEmail,
@@ -60,6 +61,7 @@ export class Login implements OnInit, OnDestroy {
   private authService = inject(AuthService);
   private cdr = inject(ChangeDetectorRef);
   private breakpointObserver = inject(BreakpointObserver);
+  private destroyRef = inject(DestroyRef);
   private destroyed = new Subject<void>();
 
   ngOnInit() {
@@ -400,10 +402,20 @@ export class Login implements OnInit, OnDestroy {
     this.copyFeedback = ok ? '¡Copiado!' : 'No se pudo copiar';
     this.cdr.detectChanges();
     if (ok) {
-      setTimeout(() => {
-        this.copyFeedback = '';
-        this.cdr.detectChanges();
-      }, 2000);
+      // BUG FIX 2026-08-31 (BUG-4 startTime): antes usabamos setTimeout
+      // directo. Si el usuario hacia logout (o navega a otra pagina)
+      // antes de los 2000ms, el callback se ejecutaba sobre un
+      // componente destruido y `this.cdr.detectChanges()` fallaba
+      // con `Cannot read properties of undefined (reading 'startTime')`.
+      // Usamos RxJS timer + takeUntilDestroyed (Angular 16+) para
+      // que la subscripcion se cancele automaticamente al destruir el
+      // componente.
+      timer(2000)
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe(() => {
+          this.copyFeedback = '';
+          this.cdr.detectChanges();
+        });
     }
   }
 }
