@@ -199,6 +199,28 @@ export class CatalogosComponent implements OnInit {
 
   ngOnInit() {
     this.loadActiveTab();
+    // BUG FIX 2026-08-31: pre-cargar TODAS las sucursales para alimentar
+    // (1) el dropdown del modal de edicion de personal y
+    // (2) la columna "Sucursal" de la tabla (getBranchName).
+    // Antes se cargaban solo al visitar la tab "sucursales" con paginacion
+    // de 10, lo que causaba "Desconocida" en la tab personal y dropdown
+    // vacio al editar coord/verif/cajero/gerente.
+    this.loadAllBranchesForDropdowns();
+  }
+
+  /**
+   * Carga TODAS las sucursales (sin paginacion) para uso exclusivo de
+   * dropdowns y resolucion de nombres. NO usa el listado paginado que
+   * muestra la tabla principal.
+   */
+  private loadAllBranchesForDropdowns(): void {
+    this.branchService.getBranches(1, 1000, '').subscribe({
+      next: (res) => {
+        this.sucursales = res.data || [];
+        this.cdr.detectChanges();
+      },
+      error: () => { /* silencioso: las tablas mostraran 'Desconocida' */ }
+    });
   }
 
   loadActiveTab(forceRefresh: boolean = false) {
