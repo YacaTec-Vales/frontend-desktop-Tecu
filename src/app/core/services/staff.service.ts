@@ -11,7 +11,12 @@ export interface Gerente {
   lastNameMaternal: string;
   email: string;
   phone: string;
-  branchId: string;
+  /**
+   * FK a la sucursal. BUG FIX 2026-08-31: para GERENTE_GENERAL
+   * el backend devuelve null (CHECK constraint chk_user_gerente_general_branch).
+   * Antes era `string` lo que hacia imposible reflejar null al editar un GG.
+   */
+  branchId: string | null;
 }
 
 import { map } from 'rxjs/operators';
