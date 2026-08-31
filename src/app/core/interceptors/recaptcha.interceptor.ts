@@ -11,61 +11,43 @@ export const RECAPTCHA_TOKEN_HEADER = 'x-recaptcha-token';
 const MUTATING_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 
 /**
- * Endpoints donde la verificacion reCAPTCHA es CRITICA. Si grecaptcha
- * falla en estos endpoints, NO hacemos fail-open silencioso: lanzamos
- * un error claro al usuario en vez de un 400 RECAPTCHA.MISSING
- * misterioso. El usuario sabra que recargar o desactivar su ad blocker.
+ * FASE BUG-3 (2026-08-31): el backend (`RecaptchaGuard` global) exige
+ * token en TODOS los metodos mutantes (POST/PUT/PATCH/DELETE) excepto
+ * los que tengan `@SkipRecaptcha()` o `@Public()`. Antes este
+ * interceptor tenia una whitelist `CRITICAL_PATHS` incompleta que NO
+ * cubria paths como `/products/`, `/solicitudes/`, `/categories/`,
+ * `/distributors/`, etc., y por tanto el backend rechazaba esos POSTs
+ * con 400 RECAPTCHA.MISSING.
  *
- * Cualquier endpoint de autenticacion, MFA o gestion de identidad
- * entra aqui. Para el resto (CRUD de negocio, uploads, etc.) se mantiene
- * fail-open porque la verificacion antifraude ya la cubre `VpnOriginGuard`
- * + `PermissionsGuard` en backend.
+ * Solucion: inyectar token en TODO request mutante. El backend decide
+ * si el endpoint lo requiere via `@SkipRecaptcha()` / `@Public()`.
+ * Si grecaptcha falla, fail-CLOSED en TODOS los endpoints (antes era
+ * fail-open para los no-criticos, pero esa diferenciacion ya no
+ * aplica porque TODOS son criticos).
  */
-const CRITICAL_PATHS = [
-  '/auth/login',
-  '/auth/mfa-verify',
-  '/auth/refresh',
-  '/auth/logout',
-  '/auth/password-reset',
-  '/mfa/setup',
-  '/mfa/verify-setup',
-  '/mfa/disable',
-  '/sessions/',
-  '/users/',
-  '/branches/',
-  '/business-config/',
-];
-
-function isCriticalEndpoint(url: string): boolean {
-  return CRITICAL_PATHS.some((p) => url.includes(p));
+function shouldInjectForMethod(method: string): boolean {
+  return MUTATING_METHODS.has(method.toUpperCase());
 }
 
 /**
- * Adjunta un token fresco de reCAPTCHA v3 a cada petición mutante
+ * Adjunta un token fresco de reCAPTCHA v3 a cada peticion mutante
  * (POST/PUT/PATCH/DELETE) via `x-recaptcha-token`.
  *
  * Comportamiento:
  *  - GET/HEAD/OPTIONS pasan sin token.
- *  - Con `recaptchaSiteKey` vacía (dev) pasa sin tocar la petición.
+ *  - Con `recaptchaSiteKey` vacia (dev) pasa sin tocar la peticion.
  *  - El servicio cachea el token por ~100s, asi flujos como
  *    login -> mfa/setup -> mfa/verify-setup reusan el mismo token.
- *  - Endpoints CRITICOS: si grecaptcha falla, fail-CLOSED (error al
- *    usuario) para que sepa que recargue o desactive su ad blocker.
- *  - Otros endpoints: fail-OPEN (request sale sin token) para no
- *    bloquear features de negocio si grecaptcha tiene un falso
- *    positivo.
+ *  - Si grecaptcha falla: fail-CLOSED (error al usuario) para que sepa
+ *    que recargue o desactive su ad blocker. Esto aplica a TODOS los
+ *    endpoints mutantes porque el backend SIEMPRE exige token.
  */
 export const recaptchaInterceptor: HttpInterceptorFn = (req, next) => {
   const recaptcha = inject(RecaptchaService);
 
-  if (
-    !MUTATING_METHODS.has(req.method.toUpperCase()) ||
-    !recaptcha.isEnabled
-  ) {
+  if (!shouldInjectForMethod(req.method) || !recaptcha.isEnabled) {
     return next(req);
   }
-
-  const critical = isCriticalEndpoint(req.url);
 
   return from(recaptcha.getToken()).pipe(
     switchMap((token) =>
@@ -77,18 +59,13 @@ export const recaptchaInterceptor: HttpInterceptorFn = (req, next) => {
     ),
     catchError((err) => {
       console.error(
-        `[reCAPTCHA] ${critical ? 'CRITICAL fail-CLOSED' : 'fail-open'}: ` +
-        `${req.method} ${req.url}`,
+        `[reCAPTCHA] fail-CLOSED: ${req.method} ${req.url}`,
         err,
       );
-      if (critical) {
-        // FAIL-CLOSED: el usuario ve un mensaje claro, no un 400 silencioso.
-        return throwError(() => new Error(
-          'No se pudo verificar reCAPTCHA. Recarga la pagina o desactiva el bloqueador de anuncios.'
-        ));
-      }
-      // FAIL-OPEN: solo para endpoints no criticos.
-      return next(req);
+      // FAIL-CLOSED: el usuario ve un mensaje claro, no un 400 silencioso.
+      return throwError(() => new Error(
+        'No se pudo verificar reCAPTCHA. Recarga la pagina o desactiva el bloqueador de anuncios.'
+      ));
     }),
   );
 };
