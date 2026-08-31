@@ -100,6 +100,26 @@ export class StaffService {
   }
 
   /**
+   * Reenvia el correo de bienvenida (con nueva contrasena temporal) al
+   * usuario objetivo. Tiene rate limit exponencial en el backend (5min,
+   * 10min, 20min, ..., 24h max). Si el backend responde 429-like,
+   * retorna el error al componente que lo muestra al usuario.
+   *
+   * Permisos requeridos: user.update O user.read. ADMIN/GG/GS tienen
+   * alguno de los dos.
+   *
+   * BUG FIX 2026-08-31: el gerente necesitaba poder reenviar el correo
+   * de bienvenida cuando el primero no llego (spam, email mal tipeado,
+   * contrasena expirada).
+   */
+  resendWelcome(userId: string): Observable<{ emailSent: boolean }> {
+    return this.http.post<{ data: { emailSent: boolean } }>(
+      `${this.baseUrl}/users/${userId}/resend-welcome`,
+      {},
+    ).pipe(map(res => res.data));
+  }
+
+  /**
    * Crea al unico Gerente General del sistema. Backend exige `branchId = null`
    * (CHECK `chk_user_gerente_general_branch`) y el admin debe tener el
    * permiso dedicado `user.create.general_manager`. El backend enforce la
