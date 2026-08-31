@@ -4,6 +4,7 @@ import { RouterModule, Router } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { VpnIndicatorComponent } from '../../../core/components/vpn-indicator/vpn-indicator.component';
 import { VpnReadonlyBannerComponent } from '../../../core/components/vpn-readonly-banner/vpn-readonly-banner.component';
+import { DesktopOnlyBannerComponent } from '../../../components/ui/desktop-only-banner/desktop-only-banner.component';
 
 @Component({
   selector: 'app-gerente-sucursal-layout',
@@ -13,7 +14,7 @@ import { VpnReadonlyBannerComponent } from '../../../core/components/vpn-readonl
     RouterModule,
     VpnIndicatorComponent,
     VpnReadonlyBannerComponent,
-  ],
+    DesktopOnlyBannerComponent,],
   templateUrl: './layout.component.html'
 })
 export class LayoutComponent {

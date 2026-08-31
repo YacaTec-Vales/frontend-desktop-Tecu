@@ -4,10 +4,12 @@ import { RouterModule, Router } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { BootstrapService } from '../../../core/services/bootstrap.service';
 import { VpnIndicatorComponent } from '../../../core/components/vpn-indicator/vpn-indicator.component';
+import { DesktopOnlyBannerComponent } from '../../../components/ui/desktop-only-banner/desktop-only-banner.component';
 
 @Component({
   selector: 'app-admin-layout',
-  imports: [CommonModule, RouterModule, VpnIndicatorComponent],
+  imports: [CommonModule, RouterModule, VpnIndicatorComponent,
+    DesktopOnlyBannerComponent,],
   templateUrl: './layout.component.html',
 })
 export class LayoutComponent {
