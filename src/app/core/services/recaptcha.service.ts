@@ -2,6 +2,19 @@ import { Service } from '@angular/core';
 
 import { environment } from '../../../environments/environment';
 
+/**
+ * Snapshot eager del siteKey con fallback a `globalThis.__MISVALES_RECAPTCHASITEKEY__`
+ * si el tree-shaker movio el environment a chunk lazy.
+ */
+function resolveSiteKey(): string {
+  const fromImport = environment.recaptchaSiteKey;
+  if (fromImport) return fromImport;
+  const fromGlobal = (globalThis as unknown as Record<string, unknown>)
+    ['__MISVALES_RECAPTCHASITEKEY__'];
+  return typeof fromGlobal === 'string' ? fromGlobal : '';
+}
+const RECAPTCHA_SITE_KEY_EAGER: string = resolveSiteKey();
+
 /** Contrato mínimo del global `grecaptcha` que expone reCAPTCHA v3. */
 interface GrecaptchaV3 {
   ready(callback: () => void): void;
@@ -37,14 +50,14 @@ export const DEFAULT_RECAPTCHA_ACTION = 'submit';
  * uno nuevo con `grecaptcha.execute()`.
  *
  * El servicio PRE-CARGA el script de Google en cuanto se instancia
- * (constructor), para que cuando el usuario haga el primer POST ya
+  * (constructor), para que cuando el usuario haga el primer POST ya
  * haya `window.grecaptcha` disponible. Sin esta precarga, el primer
  * request puede dispararse antes de que el script termine de cargar y
  * el backend responde 400 RECAPTCHA.MISSING.
  */
 @Service()
 export class RecaptchaService {
-  private readonly siteKey = environment.recaptchaSiteKey;
+  private readonly siteKey = RECAPTCHA_SITE_KEY_EAGER;
   private scriptLoading?: Promise<void>;
 
   constructor() {

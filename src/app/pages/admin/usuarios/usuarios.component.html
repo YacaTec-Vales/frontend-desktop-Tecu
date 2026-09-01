@@ -1,0 +1,142 @@
+<div class="max-w-7xl mx-auto space-y-6 pb-12">
+
+  <div class="flex justify-between items-end mb-8">
+    <div>
+      <h1 class="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight">
+        Usuarios del Sistema
+      </h1>
+      <p class="text-gray-500 dark:text-gray-400 mt-2 text-lg">
+        Lista de usuarios internos. Reenvia el correo de bienvenida (con nueva contrasena temporal)
+        cuando el primero no llego o la contrasena expiro.
+      </p>
+    </div>
+    <div class="flex gap-3">
+      <button type="button" (click)="load()" [disabled]="isLoading()"
+        class="px-5 py-2.5 text-sm font-medium text-gray-900 bg-white rounded-lg border border-gray-200 hover:bg-gray-100 disabled:opacity-50">
+        Refrescar
+      </button>
+    </div>
+  </div>
+
+  <!-- Filtros -->
+  <div class="bg-white rounded-xl shadow-sm border border-gray-200 dark:bg-gray-800 dark:border-gray-700 p-4">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div>
+        <label for="u-search" class="block text-xs font-medium text-gray-700 mb-1">Buscar</label>
+        <input id="u-search" type="text"
+          [value]="searchTerm()"
+          (input)="searchTerm.set(($any($event.target).value))"
+          (keyup.enter)="onFilterChange()"
+          placeholder="Nombre, correo..."
+          class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand focus:border-brand block w-full p-2.5" />
+      </div>
+      <div>
+        <label for="u-role" class="block text-xs font-medium text-gray-700 mb-1">Rol</label>
+        <select id="u-role"
+          [value]="filterRole()"
+          (change)="filterRole.set($any($event.target).value); onFilterChange()"
+          class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand focus:border-brand block w-full p-2.5">
+          <option value="">Todos</option>
+          @for (r of ROLES; track r) {
+            <option [value]="r">{{ roleLabel(r) }}</option>
+          }
+        </select>
+      </div>
+      <div>
+        <label for="u-branch" class="block text-xs font-medium text-gray-700 mb-1">Sucursal</label>
+        <select id="u-branch"
+          [value]="filterBranch()"
+          (change)="filterBranch.set($any($event.target).value); onFilterChange()"
+          class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand focus:border-brand block w-full p-2.5">
+          <option value="">Todas</option>
+          @for (b of branches(); track b.id) {
+            <option [value]="b.id">{{ b.name }} {{ b.esMatriz ? '(MATRIZ)' : '' }}</option>
+          }
+        </select>
+      </div>
+      <div class="flex items-end">
+        <button type="button" (click)="onFilterChange()" [disabled]="isLoading()"
+          class="w-full px-5 py-2.5 text-sm font-medium text-white bg-brand rounded-lg hover:opacity-90 disabled:opacity-50 transition">
+          Aplicar filtros
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabla -->
+  <div class="bg-white rounded-xl shadow-sm border border-gray-200 dark:bg-gray-800 dark:border-gray-700 overflow-hidden">
+    <div class="p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+      <h2 class="text-sm font-medium text-gray-700">
+        Usuarios ({{ total() }})
+      </h2>
+    </div>
+
+    @if (isLoading() && users().length === 0) {
+      <div class="p-6 text-gray-400 italic text-sm">Cargando usuarios...</div>
+    } @else if (users().length === 0) {
+      <div class="p-6 text-gray-400 italic text-sm">
+        No hay usuarios que coincidan con los filtros.
+      </div>
+    } @else {
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+          <thead class="text-xs text-gray-700 uppercase bg-gray-100 dark:bg-gray-700 dark:text-gray-400">
+            <tr>
+              <th class="px-6 py-3">Nombre</th>
+              <th class="px-6 py-3">Correo</th>
+              <th class="px-6 py-3">Rol</th>
+              <th class="px-6 py-3">Sucursal</th>
+              <th class="px-6 py-3 text-right">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (u of users(); track trackById(0, u)) {
+              <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50">
+                <td class="px-6 py-3 font-medium text-gray-900 dark:text-white">
+                  {{ u.firstName }} {{ u.lastNamePaternal }} {{ u.lastNameMaternal }}
+                </td>
+                <td class="px-6 py-3 font-mono text-xs">{{ u.email }}</td>
+                <td class="px-6 py-3">
+                  <span class="px-2 py-0.5 rounded text-xs bg-blue-100 text-blue-800">
+                    {{ roleLabel(u.roleCode) }}
+                  </span>
+                </td>
+                <td class="px-6 py-3">{{ branchName(u.branchId) }}</td>
+                <td class="px-6 py-3 text-right">
+                  <button type="button" (click)="resendWelcome(u)"
+                    [disabled]="resendingId() === u.id"
+                    class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-white bg-brand rounded hover:opacity-90 disabled:opacity-50">
+                    @if (resendingId() === u.id) {
+                      <span>Reenviando...</span>
+                    } @else {
+                      <span>Reenviar credenciales</span>
+                    }
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      @if (totalPages() > 1) {
+        <div class="p-4 flex items-center justify-between border-t border-gray-200 dark:border-gray-700">
+          <span class="text-xs text-gray-500">
+            Pagina {{ page() }} de {{ totalPages() }}
+          </span>
+          <div class="flex gap-2">
+            <button type="button" (click)="goPage(page() - 1)" [disabled]="page() <= 1"
+              class="px-3 py-1.5 text-xs font-medium text-gray-900 bg-white rounded border border-gray-200 hover:bg-gray-100 disabled:opacity-50">
+              Anterior
+            </button>
+            <button type="button" (click)="goPage(page() + 1)" [disabled]="page() >= totalPages()"
+              class="px-3 py-1.5 text-xs font-medium text-gray-900 bg-white rounded border border-gray-200 hover:bg-gray-100 disabled:opacity-50">
+              Siguiente
+            </button>
+          </div>
+        </div>
+      }
+    }
+  </div>
+
+</div>

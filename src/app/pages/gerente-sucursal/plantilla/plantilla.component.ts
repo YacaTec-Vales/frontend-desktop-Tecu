@@ -15,6 +15,7 @@ import {
   validateName,
   validateEmail,
   validatePhone,
+  validateUsername,
 } from '../../../core/validators/form-validators';
 
 const nameValidator = (fieldName: string) => (control: { value: string | null | undefined }) => {
@@ -30,6 +31,11 @@ const emailValidator = () => (control: { value: string | null | undefined }) => 
 const phoneValidator = () => (control: { value: string | null | undefined }) => {
   const err = validatePhone(control.value);
   return err ? { phone: { message: err } } : null;
+};
+
+const usernameValidator = () => (control: { value: string | null | undefined }) => {
+  const err = validateUsername(control.value);
+  return err ? { username: { message: err } } : null;
 };
 
 type PersonalTab = 'coordinadores' | 'verificadores' | 'cajeros';
@@ -86,6 +92,16 @@ export class PlantillaComponent implements OnInit {
     private fb: FormBuilder
   ) {
     this.personalForm = this.fb.group({
+      /**
+       * BUG FIX 2026-08-31: se agrega el campo `username` al formulario
+       * para que el correo de bienvenida muestre "Usuario" y "Correo"
+       * como campos distintos. Antes el backend usaba el email como
+       * username y el correo de bienvenida mostraba el email dos veces.
+       * En modo edicion el campo se deshabilita (no se permite cambiar
+       * el username desde esta UI: lo gestiona el ADMIN desde la pagina
+       * `/admin/usuarios`).
+       */
+      username: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(50), usernameValidator()]],
       firstName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100), nameValidator('nombre')]],
       lastNamePaternal: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100), nameValidator('apellido paterno')]],
       lastNameMaternal: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100), nameValidator('apellido materno')]],
@@ -188,21 +204,23 @@ export class PlantillaComponent implements OnInit {
     this.loadActiveTab(true);
   }
 
-  abrirModalPersonal() { 
+  abrirModalPersonal() {
     this.isEditingMode = false;
     this.entityToEdit = null;
-    this.isPersonalModalOpen = true; 
+    this.isPersonalModalOpen = true;
     this.errorMessage = '';
     this.personalForm.reset({ branchId: '' });
+    this.personalForm.get('username')?.enable();
   }
 
-  cerrarModalPersonal() { 
+  cerrarModalPersonal() {
     if (this.isSaving) return;
-    this.isPersonalModalOpen = false; 
+    this.isPersonalModalOpen = false;
     this.isEditingMode = false;
     this.entityToEdit = null;
     this.errorMessage = '';
-    this.personalForm.reset({ branchId: '' }); 
+    this.personalForm.reset({ branchId: '' });
+    this.personalForm.get('username')?.enable();
   }
 
   guardarPersonal() {
@@ -256,6 +274,7 @@ export class PlantillaComponent implements OnInit {
         this.isEditingMode = true;
         this.entityToEdit = p;
         this.personalForm.patchValue({
+          username: (p as { username?: string }).username || '',
           firstName: p.firstName,
           lastNamePaternal: p.lastNamePaternal,
           lastNameMaternal: p.lastNameMaternal,
@@ -263,6 +282,7 @@ export class PlantillaComponent implements OnInit {
           phone: p.phone || '',
           branchId: p.branchId || ''
         });
+        this.personalForm.get('username')?.disable();
         this.isPersonalModalOpen = true;
         this.errorMessage = '';
       }

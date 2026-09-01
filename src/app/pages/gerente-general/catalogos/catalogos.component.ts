@@ -891,14 +891,14 @@ export class CatalogosComponent implements OnInit {
       if (this.isEditingMode && this.entityToDeactivate) {
         const id = this.entityToDeactivate.id;
         if (this.activePersonalTab === 'gerentes') saveAction = this.staffService.updateGerente(id, payload);
-        else if (this.activePersonalTab === 'coordinadores') { delete payload.username; saveAction = this.staffService.updateCoordinador(id, payload); }
-        else if (this.activePersonalTab === 'verificadores') { delete payload.username; saveAction = this.staffService.updateVerificador(id, payload); }
-        else { delete payload.username; saveAction = this.staffService.updateCajero(id, payload); }
+        else if (this.activePersonalTab === 'coordinadores') saveAction = this.staffService.updateCoordinador(id, payload);
+        else if (this.activePersonalTab === 'verificadores') saveAction = this.staffService.updateVerificador(id, payload);
+        else saveAction = this.staffService.updateCajero(id, payload);
       } else {
         if (this.activePersonalTab === 'gerentes') saveAction = this.staffService.createGerente(payload);
-        else if (this.activePersonalTab === 'coordinadores') { delete payload.username; saveAction = this.staffService.createCoordinador(payload); }
-        else if (this.activePersonalTab === 'verificadores') { delete payload.username; saveAction = this.staffService.createVerificador(payload); }
-        else { delete payload.username; saveAction = this.staffService.createCajero(payload); }
+        else if (this.activePersonalTab === 'coordinadores') saveAction = this.staffService.createCoordinador(payload);
+        else if (this.activePersonalTab === 'verificadores') saveAction = this.staffService.createVerificador(payload);
+        else saveAction = this.staffService.createCajero(payload);
       }
 
       saveAction.subscribe({
