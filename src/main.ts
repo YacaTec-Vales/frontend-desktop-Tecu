@@ -1,7 +1,21 @@
 import { bootstrapApplication } from '@angular/platform-browser';
 import { appConfig } from './app/app.config';
 import { App } from './app/app';
-import { environment } from './environments/environment';
+// IMPORT EAGER: ver frontend-mobile-poch/src/main.ts para el comentario
+// completo. Mismo patron anti-tree-shake (for-in loop + globalThis).
+import { environment as EAGER_ENV } from './environments/environment';
+const __envGlobal = globalThis as unknown as Record<string, unknown>;
+for (const __envKey in EAGER_ENV) {
+  if (Object.prototype.hasOwnProperty.call(EAGER_ENV, __envKey)) {
+    __envGlobal['__MISVALES_' + __envKey.toUpperCase()] = (EAGER_ENV as Record<string, unknown>)[__envKey];
+  }
+}
+__envGlobal['__MISVALES_ENV_KEYS__'] = Object.keys(EAGER_ENV).join(',');
+if (typeof console !== 'undefined') {
+  console.warn(
+    '[misvales] api=' + __envGlobal['__MISVALES_APIURL'] + ' recaptcha=' + (__envGlobal['__MISVALES_RECAPTCHASITEKEY'] ? 'on' : 'off'),
+  );
+}
 
 /**
  * Pre-carga el script de Google reCAPTCHA v3 antes del bootstrap de
@@ -26,6 +40,6 @@ function preloadRecaptcha(siteKey: string): void {
   document.head.appendChild(script);
 }
 
-preloadRecaptcha(environment.recaptchaSiteKey);
+preloadRecaptcha(__envGlobal['__MISVALES_RECAPTCHASITEKEY__'] as string);
 
 bootstrapApplication(App, appConfig).catch((err) => console.error(err));
