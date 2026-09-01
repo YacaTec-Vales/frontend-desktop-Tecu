@@ -6,6 +6,12 @@ import { Coordinador, Verificador, Cajero, CreateStaffDto } from '../models/staf
 
 export interface Gerente {
   id: string;
+  /**
+   * Codigo de rol del usuario. BUG FIX 2026-08-31: agregado para que
+   * el panel admin pueda filtrar/etiquetar por rol. Antes solo estaba
+   * en `UserResponseDto` del backend pero el frontend no lo proyectaba.
+   */
+  roleCode?: string;
   firstName: string;
   lastNamePaternal: string;
   lastNameMaternal: string;
